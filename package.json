@@ -1,0 +1,25 @@
+{
+  "name": "jmc",
+  "displayName": "JMC",
+  "description": "JavaScript-like Minecraft Function Syntax Hihglighting",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.72.0"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "contributes": {
+    "languages": [{
+      "id": "jmc",
+      "aliases": ["JMC", "jmc"],
+      "extensions": [".jmc"],
+      "configuration": "./language-configuration.json"
+    }],
+    "grammars": [{
+      "language": "jmc",
+      "scopeName": "source.jmc",
+      "path": "./syntaxes/jmc.tmLanguage.json"
+    }]
+  }
+}
