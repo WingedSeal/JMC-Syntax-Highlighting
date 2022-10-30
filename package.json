@@ -1,28 +1,45 @@
 {
-  "name": "jmc",
-  "displayName": "JMC",
-  "description": "Basic syntax highlighting for JMC(JavaScript-like Minecraft Function)",
-  "repository": {"url": "https://github.com/WingedSeal/JMC-Syntax-Highlighting"},
-  "version": "0.0.1",
-  "publisher": "WingedSeal",
-  "engines": {
-    "vscode": "^1.72.0"
-  },
-  "icon": "images/jmc_icon.png",
-  "categories": [
-    "Programming Languages"
-  ],
-  "contributes": {
-    "languages": [{
-      "id": "jmc",
-      "aliases": ["JMC", "jmc"],
-      "extensions": [".jmc"],
-      "configuration": "./language-configuration.json"
-    }],
-    "grammars": [{
-      "language": "jmc",
-      "scopeName": "source.jmc",
-      "path": "./syntaxes/jmc.tmLanguage.json"
-    }]
-  }
+	"name": "jmc",
+	"displayName": "JMC",
+	"description": "Basic syntax highlighting for JMC(JavaScript-like Minecraft Function)",
+	"repository": {
+		"url": "https://github.com/WingedSeal/JMC-Syntax-Highlighting"
+	},
+	"version": "0.0.2",
+	"publisher": "WingedSeal",
+	"engines": {
+		"vscode": "^1.72.0"
+	},
+	"icon": "images/jmc_icon.png",
+	"categories": [
+		"Programming Languages"
+	],
+	"contributes": {
+		"languages": [
+			{
+				"id": "jmc",
+				"aliases": [
+					"JMC",
+					"jmc"
+				],
+				"extensions": [
+					".jmc"
+				],
+				"configuration": "./language-configuration.json"
+			}
+		],
+		"grammars": [
+			{
+				"language": "jmc",
+				"scopeName": "source.jmc",
+				"path": "./syntaxes/jmc.tmLanguage.json"
+			}
+		]
+	},
+	"__metadata": {
+		"id": "3cd18b1f-23b1-4732-88ac-214fc84d18ba",
+		"publisherDisplayName": "WingedSeal",
+		"publisherId": "d1daa09e-8a01-4ea3-b060-9284f1288dc3",
+		"isPreReleaseVersion": false
+	}
 }
