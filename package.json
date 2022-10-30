@@ -2,6 +2,7 @@
   "name": "jmc",
   "displayName": "JMC",
   "description": "Basic syntax highlighting for JMC(JavaScript-like Minecraft Function)",
+  "repository": {"url": "https://github.com/WingedSeal/JMC-Syntax-Highlighting"},
   "version": "0.0.1",
   "publisher": "WingedSeal",
   "engines": {
