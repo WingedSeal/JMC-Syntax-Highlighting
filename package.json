@@ -1,11 +1,13 @@
 {
   "name": "jmc",
   "displayName": "JMC",
-  "description": "JavaScript-like Minecraft Function Syntax Hihglighting",
+  "description": "Basic syntax highlighting for JMC(JavaScript-like Minecraft Function)",
   "version": "0.0.1",
+  "publisher": "WingedSeal",
   "engines": {
     "vscode": "^1.72.0"
   },
+  "icon": "images/jmc_icon.png",
   "categories": [
     "Programming Languages"
   ],
