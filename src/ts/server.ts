@@ -27,8 +27,6 @@ let hasDiagnosticRelatedInformationCapability: boolean = false;
 connection.onInitialize((params: InitializeParams) => {
     let capabilities = params.capabilities;
 
-    // Does the client support the `workspace/configuration` request?
-    // If not, we fall back using global settings.
     hasConfigurationCapability = !!(
         capabilities.workspace && !!capabilities.workspace.configuration
     );
@@ -140,7 +138,7 @@ connection.onDidChangeWatchedFiles((_change) => {
 });
 
 connection.onCompletion(
-    (_textDocumentPosition: TextDocumentPositionParams): CompletionItem[] => {
+    async (_textDocumentPosition: TextDocumentPositionParams): Promise<CompletionItem[]> => {
         var builtinFunctionsName = BuiltInFunctions.map((v) => ({name: v.class}));
         var items: CompletionItem[] = [];
         var num = 0;
@@ -151,6 +149,10 @@ connection.onCompletion(
         return items;
     }
 );
+
+connection.onCompletionResolve((item: CompletionItem): CompletionItem => { 
+    return item;
+});
 
 documents.listen(connection);
 connection.listen();

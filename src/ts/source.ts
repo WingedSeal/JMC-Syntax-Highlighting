@@ -62,7 +62,6 @@ export async function activate(context: ExtensionContext) {
                         return methods;
                     }
                 }
-                return undefined;
             }
         },
         "."
