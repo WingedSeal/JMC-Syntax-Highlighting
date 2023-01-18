@@ -28,9 +28,20 @@
         },
         {
             "include": "#operators"
+        },
+        {
+            "include": "#headers"
         }
     ],
     "repository": {
+        "headers": {
+            "patterns": [
+                {
+                    "name": "keyword.control.jmc",
+                    "match": "#(credit|define|include|command|override_miencraft|static)"
+                }
+            ]
+        },
         "target_selectors": {
             "patterns": [
                 {
@@ -120,7 +131,7 @@
             "patterns": [
                 {
                     "name": "comment.line.jmc",
-                    "match": "(^\\#.*)"
+                    "match": "(#(?!(?:credit|define)).*)"
                 },
                 {
                     "name": "comment.line.jmc",

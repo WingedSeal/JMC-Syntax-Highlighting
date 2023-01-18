@@ -27,7 +27,7 @@
                     "jmc"
                 ],
                 "extensions": [
-                    ".jmc"
+                    ".jmc",".hjmc"
                 ],
                 "configuration": "./language-configuration.json"
             }
@@ -59,5 +59,14 @@
         "vscode-languageclient": "^8.0.2",
         "vscode-languageserver": "^8.0.2",
         "vscode-languageserver-textdocument": "^1.0.8"
+    },
+    "devDependencies": {
+        "@typescript-eslint/eslint-plugin": "^5.48.2",
+        "eslint": "^8.32.0",
+        "eslint-config-standard-with-typescript": "^30.0.0",
+        "eslint-plugin-import": "^2.27.5",
+        "eslint-plugin-n": "^15.6.1",
+        "eslint-plugin-promise": "^6.1.1",
+        "typescript": "^4.9.4"
     }
 }
