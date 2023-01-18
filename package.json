@@ -1,11 +1,11 @@
 {
-	"name": "jmc",
-	"displayName": "JMC",
-	"description": "Basic syntax highlighting for JMC(JavaScript-like Minecraft Function)",
-	"repository": {
-		"url": "https://github.com/WingedSeal/JMC-Syntax-Highlighting"
-	},
-	"version": "0.0.2",
+  "name": "jmc",
+  "displayName": "JMC",
+  "description": "Basic syntax highlighting for JMC(JavaScript-like Minecraft Function)",
+  "repository": {
+      "url": "https://github.com/WingedSeal/JMC-Syntax-Highlighting"
+  },
+  "version": "0.1.1",
 	"main": "./src/js/source",
 	"publisher": "WingedSeal",
 	"engines": {
@@ -60,4 +60,3 @@
 		"vscode-languageserver": "^8.0.2",
 		"vscode-languageserver-textdocument": "^1.0.8"
 	}
-}
