@@ -1,62 +1,63 @@
 {
-  "name": "jmc",
-  "displayName": "JMC",
-  "description": "Basic syntax highlighting for JMC(JavaScript-like Minecraft Function)",
-  "repository": {
-      "url": "https://github.com/WingedSeal/JMC-Syntax-Highlighting"
-  },
-  "version": "0.1.1",
-	"main": "./src/js/source",
-	"publisher": "WingedSeal",
-	"engines": {
-		"vscode": "^1.72.0"
-	},
-	"icon": "images/jmc_icon.png",
-	"categories": [
-		"Programming Languages"
-	],
-	"activationEvents": [
-		"onLanguage:jmc"
-	],
-	"contributes": {
-		"languages": [
-			{
-				"id": "jmc",
-				"aliases": [
-					"JMC",
-					"jmc"
-				],
-				"extensions": [
-					".jmc"
-				],
-				"configuration": "./language-configuration.json"
-			}
-		],
-		"grammars": [
-			{
-				"language": "jmc",
-				"scopeName": "source.jmc",
-				"path": "./syntaxes/jmc.tmLanguage.json"
-			}
-		],
-		"snippets": [
-			{
-				"language": "jmc",
-				"path": "./snippets/snippets.json"
-			}
-		]
-	},
-	"__metadata": {
-		"id": "3cd18b1f-23b1-4732-88ac-214fc84d18ba",
-		"publisherDisplayName": "WingedSeal",
-		"publisherId": "d1daa09e-8a01-4ea3-b060-9284f1288dc3",
-		"isPreReleaseVersion": false
-	},
-	"dependencies": {
-		"@types/express": "^4.17.15",
-		"path": "^0.12.7",
-		"vscode": "^1.1.37",
-		"vscode-languageclient": "^8.0.2",
-		"vscode-languageserver": "^8.0.2",
-		"vscode-languageserver-textdocument": "^1.0.8"
-	}
+    "name": "jmc",
+    "displayName": "JMC",
+    "description": "Basic syntax highlighting for JMC(JavaScript-like Minecraft Function)",
+    "repository": {
+        "url": "https://github.com/WingedSeal/JMC-Syntax-Highlighting"
+    },
+    "version": "0.1.1",
+    "main": "./src/js/source",
+    "publisher": "WingedSeal",
+    "engines": {
+        "vscode": "^1.72.0"
+    },
+    "icon": "images/jmc_icon.png",
+    "categories": [
+        "Programming Languages"
+    ],
+    "activationEvents": [
+        "onLanguage:jmc"
+    ],
+    "contributes": {
+        "languages": [
+            {
+                "id": "jmc",
+                "aliases": [
+                    "JMC",
+                    "jmc"
+                ],
+                "extensions": [
+                    ".jmc"
+                ],
+                "configuration": "./language-configuration.json"
+            }
+        ],
+        "grammars": [
+            {
+                "language": "jmc",
+                "scopeName": "source.jmc",
+                "path": "./syntaxes/jmc.tmLanguage.json"
+            }
+        ],
+        "snippets": [
+            {
+                "language": "jmc",
+                "path": "./snippets/snippets.json"
+            }
+        ]
+    },
+    "__metadata": {
+        "id": "3cd18b1f-23b1-4732-88ac-214fc84d18ba",
+        "publisherDisplayName": "WingedSeal",
+        "publisherId": "d1daa09e-8a01-4ea3-b060-9284f1288dc3",
+        "isPreReleaseVersion": false
+    },
+    "dependencies": {
+        "@types/express": "^4.17.15",
+        "path": "^0.12.7",
+        "vscode": "^1.1.37",
+        "vscode-languageclient": "^8.0.2",
+        "vscode-languageserver": "^8.0.2",
+        "vscode-languageserver-textdocument": "^1.0.8"
+    }
+}
