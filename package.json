@@ -38,6 +38,12 @@
 				"scopeName": "source.jmc",
 				"path": "./syntaxes/jmc.tmLanguage.json"
 			}
+		],
+		"snippets": [
+			{
+				"language": "jmc",
+				"path": "./snippets/snippets.json"
+			}
 		]
 	},
 	"__metadata": {
