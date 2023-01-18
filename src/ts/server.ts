@@ -14,9 +14,14 @@ import {
 } from "vscode-languageserver/node";
 import { TextDocument } from "vscode-languageserver-textdocument";
 import { BuiltInFunctions } from "./data/builtinFunctions";
+import { keywords as Keywords } from "./data/common";
+import { SnippetString } from "vscode";
 
 let connection = createConnection(ProposedFeatures.all);
 let text: string;
+
+export var userVariables: CompletionItem[] = [];
+export var userFunctions: CompletionItem[] = [];
 
 let documents: TextDocuments<TextDocument> = new TextDocuments(TextDocument);
 
@@ -121,9 +126,36 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
     let settings = await getDocumentSettings(textDocument.uri);
 
     text = textDocument.getText();
-    let pattern = /\b[A-Z]{2,}\b/g;
     let m: RegExpExecArray | null;
 
+    let variables: CompletionItem[] = [];
+    let variablePattern = /(\$[\w\.]+)/g;
+    while ((m = variablePattern.exec(text))) {
+        if (m![0].slice(-4) === ".get") {
+            continue;
+        }
+        let filter = variables.filter(v => v.label == m![0].slice(1));
+        if (!(filter.length > 0)) {
+            variables.push({label: m[0].slice(1), kind: CompletionItemKind.Variable});
+        }
+    }    
+
+    let functions: CompletionItem[] = [];
+    let functionPattern = /function\s*([\w\.]+)/g;
+    while ((m = functionPattern.exec(text))) { 
+        let filter = functions.filter(v => v.label == m![1]);
+        if (!(filter.length > 0)) {
+            variables.push({label: m[1], kind: CompletionItemKind.Function});
+        }
+    }
+
+    userVariables = variables;
+    userFunctions = functions;
+
+
+    //TODO: problems finder 
+    let pattern = /\b[A-Z]{2,}\b/g;
+    
     let problems = 0;
     let diagnostics: Diagnostic[] = [];
     while ((m = pattern.exec(text)) && problems < 100) {
@@ -144,6 +176,20 @@ connection.onCompletion(
         var num = 0;
         for (let i of builtinFunctionsName) {
             items.push({label: i.name, kind: CompletionItemKind.Class, data: num});
+            num++;
+        }
+        for (let i of userVariables) {
+            i.data = num;
+            items.push(i);
+            num++;
+        }
+        for (let i of userFunctions) {
+            i.data = num;
+            items.push(i);
+            num++;
+        }        
+        for (let i of Keywords) {
+            items.push({label: i, kind: CompletionItemKind.Keyword});
             num++;
         }
         return items;

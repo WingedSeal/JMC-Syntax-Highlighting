@@ -32,25 +32,32 @@
 	],
 	"repository": {
 		"target_selectors": {
-			"patterns": [{
-				"name": "constant.numeric",
-				"match": "(@[parse])"
-			}]
+			"patterns": [
+				{
+					"name": "constant.other.jmc",
+					"match": "(@[parse])"
+				}
+			]
 		},
 		"keywords": {
-			"patterns": [{
+			"patterns": [
+				{
 				"name": "keyword.control.jmc",
 				"match": "\\b(if|else|while|for|do|switch|case)\\b"
-			},{
+			},
+			{
 				"name": "storage.type.function.jmc",
 				"match": "\\b(function)\\b"
-			},{
+			},
+			{
 				"name": "storage.type.new.jmc",
 				"match": "\\b(new)\\b"
-			},{
+			},
+			{
 				"name": "storage.type.arrow.jmc",
 				"match": "(=>)"
-			}]
+			}
+		]
 		},
 		"entities": {
 			"patterns": [{
@@ -98,7 +105,7 @@
 		},
 		"variables": {
 			"patterns": [{
-				"name": "entity.name.jmc",
+				"name": "variable.name.jmc",
 				"match": "(\\$[\\w\\.]+)"
 			}]
 		},
