@@ -5,8 +5,11 @@ import {
 	Range,
 } from "vscode-languageserver/node";
 import * as fs from "fs";
+import { Headers } from "./data/common";
 
 let importPattern = /@import\s*"([\w\s]*)"/g;
+let headerPattern = /#(\w+)/g
+
 let m: RegExpExecArray | null;
 
 interface textLinePos {
@@ -17,20 +20,41 @@ interface textLinePos {
 export function getDiagnostics(text: string, filePath: string): Diagnostic[] {
 	let diagnostics: Diagnostic[] = [];
 
-	while ((m = importPattern.exec(text)) !== null) {
-		let line = getLineByIndex(text, m.index + 9, getLinePos(text));
-		if (line.line > -1 && line.pos > -1) {
-			let startPos = Position.create(line.line, line.pos);
-			let endPos = Position.create(line.line, line.pos + m[1].length);
-			let range = Range.create(startPos, endPos);
-			let path = filePath.split("\\");
-			path.pop();
-			let f = path.join("/");
-			console.log(`${f}\\${m[1]}.jmc`);
-			if (!fs.existsSync(`${f}\\${m[1]}.jmc`)) {
+	let path = filePath.split("\\");
+	let filename = path.pop();
+	let f = path.join("/");
+	
+	if (filename?.endsWith(".jmc")) {
+		while ((m = importPattern.exec(text)) !== null) {
+			let line = getLineByIndex(m.index + 9, getLinePos(text));
+			if (line.line > -1 && line.pos > -1) {
+				let startPos = Position.create(line.line, line.pos);
+				let endPos = Position.create(line.line, line.pos + m[1].length);
+				let range = Range.create(startPos, endPos);
+				
+				if (!fs.existsSync(`${f}\\${m[1]}.jmc`)) {
+					diagnostics.push({
+						range: range,
+						message: `ImportError: '${m[1]}' does not exist`,
+						severity: DiagnosticSeverity.Error,
+					});
+				}
+			}
+		}
+	}
+	else if (filename?.endsWith(".hjmc")) {
+		while ((m = headerPattern.exec(text)) !== null) { 
+			let header = m[1];
+			let length = m.length;
+			let pos = getLineByIndex(m.index, getLinePos(text));
+			if (!Headers.includes(header)) {
+				let startPos = Position.create(pos.line, pos.pos + 1);
+				let endPos = Position.create(pos.line, pos.pos + header.length + 1);
+				let range = Range.create(startPos, endPos);
+
 				diagnostics.push({
 					range: range,
-					message: `'${m[1]}' does not exist`,
+					message: `ValueError: '${m[1]}' does not exist`,
 					severity: DiagnosticSeverity.Error,
 				});
 			}
@@ -41,7 +65,6 @@ export function getDiagnostics(text: string, filePath: string): Diagnostic[] {
 }
 
 function getLineByIndex(
-	text: string,
 	index: number,
 	linepos: textLinePos[]
 ): { line: number; pos: number } {

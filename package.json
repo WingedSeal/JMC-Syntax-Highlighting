@@ -27,9 +27,28 @@
                     "jmc"
                 ],
                 "extensions": [
-                    ".jmc",".hjmc"
+                    ".jmc"
                 ],
-                "configuration": "./language-configuration.json"
+                "configuration": "./language-configuration.json",
+                "icon": {
+                    "dark": "./images/jmc_icon.png",
+                    "light": "./images/jmc_icon.png"
+                }
+            },
+            {
+                "id": "hjmc",
+                "aliases": [
+                    "HJMC",
+                    "hjmc"
+                ],
+                "extensions": [
+                    ".hjmc"
+                ],
+                "configuration": "./language-configuration.json",
+                "icon": {
+                    "dark": "./images/hjmc_icon.ico",
+                    "light": "./images/hjmc_icon.ico"
+                }
             }
         ],
         "grammars": [
@@ -37,6 +56,11 @@
                 "language": "jmc",
                 "scopeName": "source.jmc",
                 "path": "./syntaxes/jmc.tmLanguage.json"
+            },
+            {
+                "language": "hjmc",
+                "scopeName": "source.hjmc",
+                "path": "./syntaxes/hjmc.tmLanguage.json"       
             }
         ],
         "snippets": [

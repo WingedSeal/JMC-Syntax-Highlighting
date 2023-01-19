@@ -19,12 +19,18 @@ const selector: DocumentSelector = {
 	language: "jmc",
 	scheme: "file",
 };
+
+const headerSelector: DocumentSelector = {
+	language: "hjmc",
+	scheme: "file",	
+}
+
 let client: LanguageClient;
 
 export async function activate(context: ExtensionContext) {
 	//setup client
 	let clientOptions: LanguageClientOptions = {
-		documentSelector: [{ scheme: "file", language: "jmc" }],
+		documentSelector: [{ scheme: "file", language: "jmc" },{ scheme: "file", language: "hjmc" }],
 		synchronize: {
 			fileEvents: workspace.createFileSystemWatcher("**/.clientsrc"),
 		},
@@ -98,23 +104,17 @@ export async function activate(context: ExtensionContext) {
 		);
 
 	const headerCompletion = languages.registerCompletionItemProvider(
-		selector,
+		headerSelector,
 		{
 			provideCompletionItems(document, position, token, c) {
-				const linePrefix = document
-					.lineAt(position)
-					.text.substring(0, position.character);
-				if (document.fileName.endsWith(".hjmc")) {
-					let headers: vscode.CompletionItem[] = [];
-					for (let i of Headers) {
-						headers.push({
-							label: i,
-							kind: vscode.CompletionItemKind.Keyword,
-						});
-					}
-					return headers;
+				let headers: vscode.CompletionItem[] = [];
+				for (let i of Headers) {
+					headers.push({
+						label: i,
+						kind: vscode.CompletionItemKind.Keyword,
+					});
 				}
-				return undefined;
+				return headers;
 			},
 		},
 		"#"
