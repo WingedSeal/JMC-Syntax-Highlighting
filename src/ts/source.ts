@@ -14,6 +14,7 @@ import * as path from "path";
 import { BuiltInFunctions } from "./data/builtinFunctions";
 import * as vscode from "vscode";
 import { Headers } from "./data/common";
+import { getAllFiles } from "get-all-files";
 
 const selector: DocumentSelector = {
 	language: "jmc",
@@ -22,15 +23,18 @@ const selector: DocumentSelector = {
 
 const headerSelector: DocumentSelector = {
 	language: "hjmc",
-	scheme: "file",	
-}
+	scheme: "file",
+};
 
 let client: LanguageClient;
 
 export async function activate(context: ExtensionContext) {
 	//setup client
 	let clientOptions: LanguageClientOptions = {
-		documentSelector: [{ scheme: "file", language: "jmc" },{ scheme: "file", language: "hjmc" }],
+		documentSelector: [
+			{ scheme: "file", language: "jmc" },
+			{ scheme: "file", language: "hjmc" },
+		],
 		synchronize: {
 			fileEvents: workspace.createFileSystemWatcher("**/.clientsrc"),
 		},
@@ -135,16 +139,37 @@ export async function activate(context: ExtensionContext) {
 		"@"
 	);
 
-	//TODO: add file import completion for files
-	// const fileImportCompletion = languages.registerCompletionItemProvider(
-	// 	selector,
-	// 	{
-	// 		provideCompletionItems(document, position, token, c) {
+	const fileImportCompletion = languages.registerCompletionItemProvider(
+		selector,
+		{
+			async provideCompletionItems(document, position, token, c) {
+				const linePrefix = document
+					.lineAt(position)
+					.text.substring(0, position.character);
+				if (linePrefix.endsWith("@import ")) {
+					let path = document.uri.fsPath.split("\\");
+					path.pop();
+					let folder = path.join("/");
 
-	// 		}
-	// 	},
-	// 	"\""
-	// )
+					let files: string[] = await getAllFiles(folder).toArray();
+					let items: vscode.CompletionItem[] = [];
+					for (let i of files) {
+						if (i.endsWith(".jmc")) {
+							items.push({
+								label: `"${i
+									.slice(folder.length + 1)
+									.slice(0, -4)}"`,
+								kind: vscode.CompletionItemKind.Module,
+							});
+						}
+					}
+					return items;
+				}
+				return undefined;
+			},
+		},
+		" "
+	);
 
 	client.start();
 }
