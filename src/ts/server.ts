@@ -13,7 +13,7 @@ import {
 } from "vscode-languageserver/node";
 import { TextDocument } from "vscode-languageserver-textdocument";
 import { BuiltInFunctions } from "./data/builtinFunctions";
-import { keywords as Keywords } from "./data/common";
+import { keywords as Keywords, VanillaKeywords } from "./data/common";
 import { getDiagnostics } from "./diagnostics";
 import * as url from "url";
 
@@ -194,7 +194,11 @@ connection.onCompletion(
 			num++;
 		}
 		for (let i of Keywords) {
-			items.push({ label: i, kind: CompletionItemKind.Keyword });
+			items.push({ label: i, kind: CompletionItemKind.Keyword, data: num });
+			num++;
+		}
+		for (let i of VanillaKeywords) {
+			items.push({ label: i, kind: CompletionItemKind.Keyword, data: num });
 			num++;
 		}
 		return items;
