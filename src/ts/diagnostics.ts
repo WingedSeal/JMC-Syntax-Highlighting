@@ -5,17 +5,14 @@ import {
 	Range,
 } from "vscode-languageserver/node";
 import * as fs from "fs";
-import { Headers } from "./data/common";
+import { Headers, getLineByIndex, getLinePos } from "./data/common";
 
 let importPattern = /@import\s*"([\w\s]*)"/g;
 let headerPattern = /#(\w+)/g;
 
 let m: RegExpExecArray | null;
 
-interface textLinePos {
-	line: number;
-	length: number;
-}
+
 
 export function getDiagnostics(text: string, filePath: string): Diagnostic[] {
 	let diagnostics: Diagnostic[] = [];
@@ -66,28 +63,4 @@ export function getDiagnostics(text: string, filePath: string): Diagnostic[] {
 	return diagnostics;
 }
 
-function getLineByIndex(
-	index: number,
-	linepos: textLinePos[]
-): { line: number; pos: number } {
-	for (let i of linepos) {
-		if (index < i.length) {
-			return { line: i.line, pos: index };
-		}
-		index -= i.length;
-	}
-	return { line: -1, pos: -1 };
-}
 
-function getLinePos(text: string): textLinePos[] {
-	let textLinePos: textLinePos[] = [];
-	let textLines = text.split("\n");
-	for (let i = 0; i < textLines.length; i++) {
-		let textLine = textLines[i];
-		textLinePos.push({
-			line: i,
-			length: textLine.length + 1,
-		});
-	}
-	return textLinePos;
-}

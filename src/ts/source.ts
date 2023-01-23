@@ -13,8 +13,9 @@ import {
 import * as path from "path";
 import { BuiltInFunctions } from "./data/builtinFunctions";
 import * as vscode from "vscode";
-import { Headers } from "./data/common";
+import { Headers, getLineByIndex, getLinePos } from "./data/common";
 import { getAllFiles } from "get-all-files";
+import { semanticLegend } from "./semanticHighlight";
 
 const selector: DocumentSelector = {
 	language: "jmc",
@@ -170,6 +171,32 @@ export async function activate(context: ExtensionContext) {
 		},
 		" "
 	);
+	//TODO: add it for vanilla commands
+	languages.registerDocumentSemanticTokensProvider(selector, {
+		provideDocumentSemanticTokens(document, token) {
+			const builder = new vscode.SemanticTokensBuilder(semanticLegend);
+			var text = document.getText();
+
+			let scoreboardPattern = /(.+):(@[parse])/g;
+			let m: RegExpExecArray | null;
+
+			// while ((m = scoreboardPattern.exec(text)) !== null) {
+			// 	var pos = getLineByIndex(m.index, getLinePos(text));
+			// 	builder.push(
+			// 		new vscode.Range(
+			// 			new vscode.Position(pos.line, pos.pos),
+			// 			new vscode.Position(pos.line, pos.pos + m[0].length)
+			// 		),
+			// 		'variable',
+			// 		['declaration']
+			// 	)
+			// }
+
+			return builder.build();
+		}
+	},
+	semanticLegend
+	)
 
 	client.start();
 }
