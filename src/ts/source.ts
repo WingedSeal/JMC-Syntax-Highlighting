@@ -16,6 +16,7 @@ import * as vscode from "vscode";
 import { Headers, getLineByIndex, getLinePos } from "./data/common";
 import { getAllFiles } from "get-all-files";
 import { semanticLegend } from "./semanticHighlight";
+import { CommandArguments } from "./data/vanillaCommands";
 
 const selector: DocumentSelector = {
 	language: "jmc",
@@ -171,13 +172,44 @@ export async function activate(context: ExtensionContext) {
 		},
 		" "
 	);
+
+	const vanillaCommandsCompletion = languages.registerCompletionItemProvider(
+		selector,
+		{
+			async provideCompletionItems(document, position, token, context) {
+				const linePrefix = document
+					.lineAt(position)
+					.text.substring(0, position.character);
+				let items: vscode.CompletionItem[] = [];
+				
+
+				for (let command of CommandArguments) {
+					let current: number = linePrefix.split(" ").filter(v => v !== '').length - 1;
+					let matchString: string = "";
+					let args = command.args[current];
+					for (let arg of args) {
+						items.push(
+							{
+								label: arg,
+								kind: vscode.CompletionItemKind.Property
+							}
+						)
+					}
+				}
+
+				return items;	
+			},
+		},
+		" "
+	)
+
 	//TODO: add it for vanilla commands
 	languages.registerDocumentSemanticTokensProvider(selector, {
 		provideDocumentSemanticTokens(document, token) {
 			const builder = new vscode.SemanticTokensBuilder(semanticLegend);
 			var text = document.getText();
 
-			let scoreboardPattern = /(.+):(@[parse])/g;
+			// let scoreboardPattern = /(.+):(@[parse])/g;
 			let m: RegExpExecArray | null;
 
 			// while ((m = scoreboardPattern.exec(text)) !== null) {
@@ -191,6 +223,10 @@ export async function activate(context: ExtensionContext) {
 			// 		['declaration']
 			// 	)
 			// }
+
+			for (let i of CommandArguments) {
+
+			}
 
 			return builder.build();
 		}
