@@ -5,14 +5,14 @@ import {
 	Range,
 } from "vscode-languageserver/node";
 import * as fs from "fs";
-import { Headers, getLineByIndex, getLinePos } from "./data/common";
+import { Headers, getLineByIndex, getLinePos, getVariables } from "./data/common";
 
 let importPattern = /@import\s*"([\w\s]*)"/g;
+let variablePattern = /\$([\w\.]+)/g;
+
 let headerPattern = /#(\w+)/g;
 
 let m: RegExpExecArray | null;
-
-
 
 export function getDiagnostics(text: string, filePath: string): Diagnostic[] {
 	let diagnostics: Diagnostic[] = [];
@@ -22,6 +22,8 @@ export function getDiagnostics(text: string, filePath: string): Diagnostic[] {
 	let f = path.join("/");
 
 	if (filename?.endsWith(".jmc")) {
+
+		//import check
 		while ((m = importPattern.exec(text)) !== null) {
 			let line = getLineByIndex(m.index + 9, getLinePos(text));
 			if (line.line > -1 && line.pos > -1) {
@@ -38,6 +40,28 @@ export function getDiagnostics(text: string, filePath: string): Diagnostic[] {
 				}
 			}
 		}
+
+		//variable check
+		while ((m = variablePattern.exec(text)) !== null) {
+			let line = getLineByIndex(m.index, getLinePos(text));
+
+			let variables = getVariables(text, f);
+
+			if (!variables.includes(m[1]) && !m[1].endsWith(".get")) {
+				let startPos = Position.create(line.line, line.pos);
+				let endPos = Position.create(line.line, line.pos + m[0].length);
+				let range = Range.create(startPos, endPos);
+
+				diagnostics.push({
+					range: range,
+					message: `NameError: '${m[1]}' is not defined`,
+					severity: DiagnosticSeverity.Error
+				})
+			}
+
+			
+		}
+
 	} else if (filename?.endsWith(".hjmc")) {
 		while ((m = headerPattern.exec(text)) !== null) {
 			let header = m[1];
@@ -62,5 +86,3 @@ export function getDiagnostics(text: string, filePath: string): Diagnostic[] {
 
 	return diagnostics;
 }
-
-

@@ -18,9 +18,6 @@
             "include": "#numbers"
         },
         {
-            "include": "#variables"
-        },
-        {
             "include": "#target_selectors"
         },
         {
@@ -31,9 +28,6 @@
         },
         {
             "include": "#vanillaKeywords"
-        },
-        {
-            "include": "#vanillaSyntaxes"
         }
     ],
     "repository": {
@@ -114,14 +108,6 @@
                 }
             ]
         },
-        "variables": {
-            "patterns": [
-                {
-                    "name": "variable.name.jmc",
-                    "match": "(\\$[\\w\\.]+)"
-                }
-            ]
-        },
         "comments": {
             "patterns": [
                 {
@@ -145,30 +131,6 @@
                     "match": "\\s+(advancement|attribute|bossbar|clear|clone|data|datapack|defaultgamemode|difficulty|effect|enchant|execute|experience|fill|fillbiome|forceload|function|gamemode|gamerule|give|item|kill|loot|me|msg|particle|place|playsound|recipe|say|schedule|scoreboard|setblock|spawnpoint|setidletimeout|setworldspawn|spectate|spreadplayers|stopsound|summon|tag|team|teammsg|teleport|tell|tellraw|time|title|tm|tp|trigger|weather|worldborder|xp)\\s+"
                 }
             ]
-        },
-        "vanillaSyntaxes": {
-            "name": "vanillasyntaxes.jmc",
-            "match": "(advancement)\\s+(grant|revoke|\\s*)\\s*(@[parse]|\\s*)\\s*((everything)|((from|only|until|through)\\s*(\\w+|\\s*))|\\s*)",
-            "captures": {
-                "1": {
-                    "name": "keyword.control.jmc"
-                },
-                "2": {
-                    "name": "keyword.control.jmc"
-                },
-                "3": {
-                    "name": "constant.other.jmc"
-                },
-                "5": {
-                    "name": "keyword.control.jmc"  
-                },
-                "7": {
-                    "name": "keyword.control.jmc"
-                },
-                "8": {
-                    "name": "variable.name.jmc"
-                }
-            }
         }
     },
     "scopeName": "source.jmc"

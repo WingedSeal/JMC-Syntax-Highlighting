@@ -83,7 +83,7 @@
         "semanticTokenScopes": [
             {
                 "scopes": {
-                    "scoreboard":["entity.name.variable.jmc"]
+                    "scoreboard":["variable.name.jmc"]
                 }
             }
         ],

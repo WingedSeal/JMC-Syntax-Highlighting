@@ -9,11 +9,16 @@ import {
 	CompletionItemKind,
 	TextDocumentPositionParams,
 	TextDocumentSyncKind,
-	InitializeResult
+	InitializeResult,
 } from "vscode-languageserver/node";
 import { TextDocument } from "vscode-languageserver-textdocument";
 import { BuiltInFunctions } from "./data/builtinFunctions";
-import { keywords as Keywords, VanillaKeywords } from "./data/common";
+import {
+	keywords as Keywords,
+	VanillaKeywords,
+	getCurrentFolder,
+	getVariables,
+} from "./data/common";
 import { getDiagnostics } from "./diagnostics";
 import * as url from "url";
 
@@ -128,16 +133,16 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 	text = textDocument.getText();
 	let m: RegExpExecArray | null;
 
+	//TODO: do it for function too
 	let variables: CompletionItem[] = [];
-	let variablePattern = /(\$[\w\.]+)/g;
-	while ((m = variablePattern.exec(text))) {
-		if (m![0].slice(-4) === ".get") {
-			continue;
-		}
-		let filter = variables.filter((v) => v.label == m![0].slice(1));
+	for (let variable of getVariables(
+		text,
+		getCurrentFolder(url.fileURLToPath(textDocument.uri))
+	)) {
+		let filter = variables.filter((v) => v.label == variable);
 		if (!(filter.length > 0)) {
 			variables.push({
-				label: m[0].slice(1),
+				label: variable,
 				kind: CompletionItemKind.Variable,
 			});
 		}
@@ -175,6 +180,7 @@ connection.onCompletion(
 		}));
 		var items: CompletionItem[] = [];
 		var num = 0;
+
 		for (let i of builtinFunctionsName) {
 			items.push({
 				label: i.name,
@@ -194,11 +200,19 @@ connection.onCompletion(
 			num++;
 		}
 		for (let i of Keywords) {
-			items.push({ label: i, kind: CompletionItemKind.Keyword, data: num });
+			items.push({
+				label: i,
+				kind: CompletionItemKind.Keyword,
+				data: num,
+			});
 			num++;
 		}
 		for (let i of VanillaKeywords) {
-			items.push({ label: i, kind: CompletionItemKind.Keyword, data: num });
+			items.push({
+				label: i,
+				kind: CompletionItemKind.Keyword,
+				data: num,
+			});
 			num++;
 		}
 		return items;

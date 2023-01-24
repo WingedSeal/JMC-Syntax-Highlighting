@@ -15,7 +15,7 @@ import { BuiltInFunctions } from "./data/builtinFunctions";
 import * as vscode from "vscode";
 import { Headers, getLineByIndex, getLinePos } from "./data/common";
 import { getAllFiles } from "get-all-files";
-import { semanticLegend } from "./semanticHighlight";
+import { getVariablesClient, semanticLegend } from "./semanticHighlight";
 import { CommandArguments } from "./data/vanillaCommands";
 
 const selector: DocumentSelector = {
@@ -27,6 +27,14 @@ const headerSelector: DocumentSelector = {
 	language: "hjmc",
 	scheme: "file",
 };
+
+export function getCurrentWorkspace(): string | undefined {
+	if (vscode.window.activeTextEditor !== undefined) {
+		let path = vscode.window.activeTextEditor.document.uri.fsPath.split('\\');
+		path.pop();
+		return path.join('/');
+	}
+}
 
 let client: LanguageClient;
 
@@ -173,66 +181,83 @@ export async function activate(context: ExtensionContext) {
 		" "
 	);
 
-	const vanillaCommandsCompletion = languages.registerCompletionItemProvider(
+	// const vanillaCommandsCompletion = languages.registerCompletionItemProvider(
+	// 	selector,
+	// 	{
+	// 		async provideCompletionItems(document, position, token, context) {
+	// 			const linePrefix = document
+	// 				.lineAt(position)
+	// 				.text.substring(0, position.character);
+	// 			let items: vscode.CompletionItem[] = [];
+
+	// 			for (let command of CommandArguments) {
+	// 				let current: number =
+	// 					linePrefix.split(" ").filter((v) => v !== "").length -
+	// 					1;
+	// 				let matchString: string = "";
+	// 				let args = command.args[current];
+	// 				for (let arg of args) {
+	// 					items.push({
+	// 						label: arg,
+	// 						kind: vscode.CompletionItemKind.Property,
+	// 					});
+	// 				}
+	// 			}
+
+	// 			return items;
+	// 		},
+	// 	},
+	// 	" "
+	// );
+
+	
+	//TODO: add it for vanilla commands
+	const semanticHighlight = languages.registerDocumentSemanticTokensProvider(
 		selector,
 		{
-			async provideCompletionItems(document, position, token, context) {
-				const linePrefix = document
-					.lineAt(position)
-					.text.substring(0, position.character);
-				let items: vscode.CompletionItem[] = [];
-				
+			provideDocumentSemanticTokens(document, token) {
+				const builder = new vscode.SemanticTokensBuilder(
+					semanticLegend
+				);
+				var text = document.getText();
 
-				for (let command of CommandArguments) {
-					let current: number = linePrefix.split(" ").filter(v => v !== '').length - 1;
-					let matchString: string = "";
-					let args = command.args[current];
-					for (let arg of args) {
-						items.push(
-							{
-								label: arg,
-								kind: vscode.CompletionItemKind.Property
-							}
+				// let scoreboardPattern = /(.+):(@[parse])/g;
+				let m: RegExpExecArray | null;
+				let variables = getVariablesClient(text);
+				for (let variable of variables) {
+					//TODO: It stucks here, check the regex
+					let pattern = RegExp(`\\\$${variable}\\b`,'g');
+					while ((m = pattern.exec(text)) !== null) {
+						var pos = getLineByIndex(m.index, getLinePos(text));
+						builder.push(
+							new vscode.Range(
+								new vscode.Position(pos.line, pos.pos),
+								new vscode.Position(pos.line, pos.pos + m[0].length)
+							),
+							'variable',
+							['declaration']
 						)
 					}
 				}
+				
 
-				return items;	
+				// while ((m = scoreboardPattern.exec(text)) !== null) {
+				// 	var pos = getLineByIndex(m.index, getLinePos(text));
+				// 	builder.push(
+				// 		new vscode.Range(
+				// 			new vscode.Position(pos.line, pos.pos),
+				// 			new vscode.Position(pos.line, pos.pos + m[0].length)
+				// 		),
+				// 		'variable',
+				// 		['declaration']
+				// 	)
+				// }
+
+				return builder.build();
 			},
 		},
-		" "
-	)
-
-	//TODO: add it for vanilla commands
-	languages.registerDocumentSemanticTokensProvider(selector, {
-		provideDocumentSemanticTokens(document, token) {
-			const builder = new vscode.SemanticTokensBuilder(semanticLegend);
-			var text = document.getText();
-
-			// let scoreboardPattern = /(.+):(@[parse])/g;
-			let m: RegExpExecArray | null;
-
-			// while ((m = scoreboardPattern.exec(text)) !== null) {
-			// 	var pos = getLineByIndex(m.index, getLinePos(text));
-			// 	builder.push(
-			// 		new vscode.Range(
-			// 			new vscode.Position(pos.line, pos.pos),
-			// 			new vscode.Position(pos.line, pos.pos + m[0].length)
-			// 		),
-			// 		'variable',
-			// 		['declaration']
-			// 	)
-			// }
-
-			for (let i of CommandArguments) {
-
-			}
-
-			return builder.build();
-		}
-	},
-	semanticLegend
-	)
+		semanticLegend
+	);
 
 	client.start();
 }
