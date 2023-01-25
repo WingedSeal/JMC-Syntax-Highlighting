@@ -123,7 +123,7 @@ export function getImport(text: string): string[] {
 
 export function getDocumentText(path: string, root: string | undefined): string {
 	let text: string = "";
-	fs.readFile(`${root}/${path}`,'utf-8',(err,data) => {
+	fs.readFile(`${root}/${path}`, 'utf-8', (err, data) => {
 		if (err !== null) {
 			console.log(err)
 		}
@@ -164,7 +164,7 @@ export function getCurrentFolder(path: string): string {
 export function getVariables(text: string, root: string): string[] {
 	let definedVariables: string[] = [];
 
-	let variablePattern = /\$(\w+)\s*=(?!=)/g;
+	let variablePattern = /\$(\w+)\s*\??=(?!=)/g;
 	let m: RegExpExecArray | null;
 
 	let files = getImportDocumentText(text, root);
@@ -181,4 +181,39 @@ export function getVariables(text: string, root: string): string[] {
 	}
 
 	return definedVariables;
+}
+
+export function getUnusedVariables(text: string, root: string | undefined): string[] {
+	let variables: string[] = [];
+
+
+	let variablePattern = /\$([\w\.]+)/g;
+	let m: RegExpExecArray | null;
+
+	let files = getImportDocumentText(text, root);
+	files.push({
+		filename: "main",
+		text: text,
+	});
+
+	for (let i of files) {
+		let text = i.text;
+		while ((m = variablePattern.exec(text)) !== null) {
+			if (m[1].endsWith(".get")) {
+				variables.push(m[1].slice(0, -4));
+			}
+			else {
+				variables.push(m[1]);
+			}
+		}
+	}
+
+	let nonDuplicate = variables.filter((item, index) => {
+		variables.splice(index, 1)
+		const unique = !variables.includes(item) && !item.endsWith(".get");
+		variables.splice(index, 0, item)
+		return unique
+	});
+
+	return nonDuplicate;
 }

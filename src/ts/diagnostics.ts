@@ -5,7 +5,7 @@ import {
 	Range,
 } from "vscode-languageserver/node";
 import * as fs from "fs";
-import { Headers, getLineByIndex, getLinePos, getVariables } from "./data/common";
+import { Headers, getLineByIndex, getLinePos, getVariables, getUnusedVariables } from "./data/common";
 
 let importPattern = /@import\s*"([\w\s]*)"/g;
 let variablePattern = /\$([\w\.]+)/g;
@@ -58,8 +58,23 @@ export function getDiagnostics(text: string, filePath: string): Diagnostic[] {
 					severity: DiagnosticSeverity.Error
 				})
 			}
+		}
 
-			
+		for (let variable of getUnusedVariables(text, f)) {
+			let pattern = RegExp(`\\\$(${variable})\\b`, 'g');
+			while ((m = pattern.exec(text)) !== null) {
+				var line = getLineByIndex(m.index, getLinePos(text));
+				let startPos = Position.create(line.line, line.pos);
+				let endPos = Position.create(line.line, line.pos + m[0].length);
+				let range = Range.create(startPos, endPos);
+				diagnostics.push(
+					{
+						range: range,
+						message: `Unused variable ${m[1]}`,
+						severity: DiagnosticSeverity.Warning
+					}
+				)
+			}
 		}
 
 	} else if (filename?.endsWith(".hjmc")) {

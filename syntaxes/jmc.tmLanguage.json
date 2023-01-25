@@ -34,7 +34,7 @@
         "target_selectors": {
             "patterns": [
                 {
-                    "name": "constant.other.jmc",
+                    "name": "constant.numeric.jmc",
                     "match": "(@[parse])"
                 }
             ]

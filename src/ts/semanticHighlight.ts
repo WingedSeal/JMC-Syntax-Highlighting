@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
-import { ImportData, getImport, getImportDocumentText, getVariables } from "./data/common";
-import { getCurrentWorkspace } from "./source";
+import { getVariables } from "./data/common";
+import { getCurrentFile } from "./source";
 
 const tokenTypes = [
 	"class",
@@ -9,6 +9,7 @@ const tokenTypes = [
 	"enum",
 	"enumMember",
 	"method",
+	"undefinedVariable"
 ];
 const tokenModifiers = ["declaration"];
 export const semanticLegend = new vscode.SemanticTokensLegend(
@@ -23,5 +24,5 @@ interface SemanticToken {
 }
 
 export function getVariablesClient(text: string): string[] {
-	return getVariables(text, getCurrentWorkspace()!);
+	return getVariables(text, getCurrentFile()!);
 }

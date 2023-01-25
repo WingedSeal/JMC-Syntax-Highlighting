@@ -83,7 +83,8 @@
         "semanticTokenScopes": [
             {
                 "scopes": {
-                    "scoreboard":["variable.name.jmc"]
+                    "scoreboard":["entity.name.class.jmc"],
+                    "undefinedVariable": ["constant.numeric.jmc"]
                 }
             }
         ],
@@ -92,6 +93,11 @@
                 "id": "scoreboard",
                 "superType": "variable",
                 "description": "defined scoreboard highlighting"
+            },
+            {
+                "id": "unusedVariable",
+                "superType": "undefinedVariable",
+                "description": "NA"
             }
         ]
     },

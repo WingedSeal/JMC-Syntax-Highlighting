@@ -13,7 +13,7 @@ import {
 import * as path from "path";
 import { BuiltInFunctions } from "./data/builtinFunctions";
 import * as vscode from "vscode";
-import { Headers, getLineByIndex, getLinePos } from "./data/common";
+import { Headers, getLineByIndex, getLinePos, getUnusedVariables } from "./data/common";
 import { getAllFiles } from "get-all-files";
 import { getVariablesClient, semanticLegend } from "./semanticHighlight";
 import { CommandArguments } from "./data/vanillaCommands";
@@ -28,7 +28,7 @@ const headerSelector: DocumentSelector = {
 	scheme: "file",
 };
 
-export function getCurrentWorkspace(): string | undefined {
+export function getCurrentFile(): string | undefined {
 	if (vscode.window.activeTextEditor !== undefined) {
 		let path = vscode.window.activeTextEditor.document.uri.fsPath.split('\\');
 		path.pop();
@@ -210,7 +210,7 @@ export async function activate(context: ExtensionContext) {
 	// 	" "
 	// );
 
-	
+
 	//TODO: add it for vanilla commands
 	const semanticHighlight = languages.registerDocumentSemanticTokensProvider(
 		selector,
@@ -226,7 +226,7 @@ export async function activate(context: ExtensionContext) {
 				let variables = getVariablesClient(text);
 				for (let variable of variables) {
 					//TODO: It stucks here, check the regex
-					let pattern = RegExp(`\\\$${variable}\\b`,'g');
+					let pattern = RegExp(`\\\$${variable}\\b`, 'g');
 					while ((m = pattern.exec(text)) !== null) {
 						var pos = getLineByIndex(m.index, getLinePos(text));
 						builder.push(
@@ -239,7 +239,24 @@ export async function activate(context: ExtensionContext) {
 						)
 					}
 				}
-				
+
+				// let pattern = RegExp(`\\\$${variable}\\b`,'g');
+				// while ((m = variablePattern.exec(text)) !== null) {
+				// 	let variables = getUnusedVariables(text, getCurrentFile());
+
+				// 	if (variables.includes(m[1])) {
+				// 		var pos = getLineByIndex(m.index, getLinePos(text));
+				// 		builder.push(
+				// 			new vscode.Range(
+				// 				new vscode.Position(pos.line, pos.pos),
+				// 				new vscode.Position(pos.line, pos.pos + m[0].length)
+				// 			),
+				// 			'variable',
+				// 			['declaration']
+				// 		)						
+				// 	}
+				// }
+
 
 				// while ((m = scoreboardPattern.exec(text)) !== null) {
 				// 	var pos = getLineByIndex(m.index, getLinePos(text));
