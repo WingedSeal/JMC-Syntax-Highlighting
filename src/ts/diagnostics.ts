@@ -6,7 +6,7 @@ import {
 } from "vscode-languageserver/node";
 import * as fs from "fs";
 import {
-	Headers,
+	HEADERS,
 	getLineByIndex,
 	getLinePos,
 	getVariables,
@@ -94,7 +94,7 @@ export function getDiagnostics(text: string, filePath: string): Diagnostic[] {
 			let header = m[1];
 			let length = m.length;
 			let pos = getLineByIndex(m.index, getLinePos(text));
-			if (!Headers.includes(header)) {
+			if (!HEADERS.includes(header)) {
 				let startPos = Position.create(pos.line, pos.pos + 1);
 				let endPos = Position.create(
 					pos.line,

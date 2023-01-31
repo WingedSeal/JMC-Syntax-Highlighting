@@ -14,8 +14,8 @@ import {
 import { TextDocument } from "vscode-languageserver-textdocument";
 import { BuiltInFunctions } from "./data/builtinFunctions";
 import {
-	keywords as Keywords,
-	VanillaKeywords,
+	KEYWORDS as Keywords,
+	VANILLA_COMMANDS,
 	getCurrentFolder,
 	getVariables,
 } from "./data/common";
@@ -207,7 +207,7 @@ connection.onCompletion(
 			});
 			num++;
 		}
-		for (let i of VanillaKeywords) {
+		for (let i of VANILLA_COMMANDS) {
 			items.push({
 				label: i,
 				kind: CompletionItemKind.Keyword,

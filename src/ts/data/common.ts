@@ -1,6 +1,6 @@
 import * as fs from "fs";
 
-export const keywords: Array<string> = [
+export const KEYWORDS: Array<string> = [
 	"function",
 	"new",
 	"if",
@@ -12,7 +12,7 @@ export const keywords: Array<string> = [
 	"case",
 ];
 
-export const VanillaKeywords: Array<string> = [
+export const VANILLA_COMMANDS: Array<string> = [
 	"advancement",
 	"attribute",
 	"bossbar",
@@ -70,13 +70,32 @@ export const VanillaKeywords: Array<string> = [
 	"xp",
 ];
 
-export const Headers: Array<string> = [
+export const HEADERS: Array<string> = [
 	"define",
 	"credit",
 	"include",
 	"command",
 	"override_minecraft",
 	"static",
+];
+
+export const JSON_FILE_TYPES = [
+	"advancements",
+	"dimension",
+	"dimension_type",
+	"loot_tables",
+	"predicates",
+	"recipes",
+	"item_modifiers",
+	"structures",
+	"worldgen/biome",
+	"worldgen/configured_carver",
+	"worldgen/configured_feature",
+	"worldgen/configured_structure_feature",
+	"worldgen/configured_surface_builder",
+	"worldgen/noise_settings",
+	"worldgen/processor_list",
+	"worldgen/template_pool",
 ];
 
 export interface textLinePos {
@@ -121,13 +140,15 @@ export function getImport(text: string): string[] {
 	return files;
 }
 
-export function getDocumentText(path: string, root: string | undefined): string {
+export function getDocumentText(
+	path: string,
+	root: string | undefined
+): string {
 	let text: string = "";
-	fs.readFile(`${root}/${path}`, 'utf-8', (err, data) => {
+	fs.readFile(`${root}/${path}`, "utf-8", (err, data) => {
 		if (err !== null) {
-			console.log(err)
-		}
-		else {
+			console.log(err);
+		} else {
 			text = data;
 		}
 	});
@@ -139,26 +160,27 @@ export interface ImportData {
 	text: string;
 }
 
-export function getImportDocumentText(text: string, root: string | undefined): ImportData[] {
+export function getImportDocumentText(
+	text: string,
+	root: string | undefined
+): ImportData[] {
 	let datas: ImportData[] = [];
 
 	let files = getImport(text);
 	for (let file of files) {
 		let text = getDocumentText(file, root);
-		datas.push(
-			{
-				filename: file,
-				text: text
-			}
-		)
+		datas.push({
+			filename: file,
+			text: text,
+		});
 	}
 	return datas;
 }
 
 export function getCurrentFolder(path: string): string {
-	let edited = path.split('\\');
+	let edited = path.split("\\");
 	edited.pop();
-	return edited.join('\\');
+	return edited.join("\\");
 }
 
 export function getVariables(text: string, root: string): string[] {
@@ -183,9 +205,11 @@ export function getVariables(text: string, root: string): string[] {
 	return definedVariables;
 }
 
-export function getUnusedVariables(text: string, root: string | undefined): string[] {
+export function getUnusedVariables(
+	text: string,
+	root: string | undefined
+): string[] {
 	let variables: string[] = [];
-
 
 	let variablePattern = /\$([\w\.]+)/g;
 	let m: RegExpExecArray | null;
@@ -201,18 +225,17 @@ export function getUnusedVariables(text: string, root: string | undefined): stri
 		while ((m = variablePattern.exec(text)) !== null) {
 			if (m[1].endsWith(".get")) {
 				variables.push(m[1].slice(0, -4));
-			}
-			else {
+			} else {
 				variables.push(m[1]);
 			}
 		}
 	}
 
 	let nonDuplicate = variables.filter((item, index) => {
-		variables.splice(index, 1)
+		variables.splice(index, 1);
 		const unique = !variables.includes(item) && !item.endsWith(".get");
-		variables.splice(index, 0, item)
-		return unique
+		variables.splice(index, 0, item);
+		return unique;
 	});
 
 	return nonDuplicate;
@@ -238,7 +261,7 @@ export function getFunctions(text: string, root: string): string[] {
 		while ((m = functionPattern.exec(text)) !== null) {
 			definedFunctions.push(m[1]);
 		}
-	}	
+	}
 
 	return definedFunctions;
 }

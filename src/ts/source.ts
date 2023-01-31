@@ -13,7 +13,13 @@ import {
 import * as path from "path";
 import { BuiltInFunctions } from "./data/builtinFunctions";
 import * as vscode from "vscode";
-import { Headers, getLineByIndex, getLinePos, getUnusedVariables } from "./data/common";
+import {
+	HEADERS,
+	JSON_FILE_TYPES,
+	getLineByIndex,
+	getLinePos,
+	getUnusedVariables,
+} from "./data/common";
 import { getAllFiles } from "get-all-files";
 import { getVariablesClient, semanticLegend } from "./semanticHighlight";
 import { CommandArguments } from "./data/vanillaCommands";
@@ -30,9 +36,10 @@ const headerSelector: DocumentSelector = {
 
 export function getCurrentFile(): string | undefined {
 	if (vscode.window.activeTextEditor !== undefined) {
-		let path = vscode.window.activeTextEditor.document.uri.fsPath.split('\\');
+		let path =
+			vscode.window.activeTextEditor.document.uri.fsPath.split("\\");
 		path.pop();
-		return path.join('/');
+		return path.join("/");
 	}
 }
 
@@ -122,7 +129,7 @@ export async function activate(context: ExtensionContext) {
 		{
 			provideCompletionItems(document, position, token, c) {
 				let headers: vscode.CompletionItem[] = [];
-				for (let i of Headers) {
+				for (let i of HEADERS) {
 					headers.push({
 						label: i,
 						kind: vscode.CompletionItemKind.Keyword,
@@ -181,6 +188,29 @@ export async function activate(context: ExtensionContext) {
 		" "
 	);
 
+	const newKeywordCompletion = languages.registerCompletionItemProvider(
+		selector,
+		{
+			async provideCompletionItems(document, position, token, context) {
+				const linePrefix = document
+					.lineAt(position)
+					.text.substring(0, position.character);
+				if (linePrefix.endsWith("new ")) {
+					let items: vscode.CompletionItem[] = [];
+					for (let i of JSON_FILE_TYPES) {
+						items.push({
+							label: i,
+							kind: vscode.CompletionItemKind.Value,
+						});
+					}
+					return items;
+				}
+				return undefined;
+			},
+		},
+		" "
+	);
+
 	// const vanillaCommandsCompletion = languages.registerCompletionItemProvider(
 	// 	selector,
 	// 	{
@@ -210,7 +240,6 @@ export async function activate(context: ExtensionContext) {
 	// 	" "
 	// );
 
-
 	//TODO: add it for vanilla commands
 	const semanticHighlight = languages.registerDocumentSemanticTokensProvider(
 		selector,
@@ -225,20 +254,23 @@ export async function activate(context: ExtensionContext) {
 				let m: RegExpExecArray | null;
 				let variables = getVariablesClient(text);
 				for (let variable of variables) {
-					let pattern = RegExp(`\\\$${variable}\\b`, 'g');
+					let pattern = RegExp(`\\\$${variable}\\b`, "g");
 					while ((m = pattern.exec(text)) !== null) {
 						var pos = getLineByIndex(m.index, getLinePos(text));
 						var lineText = document.lineAt(pos.line).text.trim();
-						
+
 						if (!lineText.startsWith("//")) {
 							builder.push(
 								new vscode.Range(
 									new vscode.Position(pos.line, pos.pos),
-									new vscode.Position(pos.line, pos.pos + m[0].length)
+									new vscode.Position(
+										pos.line,
+										pos.pos + m[0].length
+									)
 								),
-								'variable',
-								['declaration']
-							)
+								"variable",
+								["declaration"]
+							);
 						}
 					}
 				}
@@ -256,10 +288,9 @@ export async function activate(context: ExtensionContext) {
 				// 			),
 				// 			'variable',
 				// 			['declaration']
-				// 		)						
+				// 		)
 				// 	}
 				// }
-
 
 				// while ((m = scoreboardPattern.exec(text)) !== null) {
 				// 	var pos = getLineByIndex(m.index, getLinePos(text));
