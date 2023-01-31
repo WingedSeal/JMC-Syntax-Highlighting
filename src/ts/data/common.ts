@@ -217,3 +217,28 @@ export function getUnusedVariables(text: string, root: string | undefined): stri
 
 	return nonDuplicate;
 }
+export function getTextByLine(text: string, line: number): string {
+	return text.split("\n")[line];
+}
+
+export function getFunctions(text: string, root: string): string[] {
+	let definedFunctions: string[] = [];
+
+	let functionPattern = /function\s*([\w\.]+)\(/g;
+	let m: RegExpExecArray | null;
+
+	let files = getImportDocumentText(text, root);
+	files.push({
+		filename: "main",
+		text: text,
+	});
+
+	for (let i of files) {
+		let text = i.text;
+		while ((m = functionPattern.exec(text)) !== null) {
+			definedFunctions.push(m[1]);
+		}
+	}	
+
+	return definedFunctions;
+}

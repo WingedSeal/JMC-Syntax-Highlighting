@@ -25,9 +25,6 @@
         },
         {
             "include": "#operators"
-        },
-        {
-            "include": "#vanillaKeywords"
         }
     ],
     "repository": {
@@ -121,14 +118,6 @@
                 {
                     "name": "constant.numeric.jmc",
                     "match": "(\\d+(?:[\\.]\\d+)?)"
-                }
-            ]
-        },
-        "vanillaKeywords": {
-            "patterns": [
-                {
-                    "name": "keyword.control.jmc",
-                    "match": "\\s+(advancement|attribute|bossbar|clear|clone|data|datapack|defaultgamemode|difficulty|effect|enchant|execute|experience|fill|fillbiome|forceload|function|gamemode|gamerule|give|item|kill|loot|me|msg|particle|place|playsound|recipe|say|schedule|scoreboard|setblock|spawnpoint|setidletimeout|setworldspawn|spectate|spreadplayers|stopsound|summon|tag|team|teammsg|teleport|tell|tellraw|time|title|tm|tp|trigger|weather|worldborder|xp)\\s+"
                 }
             ]
         }

@@ -225,18 +225,21 @@ export async function activate(context: ExtensionContext) {
 				let m: RegExpExecArray | null;
 				let variables = getVariablesClient(text);
 				for (let variable of variables) {
-					//TODO: It stucks here, check the regex
 					let pattern = RegExp(`\\\$${variable}\\b`, 'g');
 					while ((m = pattern.exec(text)) !== null) {
 						var pos = getLineByIndex(m.index, getLinePos(text));
-						builder.push(
-							new vscode.Range(
-								new vscode.Position(pos.line, pos.pos),
-								new vscode.Position(pos.line, pos.pos + m[0].length)
-							),
-							'variable',
-							['declaration']
-						)
+						var lineText = document.lineAt(pos.line).text.trim();
+						
+						if (!lineText.startsWith("//")) {
+							builder.push(
+								new vscode.Range(
+									new vscode.Position(pos.line, pos.pos),
+									new vscode.Position(pos.line, pos.pos + m[0].length)
+								),
+								'variable',
+								['declaration']
+							)
+						}
 					}
 				}
 

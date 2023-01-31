@@ -1,8 +1,9 @@
 const selectors: string[] = ["@p", "@a", "@r", "@s", "@e"];
+export const NAMESPACE: string = "NAMESPACE";
 
 interface CommandArgument {
 	command: string;
-	args: string[][];
+	args: (string[] | string)[];
 }
 
 export const CommandArguments: CommandArgument[] = [
@@ -12,6 +13,7 @@ export const CommandArguments: CommandArgument[] = [
 			["grant", "revoke"],
 			selectors,
 			["everything", "from", "only", "until", "through"],
+			NAMESPACE
 		],
 	}
 ];
