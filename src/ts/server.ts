@@ -133,7 +133,6 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 	text = textDocument.getText();
 	let m: RegExpExecArray | null;
 
-	//TODO: do it for function too
 	let variables: CompletionItem[] = [];
 	for (let variable of getVariables(
 		text,
@@ -153,7 +152,7 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 	while ((m = functionPattern.exec(text))) {
 		let filter = functions.filter((v) => v.label == m![1]);
 		if (!(filter.length > 0)) {
-			variables.push({ label: m[1], kind: CompletionItemKind.Function });
+			functions.push({ label: m[1], kind: CompletionItemKind.Function });
 		}
 	}
 

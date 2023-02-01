@@ -98,14 +98,14 @@ export const JSON_FILE_TYPES = [
 	"worldgen/template_pool",
 ];
 
-export interface textLinePos {
+export interface TextLinePos {
 	line: number;
 	length: number;
 }
 
 export function getLineByIndex(
 	index: number,
-	linepos: textLinePos[]
+	linepos: TextLinePos[]
 ): { line: number; pos: number } {
 	for (let i of linepos) {
 		if (index < i.length) {
@@ -116,8 +116,8 @@ export function getLineByIndex(
 	return { line: -1, pos: -1 };
 }
 
-export function getLinePos(text: string): textLinePos[] {
-	let textLinePos: textLinePos[] = [];
+export function getLinePos(text: string): TextLinePos[] {
+	let textLinePos: TextLinePos[] = [];
 	let textLines = text.split("\n");
 	for (let i = 0; i < textLines.length; i++) {
 		let textLine = textLines[i];
