@@ -1,6 +1,31 @@
 # Change Log
 
-All notable changes to the "jmc" extension will be documented in this file.
+## [0.1.5]
+`In Progress`
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+## [0.1.4]
+### Added
+- Auto completion for `@import`
+- Header Diagnostics
+- Diagnostic for unused variabes
+- Diagnostic for undefined variables
+
+### Changed
+- Now use semantic highlight instead to TextMate
+
+## [0.1.3]
+### Added
+- Support for .hjmc
+- Diagnostics
+
+
+## [0.1.2]
+### Added
+- Snippets and Auto completion for defined variables and functions
+
+## [0.1.1]
+### Added
+- Auto completion for built-in functions
+
+## [0.1]
+> initial commit
