@@ -13,16 +13,10 @@ import {
 import * as path from "path";
 import { BuiltInFunctions } from "./data/builtinFunctions";
 import * as vscode from "vscode";
-import {
-	HEADERS,
-	JSON_FILE_TYPES,
-	getLineByIndex,
-	getLinePos,
-	getUnusedVariables,
-} from "./data/common";
+import { HEADERS, JSON_FILE_TYPES } from "./data/common";
 import { getAllFiles } from "get-all-files";
 import { getVariablesClient, semanticLegend } from "./semanticHighlight";
-import { CommandArguments } from "./data/vanillaCommands";
+import { getLineByIndex, getLinePos } from "./helpers/documentHelper";
 
 const selector: DocumentSelector = {
 	language: "jmc",
@@ -210,6 +204,8 @@ export async function activate(context: ExtensionContext) {
 		},
 		" "
 	);
+
+	
 
 	// const vanillaCommandsCompletion = languages.registerCompletionItemProvider(
 	// 	selector,

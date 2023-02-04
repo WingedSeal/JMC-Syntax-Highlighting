@@ -17,10 +17,10 @@ import {
 	KEYWORDS as Keywords,
 	VANILLA_COMMANDS,
 	getCurrentFolder,
-	getVariables,
 } from "./data/common";
 import { getDiagnostics } from "./diagnostics";
 import * as url from "url";
+import { getImportDocumentText, getVariables } from "./helpers/documentAnalyze";
 
 let connection = createConnection(ProposedFeatures.all);
 let text: string;
@@ -127,17 +127,16 @@ documents.onDidChangeContent((change) => {
 	validateTextDocument(change.document);
 });
 
-async function validateTextDocument(textDocument: TextDocument): Promise<void> {
-	let settings = await getDocumentSettings(textDocument.uri);
+interface ValidateData {
+	variables: CompletionItem[];
+	functions: CompletionItem[];
+}
 
-	text = textDocument.getText();
+async function validateText(text: string, path: string): Promise<ValidateData> {
 	let m: RegExpExecArray | null;
 
 	let variables: CompletionItem[] = [];
-	for (let variable of getVariables(
-		text,
-		getCurrentFolder(url.fileURLToPath(textDocument.uri))
-	)) {
+	for (let variable of getVariables(text, getCurrentFolder(path))) {
 		let filter = variables.filter((v) => v.label == variable);
 		if (!(filter.length > 0)) {
 			variables.push({
@@ -156,8 +155,20 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 		}
 	}
 
-	userVariables = variables;
-	userFunctions = functions;
+	return {
+		variables: variables,
+		functions: functions,
+	};
+}
+
+async function validateTextDocument(textDocument: TextDocument): Promise<void> {
+	let settings = await getDocumentSettings(textDocument.uri);
+
+	text = textDocument.getText();
+
+	let data = await validateText(text, url.fileURLToPath(textDocument.uri));
+	userVariables = data.variables;
+	userFunctions = data.functions;
 
 	let diagnostics: Diagnostic[] = getDiagnostics(
 		text,
@@ -171,9 +182,7 @@ connection.onDidChangeWatchedFiles((_change) => {
 });
 
 connection.onCompletion(
-	async (
-		_textDocumentPosition: TextDocumentPositionParams
-	): Promise<CompletionItem[]> => {
+	async (pos: TextDocumentPositionParams): Promise<CompletionItem[]> => {
 		var builtinFunctionsName = BuiltInFunctions.map((v) => ({
 			name: v.class,
 		}));

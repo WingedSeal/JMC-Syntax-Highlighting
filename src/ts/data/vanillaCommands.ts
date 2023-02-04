@@ -1,4 +1,4 @@
-const selectors: string[] = ["@p", "@a", "@r", "@s", "@e"];
+const SELECTORS: string[] = ["@p", "@a", "@r", "@s", "@e"];
 export const NAMESPACE: string = "NAMESPACE";
 
 interface CommandArgument {
@@ -11,7 +11,7 @@ export const CommandArguments: CommandArgument[] = [
 		command: "advancement",
 		args: [
 			["grant", "revoke"],
-			selectors,
+			SELECTORS,
 			["everything", "from", "only", "until", "through"],
 			NAMESPACE
 		],

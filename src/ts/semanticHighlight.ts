@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
-import { getVariables } from "./data/common";
 import { getCurrentFile } from "./source";
+import { getVariables } from "./helpers/documentAnalyze";
 
 const tokenTypes = [
 	"class",
@@ -16,12 +16,6 @@ export const semanticLegend = new vscode.SemanticTokensLegend(
 	tokenTypes,
 	tokenModifiers
 );
-
-interface SemanticToken {
-	range: vscode.Range;
-	type: string;
-	modifier: string[] | undefined;
-}
 
 export function getVariablesClient(text: string): string[] {
 	return getVariables(text, getCurrentFile()!);

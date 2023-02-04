@@ -7,12 +7,9 @@ import {
 import * as fs from "fs";
 import {
 	HEADERS,
-	getLineByIndex,
-	getLinePos,
-	getVariables,
-	getUnusedVariables,
-	getTextByLine,
 } from "./data/common";
+import { getLineByIndex, getLinePos, getTextByLine } from "./helpers/documentHelper";
+import { getUnusedVariables, getVariables } from "./helpers/documentAnalyze";
 
 let importPattern = /@import\s*"([\w\s]*)"/g;
 let variablePattern = /\$([\w\.]+)/g;
