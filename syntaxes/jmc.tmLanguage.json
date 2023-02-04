@@ -21,9 +21,6 @@
             "include": "#target_selectors"
         },
         {
-            "include": "#entities"
-        },
-        {
             "include": "#operators"
         }
     ],
@@ -40,7 +37,7 @@
             "patterns": [
                 {
                     "name": "keyword.control.jmc",
-                    "match": "\\b(if|else|while|for|do|switch|case)\\b"
+                    "match": "\\b(if|else|while|for|do|switch|case|class)\\b"
                 },
                 {
                     "name": "storage.type.function.jmc",
@@ -53,21 +50,6 @@
                 {
                     "name": "storage.type.arrow.jmc",
                     "match": "(=>)"
-                }
-            ]
-        },
-        "entities": {
-            "patterns": [
-                {
-                    "match": "\\b(class) ([\\w\\.]+)",
-                    "captures": {
-                        "1": {
-                            "name": "storage.type.class.jmc"
-                        },
-                        "2": {
-                            "name": "entity.name.class.jmc"
-                        }
-                    }
                 }
             ]
         },

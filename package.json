@@ -85,7 +85,8 @@
                 "scopes": {
                     "scoreboard":["entity.name.class.jmc"],
                     "undefinedVariable": ["constant.numeric.jmc"],
-                    "func": ["storage.type.function.jmc"]
+                    "func": ["storage.type.function.jmc"],
+                    "clas": ["entity.name.class.jmc"]
                 }
             }
         ],
@@ -103,6 +104,11 @@
             {
                 "id": "func",
                 "superType": "function",
+                "description": "NA"
+            },
+            {
+                "id": "clas",
+                "superType": "class",
                 "description": "NA"
             }
         ]

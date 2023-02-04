@@ -16,6 +16,7 @@ import * as vscode from "vscode";
 import { HEADERS, JSON_FILE_TYPES } from "./data/common";
 import { getAllFiles } from "get-all-files";
 import {
+	getClassClient as getClassesClient,
 	getFunctionsClient,
 	getVariablesClient,
 	semanticLegend,
@@ -295,6 +296,29 @@ export async function activate(context: ExtensionContext) {
 						}
 					}
 				}
+
+				let classes = getClassesClient(text);
+				for (let clas of classes) {
+					let pattern = RegExp(`\\b(${clas})\\b`, "g");
+					while ((m = pattern.exec(text)) !== null) {
+						var pos = getLineByIndex(m.index, getLinePos(text));
+						var lineText = document.lineAt(pos.line).text.trim();
+
+						if (!lineText.startsWith("//")) {
+							builder.push(
+								new vscode.Range(
+									new vscode.Position(pos.line, pos.pos),
+									new vscode.Position(
+										pos.line,
+										pos.pos + m[1].length
+									)
+								),
+								"class",
+								["declaration"]
+							);
+						}
+					}
+				}				
 
 				// let pattern = RegExp(`\\\$${variable}\\b`,'g');
 				// while ((m = variablePattern.exec(text)) !== null) {

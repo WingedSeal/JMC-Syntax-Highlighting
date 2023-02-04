@@ -84,6 +84,28 @@ export function getFunctions(text: string, root: string): string[] {
 	return definedFunctions;
 }
 
+export function getClass(text: string, root: string): string[] {
+	let definedClasses: string[] = [];
+
+	let functionPattern = /class\s*([\w\.]+)/g;
+	let m: RegExpExecArray | null;
+
+	let files = getImportDocumentText(text, root);
+	files.push({
+		filename: "main",
+		text: text,
+	});
+
+	for (let i of files) {
+		let text = i.text;
+		while ((m = functionPattern.exec(text)) !== null) {
+			definedClasses.push(m[1]);
+		}
+	}
+
+	return definedClasses;
+}
+
 export function getImportDocumentText(
 	text: string,
 	root: string | undefined

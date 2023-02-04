@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
 import { getCurrentFile } from "./source";
-import { getFunctions, getVariables } from "./helpers/documentAnalyze";
+import { getClass as getClasses, getFunctions, getVariables } from "./helpers/documentAnalyze";
 
 const tokenTypes = [
 	"class",
@@ -23,4 +23,8 @@ export function getVariablesClient(text: string): string[] {
 
 export function getFunctionsClient(text: string): string[] {
 	return getFunctions(text, getCurrentFile()!);
+}
+
+export function getClassClient(text: string): string[] {
+	return getClasses(text, getCurrentFile()!);
 }
