@@ -84,7 +84,8 @@
             {
                 "scopes": {
                     "scoreboard":["entity.name.class.jmc"],
-                    "undefinedVariable": ["constant.numeric.jmc"]
+                    "undefinedVariable": ["constant.numeric.jmc"],
+                    "func": ["storage.type.function.jmc"]
                 }
             }
         ],
@@ -97,6 +98,11 @@
             {
                 "id": "unusedVariable",
                 "superType": "undefinedVariable",
+                "description": "NA"
+            },
+            {
+                "id": "func",
+                "superType": "function",
                 "description": "NA"
             }
         ]

@@ -15,7 +15,11 @@ import { BuiltInFunctions } from "./data/builtinFunctions";
 import * as vscode from "vscode";
 import { HEADERS, JSON_FILE_TYPES } from "./data/common";
 import { getAllFiles } from "get-all-files";
-import { getVariablesClient, semanticLegend } from "./semanticHighlight";
+import {
+	getFunctionsClient,
+	getVariablesClient,
+	semanticLegend,
+} from "./semanticHighlight";
 import { getLineByIndex, getLinePos } from "./helpers/documentHelper";
 
 const selector: DocumentSelector = {
@@ -205,8 +209,6 @@ export async function activate(context: ExtensionContext) {
 		" "
 	);
 
-	
-
 	// const vanillaCommandsCompletion = languages.registerCompletionItemProvider(
 	// 	selector,
 	// 	{
@@ -271,6 +273,29 @@ export async function activate(context: ExtensionContext) {
 					}
 				}
 
+				let functions = getFunctionsClient(text);
+				for (let func of functions) {
+					let pattern = RegExp(`\\b${func}\\b`, "g");
+					while ((m = pattern.exec(text)) !== null) {
+						var pos = getLineByIndex(m.index, getLinePos(text));
+						var lineText = document.lineAt(pos.line).text.trim();
+
+						if (!lineText.startsWith("//")) {
+							builder.push(
+								new vscode.Range(
+									new vscode.Position(pos.line, pos.pos),
+									new vscode.Position(
+										pos.line,
+										pos.pos + m[0].length
+									)
+								),
+								"function",
+								["declaration"]
+							);
+						}
+					}
+				}
+
 				// let pattern = RegExp(`\\\$${variable}\\b`,'g');
 				// while ((m = variablePattern.exec(text)) !== null) {
 				// 	let variables = getUnusedVariables(text, getCurrentFile());
@@ -299,7 +324,6 @@ export async function activate(context: ExtensionContext) {
 				// 		['declaration']
 				// 	)
 				// }
-
 				return builder.build();
 			},
 		},

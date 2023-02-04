@@ -59,10 +59,6 @@
         "entities": {
             "patterns": [
                 {
-                    "name": "entity.name.function.jmc",
-                    "match": "([\\w\\.]+)\\("
-                },
-                {
                     "match": "\\b(class) ([\\w\\.]+)",
                     "captures": {
                         "1": {
