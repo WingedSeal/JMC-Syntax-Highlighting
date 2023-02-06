@@ -46,11 +46,9 @@ export function getDocumentText(
 	path: string,
 	root: string | undefined
 ): string {
-	return fs.readFileSync(`${root}/${path}`,'utf-8');
+	return fs.readFileSync(`${root}/${path}`, "utf-8");
 }
 
 export function getTextByLine(text: string, line: number): string {
 	return text.split("\n")[line];
 }
-
-

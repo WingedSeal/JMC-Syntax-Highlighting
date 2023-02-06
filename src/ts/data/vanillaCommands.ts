@@ -13,7 +13,7 @@ export const CommandArguments: CommandArgument[] = [
 			["grant", "revoke"],
 			SELECTORS,
 			["everything", "from", "only", "until", "through"],
-			NAMESPACE
+			NAMESPACE,
 		],
-	}
+	},
 ];

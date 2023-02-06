@@ -113,7 +113,7 @@ export function getImportDocumentText(
 	let datas: ImportData[] = [];
 	let files = getImport(text);
 	for (let file of files) {
-		let text = getDocumentText(file, root).replace("\r\n","\n");
+		let text = getDocumentText(file, root).replace("\r\n", "\n");
 		datas.push({
 			filename: file,
 			text: text,

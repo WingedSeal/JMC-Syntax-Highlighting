@@ -1,6 +1,10 @@
 import * as vscode from "vscode";
 import { getCurrentFile } from "./source";
-import { getClass as getClasses, getFunctions, getVariables } from "./helpers/documentAnalyze";
+import {
+	getClass as getClasses,
+	getFunctions,
+	getVariables,
+} from "./helpers/documentAnalyze";
 
 const tokenTypes = [
 	"class",
@@ -9,7 +13,7 @@ const tokenTypes = [
 	"enum",
 	"enumMember",
 	"method",
-	"undefinedVariable"
+	"undefinedVariable",
 ];
 const tokenModifiers = ["declaration"];
 export const semanticLegend = new vscode.SemanticTokensLegend(

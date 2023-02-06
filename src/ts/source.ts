@@ -11,7 +11,7 @@ import {
 	TransportKind,
 } from "vscode-languageclient/node";
 import * as path from "path";
-import { BuiltInFunctions } from "./data/builtinFunctions";
+import { BuiltInFunctions, methodInfoToDoc } from "./data/builtinFunctions";
 import * as vscode from "vscode";
 import { HEADERS, JSON_FILE_TYPES } from "./data/common";
 import { getAllFiles } from "get-all-files";
@@ -86,12 +86,11 @@ export async function activate(context: ExtensionContext) {
 					if (linePrefix.endsWith(`${i.class}.`)) {
 						var methods: vscode.CompletionItem[] = [];
 						for (let method of i.methods) {
-							methods.push(
-								new vscode.CompletionItem(
-									method,
-									vscode.CompletionItemKind.Method
-								)
+							let item = new vscode.CompletionItem(
+								method.name,
+								vscode.CompletionItemKind.Method
 							);
+							methods.push(item);
 						}
 						return methods;
 					}
@@ -99,6 +98,53 @@ export async function activate(context: ExtensionContext) {
 			},
 		},
 		"."
+	);
+
+	//TODO:
+	const signatureHelper = languages.registerSignatureHelpProvider(
+		selector,
+		{
+			async provideSignatureHelp(document, position, token, ctx) {
+				const linePrefix = document
+					.lineAt(position)
+					.text.substring(0, position.character);
+				console.log(ctx.activeSignatureHelp);
+				if (ctx.triggerCharacter === "(") {
+					let methods = BuiltInFunctions.flatMap((v) => {
+						var target = v.methods.filter((value) => {
+							return linePrefix.endsWith(
+								`${v.class}.${value.name}(`
+							);
+						});
+						return target;
+					});
+					var method = methods[0];
+
+					return {
+						signatures: [
+							{
+								label: methodInfoToDoc(method),
+								parameters: method.args.flatMap((v) => {
+									let def =
+										v.default !== undefined
+											? ` = ${v.default}`
+											: "";
+									let arg = `${v.name}: ${v.type}${def}`;
+									return {
+										label: arg,
+									};
+								}),
+							},
+						],
+						activeSignature: 0,
+						activeParameter: 0,
+					};
+				}
+				return undefined;
+			},
+		},
+		"(",
+		","
 	);
 
 	const variablesFunctionsCompletion =
@@ -318,7 +364,7 @@ export async function activate(context: ExtensionContext) {
 							);
 						}
 					}
-				}				
+				}
 
 				// let pattern = RegExp(`\\\$${variable}\\b`,'g');
 				// while ((m = variablePattern.exec(text)) !== null) {

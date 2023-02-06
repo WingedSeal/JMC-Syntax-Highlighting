@@ -5,10 +5,12 @@ import {
 	Range,
 } from "vscode-languageserver/node";
 import * as fs from "fs";
+import { HEADERS } from "./data/common";
 import {
-	HEADERS,
-} from "./data/common";
-import { getLineByIndex, getLinePos, getTextByLine } from "./helpers/documentHelper";
+	getLineByIndex,
+	getLinePos,
+	getTextByLine,
+} from "./helpers/documentHelper";
 import { getUnusedVariables, getVariables } from "./helpers/documentAnalyze";
 
 let importPattern = /@import\s*"([\w\s]*)"/g;

@@ -10,6 +10,9 @@ import {
 	TextDocumentPositionParams,
 	TextDocumentSyncKind,
 	InitializeResult,
+	HandlerResult,
+	SignatureHelp,
+	SignatureHelpParams,
 } from "vscode-languageserver/node";
 import { TextDocument } from "vscode-languageserver-textdocument";
 import { BuiltInFunctions } from "./data/builtinFunctions";
@@ -55,6 +58,9 @@ connection.onInitialize((params: InitializeParams) => {
 			// Tell the client that this server supports code completion.
 			completionProvider: {
 				resolveProvider: true,
+			},
+			signatureHelpProvider: {
+				triggerCharacters: ["("],
 			},
 		},
 	};
@@ -230,6 +236,39 @@ connection.onCompletion(
 connection.onCompletionResolve((item: CompletionItem): CompletionItem => {
 	return item;
 });
+
+connection.onSignatureHelp(
+	(
+		v: SignatureHelpParams
+	): HandlerResult<SignatureHelp | null | undefined, void> => {
+		let document = documents.get(v.textDocument.uri);
+		if (document !== undefined) {
+			let index = document.offsetAt(v.position);
+			let text = document.getText();
+
+			let commaCount = 0;
+			while ((index -= 1) !== -1) {
+				let char = text[index];
+				if (char === "(") {
+					break;
+				}
+				if (char === ",") {
+					commaCount += 1;
+				}
+			}
+
+			if (v.context?.triggerCharacter === ",") {
+				if (
+					v.context.activeSignatureHelp !== undefined &&
+					v.context.activeSignatureHelp.activeParameter !== undefined
+				) {
+					v.context.activeSignatureHelp.activeParameter = commaCount;
+				}
+			}
+		}
+		return v.context?.activeSignatureHelp;
+	}
+);
 
 documents.listen(connection);
 connection.listen();
