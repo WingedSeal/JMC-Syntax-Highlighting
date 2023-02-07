@@ -1,14 +1,5 @@
 # Change Log
 
-## [0.3.0]
-### Planned
-- Vanilla syntax completion
-
-## [0.2.2]
-### Planned
-- Better documents
-- Class completion
-
 ## [0.2.1]
 ### Added
 - Builtin Functions will show parameters and functions documents
