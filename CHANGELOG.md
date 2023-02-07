@@ -1,10 +1,21 @@
 # Change Log
 
-## [0.2.1]
+## [0.3.0]
 ### Planned
+- Vanilla syntax completion
+
+## [0.2.2]
+### Planned
+- Better documents
+- Class completion
+
+## [0.2.1]
+### Added
 - Builtin Functions will show parameters and functions documents
 ### Fixed
 - Comma wont trigger showing parameters and functions documents
+- Number being highlighted in words
+- `.get` function for variable not highlighting
 
 ## [0.2.0]
 ### Added
@@ -18,7 +29,7 @@
 - Diagnostic for undefined variables
 
 ### Changed
-- Now use semantic highlight instead to TextMate
+- Now use semantic highlight instead of TextMate
 
 ## [0.1.3]
 ### Added
