@@ -1,7 +1,12 @@
 # Change Log
 
-## [0.1.5]
-`In Progress`
+## [0.2.1]
+### Planned
+- Builtin Functions will show parameter and functions documents
+
+## [0.2.0]
+### Added
+- Builtin Functions will show parameter
 
 ## [0.1.4]
 ### Added
