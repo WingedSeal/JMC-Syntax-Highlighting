@@ -28,12 +28,14 @@ interface ArgInfo {
 	name: string;
 	type: string;
 	default?: string;
+	doc?: string;
 }
 
 interface MethodInfo {
 	name: string;
 	args: ArgInfo[];
 	returnType: string;
+	doc?: string;
 }
 
 interface BuiltInFunction {
@@ -74,6 +76,7 @@ export const BuiltInFunctions: Array<BuiltInFunction> = [
 					},
 				],
 				returnType: JMC_FUNCTION,
+				doc: `Grant advancement, an alternative to vanilla syntax\nAvailable type are "everything", "from", "only", "through", "until"`,
 			},
 			{
 				name: "revoke",
@@ -97,6 +100,7 @@ export const BuiltInFunctions: Array<BuiltInFunction> = [
 					},
 				],
 				returnType: JMC_FUNCTION,
+				doc: `Revoke advancement, an alternative to vanilla syntax\nAvailable type are "everything", "from", "only", "through", "until"`,
 			},
 		],
 	},
@@ -116,6 +120,7 @@ export const BuiltInFunctions: Array<BuiltInFunction> = [
 					},
 				],
 				returnType: LOAD_ONLY,
+				doc: `Run commands on positive change of scoreboard and reset the score.`,
 			},
 			{
 				name: "firstJoin",
@@ -126,6 +131,7 @@ export const BuiltInFunctions: Array<BuiltInFunction> = [
 					},
 				],
 				returnType: LOAD_ONCE,
+				doc: `Run commands as player and at player when joining the World for the first time.\nRevoking all advancements will cause this to be called again.`,
 			},
 			{
 				name: "reJoin",
@@ -136,6 +142,7 @@ export const BuiltInFunctions: Array<BuiltInFunction> = [
 					},
 				],
 				returnType: LOAD_ONCE,
+				doc: `Run commands as player and at player when a player leave a world then join back.\nWill not run when player join the world for the first time.`,
 			},
 			{
 				name: "die",
@@ -152,6 +159,7 @@ export const BuiltInFunctions: Array<BuiltInFunction> = [
 					},
 				],
 				returnType: LOAD_ONCE,
+				doc: `Run onDeath as player and at player's last position when the player die\nRun onRespawn as player and at player spawn location when the player respawn`,
 			},
 		],
 	},
@@ -164,6 +172,7 @@ export const BuiltInFunctions: Array<BuiltInFunction> = [
 					{
 						name: "itemId",
 						type: KEYWORD,
+						doc: "'itemId' is the unique name of this item so that it can be referenced in other Item function.",
 					},
 					{
 						name: "itemType",
@@ -190,6 +199,7 @@ export const BuiltInFunctions: Array<BuiltInFunction> = [
 					},
 				],
 				returnType: LOAD_ONLY,
+				doc: `Create a custom item and save it for further use.\nonClick can only be used with "carrot_on_a_stick" or "warped_fungus_on_a_stick" itemType.`,
 			},
 			{
 				name: "createSign",
@@ -197,10 +207,12 @@ export const BuiltInFunctions: Array<BuiltInFunction> = [
 					{
 						name: "itemId",
 						type: KEYWORD,
+						doc: "'itemId' is the unique name of this item so that it can be referenced in other Item function.",
 					},
 					{
 						name: "variant",
 						type: ITEM,
+						doc: "variant is wood variant of the sign such as oak, spruce, etc.",
 					},
 					{
 						name: "displayName",
@@ -223,6 +235,7 @@ export const BuiltInFunctions: Array<BuiltInFunction> = [
 					},
 				],
 				returnType: LOAD_ONLY,
+				doc: "Create a custom sign and save it for further use.",
 			},
 			{
 				name: "createSpawnEgg",
@@ -256,6 +269,7 @@ export const BuiltInFunctions: Array<BuiltInFunction> = [
 					},
 				],
 				returnType: LOAD_ONLY,
+				doc: `Create a custom spawn egg and save it for further use.\nThe spawn egg will not summon any mob unless specified in onPlace`,
 			},
 			{
 				name: "give",
@@ -276,6 +290,7 @@ export const BuiltInFunctions: Array<BuiltInFunction> = [
 					},
 				],
 				returnType: JMC_FUNCTION,
+				doc: "Give item created from Item.create to a player",
 			},
 			{
 				name: "summon",
@@ -300,6 +315,7 @@ export const BuiltInFunctions: Array<BuiltInFunction> = [
 					},
 				],
 				returnType: JMC_FUNCTION,
+				doc: `Spawn item entity from Item.create.`,
 			},
 			{
 				name: "replaceBlock",
@@ -323,6 +339,7 @@ export const BuiltInFunctions: Array<BuiltInFunction> = [
 					},
 				],
 				returnType: JMC_FUNCTION,
+				doc: `Use /item replace block with item from Item.create.`,
 			},
 			{
 				name: "replaceEntity",
@@ -346,6 +363,7 @@ export const BuiltInFunctions: Array<BuiltInFunction> = [
 					},
 				],
 				returnType: JMC_FUNCTION,
+				doc: `Use /item replace entity with item from Item.create.`,
 			},
 		],
 	},
@@ -365,6 +383,7 @@ export const BuiltInFunctions: Array<BuiltInFunction> = [
 					},
 				],
 				returnType: JMC_FUNCTION,
+				doc: "Use formatted text on tellraw",
 			},
 			{
 				name: "title",
@@ -379,6 +398,7 @@ export const BuiltInFunctions: Array<BuiltInFunction> = [
 					},
 				],
 				returnType: JMC_FUNCTION,
+				doc: "Use formatted text on title",
 			},
 			{
 				name: "subtitle",
@@ -393,6 +413,7 @@ export const BuiltInFunctions: Array<BuiltInFunction> = [
 					},
 				],
 				returnType: JMC_FUNCTION,
+				doc: "Use formatted text on subtitle",
 			},
 			{
 				name: "actionbar",
@@ -407,6 +428,7 @@ export const BuiltInFunctions: Array<BuiltInFunction> = [
 					},
 				],
 				returnType: JMC_FUNCTION,
+				doc: `Use formatted text on actionbar`,
 			},
 		],
 	},
@@ -422,6 +444,7 @@ export const BuiltInFunctions: Array<BuiltInFunction> = [
 					},
 				],
 				returnType: VARIABLE_OPERATION,
+				doc: `Use Newton-Raphson method to perfectly calculate square root of any integer. And, like normal minecraft operators, this function will floor(round down) the result.`,
 			},
 			{
 				name: "random",
@@ -438,6 +461,7 @@ export const BuiltInFunctions: Array<BuiltInFunction> = [
 					},
 				],
 				returnType: VARIABLE_OPERATION,
+				doc: "Simplify integer randomization process using Linear congruential generator.",
 			},
 		],
 	},
@@ -466,6 +490,7 @@ export const BuiltInFunctions: Array<BuiltInFunction> = [
 					},
 				],
 				returnType: LOAD_ONLY,
+				doc: `Create a scoreboard timer with 3 run mode\n- runOnce: run the commands once after the timer is over.\n- runTick: run the commands every tick if timer is over.\n- none: do not run any command.\nSelector is the entities that the game will search for when ticking down the timer. Avoid using expensive selector like @e.`,
 			},
 			{
 				name: "set",
@@ -484,6 +509,7 @@ export const BuiltInFunctions: Array<BuiltInFunction> = [
 					},
 				],
 				returnType: JMC_FUNCTION,
+				doc: "Set entity's score to start the timer.",
 			},
 			{
 				name: "isOver",
@@ -499,6 +525,7 @@ export const BuiltInFunctions: Array<BuiltInFunction> = [
 					},
 				],
 				returnType: BOOLEAN,
+				doc: "Whether the timer of the selector is over or not.",
 			},
 		],
 	},
@@ -524,6 +551,7 @@ export const BuiltInFunctions: Array<BuiltInFunction> = [
 					},
 				],
 				returnType: LOAD_ONLY,
+				doc: "Create a custom recipe for Crafting Table allowing NBT in result item and running function on craft",
 			},
 		],
 	},
@@ -556,6 +584,7 @@ export const BuiltInFunctions: Array<BuiltInFunction> = [
 					},
 				],
 				returnType: EXECUTE_EXCLUDED,
+				doc: `Some features in minecraft datapack require hard coding, this function will be a tool to help you. JMC will replace text that's the same as indexString with the number.\nstart is inclusive, stop is exclusive.\n\nThis do not work on Switch Case statement. Use Hardcode.switch() instead.\n\nTo do more complex task, you can use Hardcode.calc(<expression>) ANYWHERE in the function. JMC will replace the entire section with the result after replacing indexString\n\n+(add), -(subtract), *(multiply), /(divide by), **(power) are allowed in the expression. An example of expression with indexString="index" is				`,
 			},
 			{
 				name: "repeatList",
@@ -574,6 +603,7 @@ export const BuiltInFunctions: Array<BuiltInFunction> = [
 					},
 				],
 				returnType: EXECUTE_EXCLUDED,
+				doc: "Does the same thing as Hardcode.repeat but use list to loop through instead of numbers",
 			},
 			{
 				name: "switch",
@@ -596,6 +626,7 @@ export const BuiltInFunctions: Array<BuiltInFunction> = [
 					},
 				],
 				returnType: EXECUTE_EXCLUDED,
+				doc: `Similar to Hardcode.repeat() but for switch statement.`,
 			},
 		],
 	},
@@ -615,6 +646,7 @@ export const BuiltInFunctions: Array<BuiltInFunction> = [
 					},
 				],
 				returnType: LOAD_ONLY,
+				doc: `Setup a trigger system for custom command or allowing players with no permission to click a text button. User can use the function with /trigger <objective> set <id>\n\nDo not define/create objective with the same name as objective`,
 			},
 			{
 				name: "add",
@@ -629,6 +661,7 @@ export const BuiltInFunctions: Array<BuiltInFunction> = [
 					},
 				],
 				returnType: LOAD_ONLY,
+				doc: `Add a trigger command. (Shortcut for Trigger.setup())\n\nDo not define/create objective with the same name as objective`,
 			},
 		],
 	},
@@ -672,6 +705,7 @@ export const BuiltInFunctions: Array<BuiltInFunction> = [
 					},
 				],
 				returnType: LOAD_ONLY,
+				doc: "Automation for making massive location check.",
 			},
 		],
 	},
@@ -691,6 +725,7 @@ export const BuiltInFunctions: Array<BuiltInFunction> = [
 					},
 				],
 				returnType: LOAD_ONLY,
+				doc: `Setup basic carrot_on_a_stick right click detection with selected item detection. You can map any id to a series of commands. When any player right click with the item, the command matching the id will be run. While ID 0 being default which will be run if player right click with *any* Carrot on a stick that doesn't have an ID. You are allowed to setup multiple times with different id_name but that isn't recommended due to optimization issue. An example of idName is my_id for nbt {my_id:2}`,
 			},
 		],
 	},
@@ -729,6 +764,7 @@ export const BuiltInFunctions: Array<BuiltInFunction> = [
 					},
 				],
 				returnType: JMC_FUNCTION,
+				doc: "Make circle shaped particles. The higher the spread number, the less distance between particle becomes.",
 			},
 			{
 				name: "spiral",
@@ -766,6 +802,7 @@ export const BuiltInFunctions: Array<BuiltInFunction> = [
 					},
 				],
 				returnType: JMC_FUNCTION,
+				doc: "Make spiral shaped particles. The higher the spread number, the less distance between particle becomes.",
 			},
 			{
 				name: "cylinder",
@@ -807,6 +844,7 @@ export const BuiltInFunctions: Array<BuiltInFunction> = [
 					},
 				],
 				returnType: JMC_FUNCTION,
+				doc: "Make cylinder shaped particles. The higher the spread number, the less distance between particle becomes.",
 			},
 			{
 				name: "line",
@@ -840,6 +878,7 @@ export const BuiltInFunctions: Array<BuiltInFunction> = [
 					},
 				],
 				returnType: JMC_FUNCTION,
+				doc: "Make line shaped particles. The higher the spread number, the less distance between particle becomes.",
 			},
 		],
 	},
@@ -867,41 +906,49 @@ export const BuiltInFunctions: Array<BuiltInFunction> = [
 						name: "interval",
 						type: FLOAT,
 						default: "0.1",
+						doc: "'interval' is distance between checks.",
 					},
 					{
 						name: "maxIter",
 						type: INTEGER,
 						default: "1000",
+						doc: "'maxIter' is maximum number of iteration.",
 					},
 					{
 						name: "boxSize",
 						type: FLOAT,
 						default: "0.1",
+						doc: "'boxSize' is the size of entity detection cube.",
 					},
 					{
 						name: "target",
 						type: TARGET_SELECTOR,
 						default: "@e",
+						doc: "'target' is acceptable target for collution.",
 					},
 					{
 						name: "startAtEye",
 						type: BOOLEAN,
 						default: "true",
+						doc: "'startAtEye' is wheter to start at the entity's eyes. If set to false it'll use the current position of the command.",
 					},
 					{
 						name: "stopAtEntity",
 						type: BOOLEAN,
 						default: "true",
+						doc: "'stopAtEntity' is wheter to stop the raycast when colliding with the entity.",
 					},
 					{
 						name: "stopAtBlock",
 						type: BOOLEAN,
 						default: "true",
+						doc: "'stopAtBlock' is wheter to stop the raycast when colliding with a block.",
 					},
 					{
 						name: "runAtEnd",
 						type: BOOLEAN,
 						default: "true",
+						doc: "'runAtEnd' is wheter to run onHit function even if doesn't collide with entity. (It'll run as the caster in this case.)",
 					},
 					{
 						name: "casterTag",
@@ -917,24 +964,29 @@ export const BuiltInFunctions: Array<BuiltInFunction> = [
 						name: "modifyExecuteBeforeStep",
 						type: STRING,
 						default: '""',
+						doc: `'modifyExecuteBeforeStep' is part of execute command that come before positioning forward. Example: "rotated ~ ~5"`,
 					},
 					{
 						name: "modifyExecuteAfterStep",
 						type: STRING,
 						default: '""',
+						doc: "'modifyExecuteAfterStep' is part of execute command that come after positioning forward.",
 					},
 					{
 						name: "overrideString",
 						type: STRING,
 						default: '""',
+						doc: "'overrideString' is string that'll be replaced with the recursion function's name (In vanilla syntax). Must be used with overideRecursion. Do not use unless it's necessary",
 					},
 					{
 						name: "overrideRecursion",
 						type: ARROW_FUNCTION,
 						default: "()=>{}",
+						doc: "'overrideRecursion' is function that'll overide the recursion line entirely. Must be used with overideString. Do not use unless it's necessary",
 					},
 				],
 				returnType: EXECUTE_EXCLUDED,
+				doc: "Cast simple raycast",
 			},
 		],
 	},
@@ -950,6 +1002,7 @@ export const BuiltInFunctions: Array<BuiltInFunction> = [
 					},
 				],
 				returnType: JMC_FUNCTION,
+				doc: "Ignore any parsing and output the command directly. Mainly used for bypass compiler failures.",
 			},
 		],
 	},
@@ -977,6 +1030,7 @@ export const BuiltInFunctions: Array<BuiltInFunction> = [
 					},
 				],
 				returnType: BOOLEAN,
+				doc: "Whether the value inside NBT path is equal to the string.",
 			},
 		],
 	},
@@ -1012,6 +1066,7 @@ export const BuiltInFunctions: Array<BuiltInFunction> = [
 					},
 				],
 				returnType: BOOLEAN,
+				doc: "Whether the value inside NBT path is equal to the value inside another NBT path.",
 			},
 		],
 	},
@@ -1035,6 +1090,12 @@ export const BuiltInFunctions: Array<BuiltInFunction> = [
 					},
 				],
 				returnType: LOAD_ONLY,
+				doc: `Create template for GUI that can be configured with GUI.register and GUI.registers then create the GUI with GUI.create and used with GUI.run. GUI module doesn't work on Player's inventory.\n\nAvailable modes are entity, block and enderchest\n\nExample of template is\n
+[
+	"---------",
+	"---A-B---",
+	"---------"
+]`,
 			},
 			{
 				name: "register",
@@ -1078,6 +1139,7 @@ export const BuiltInFunctions: Array<BuiltInFunction> = [
 					},
 				],
 				returnType: LOAD_ONLY,
+				doc: "Map an item to an id(chatacter) in template",
 			},
 			{
 				name: "registers",
@@ -1110,6 +1172,7 @@ export const BuiltInFunctions: Array<BuiltInFunction> = [
 					},
 				],
 				returnType: LOAD_ONLY,
+				doc: "Map multiple items created from Item.create to an id(chatacter) in template depending on variable",
 			},
 			{
 				name: "create",
@@ -1120,6 +1183,7 @@ export const BuiltInFunctions: Array<BuiltInFunction> = [
 					},
 				],
 				returnType: LOAD_ONLY,
+				doc: "Create a GUI that's been configured from GUI.template, GUI.register and GUI.registers",
 			},
 			{
 				name: "run",
@@ -1130,57 +1194,7 @@ export const BuiltInFunctions: Array<BuiltInFunction> = [
 					},
 				],
 				returnType: JMC_FUNCTION,
-			},
-		],
-	},
-	{
-		class: "Advancement",
-		methods: [
-			{
-				name: "grant",
-				args: [
-					{
-						name: "target",
-						type: TARGET_SELECTOR,
-					},
-					{
-						name: "type",
-						type: KEYWORD,
-					},
-					{
-						name: "advancement",
-						type: KEYWORD,
-					},
-					{
-						name: "namespace",
-						type: KEYWORD,
-						default: '""',
-					},
-				],
-				returnType: JMC_FUNCTION,
-			},
-			{
-				name: "revoke",
-				args: [
-					{
-						name: "target",
-						type: TARGET_SELECTOR,
-					},
-					{
-						name: "type",
-						type: KEYWORD,
-					},
-					{
-						name: "advancement",
-						type: KEYWORD,
-					},
-					{
-						name: "namespace",
-						type: KEYWORD,
-						default: '""',
-					},
-				],
-				returnType: JMC_FUNCTION,
+				doc: "Run a GUI, on entity/block. This function must be run every tick, as the entity at the entity/at the block containing that GUI.",
 			},
 		],
 	},
@@ -1206,6 +1220,7 @@ export const BuiltInFunctions: Array<BuiltInFunction> = [
 					},
 				],
 				returnType: JMC_FUNCTION,
+				doc: "Add scoreboard objective, an alternative to vanilla syntax",
 			},
 		],
 	},
@@ -1226,6 +1241,7 @@ export const BuiltInFunctions: Array<BuiltInFunction> = [
 					},
 				],
 				returnType: JMC_FUNCTION,
+				doc: "Add bossbar, an alternative to vanilla syntax",
 			},
 		],
 	},
@@ -1251,6 +1267,9 @@ export const BuiltInFunctions: Array<BuiltInFunction> = [
 					},
 				],
 				returnType: JMC_FUNCTION,
+				doc: `Add team, an alternative to vanilla syntax
+
+				Example of properties is {nametagVisibility: never}`,
 			},
 		],
 	},

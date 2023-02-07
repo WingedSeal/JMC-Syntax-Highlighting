@@ -131,8 +131,10 @@ export async function activate(context: ExtensionContext) {
 									let arg = `${v.name}: ${v.type}${def}`;
 									return {
 										label: arg,
+										documentation: v.doc
 									};
 								}),
+								documentation: method.doc
 							},
 						],
 						activeSignature: 0,
@@ -298,7 +300,7 @@ export async function activate(context: ExtensionContext) {
 				let m: RegExpExecArray | null;
 				let variables = getVariablesClient(text);
 				for (let variable of variables) {
-					let pattern = RegExp(`\\\$${variable}\\b`, "g");
+					let pattern = RegExp(`(\\\$${variable})(\.get)?\\b`, "g");
 					while ((m = pattern.exec(text)) !== null) {
 						var pos = getLineByIndex(m.index, getLinePos(text));
 						var lineText = document.lineAt(pos.line).text.trim();
@@ -309,14 +311,28 @@ export async function activate(context: ExtensionContext) {
 									new vscode.Position(pos.line, pos.pos),
 									new vscode.Position(
 										pos.line,
-										pos.pos + m[0].length
+										pos.pos + m[1].length
 									)
 								),
 								"variable",
 								["declaration"]
 							);
+
+							if (m[2] !== undefined) {
+								builder.push(
+									new vscode.Range(
+										new vscode.Position(pos.line, pos.pos + m[1].length),
+										new vscode.Position(
+											pos.line,
+											pos.pos + m[1].length + m[0].length
+										)
+									),
+									"function",
+									["declaration"]
+								);								
+							}
 						}
-					}
+					}				
 				}
 
 				let functions = getFunctionsClient(text);

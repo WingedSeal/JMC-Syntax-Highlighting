@@ -95,7 +95,7 @@
             "patterns": [
                 {
                     "name": "constant.numeric.jmc",
-                    "match": "(\\d+(?:[\\.]\\d+)?)"
+                    "match": "\\b(\\d+(?:[\\.]\\d+)?)\\b"
                 }
             ]
         }

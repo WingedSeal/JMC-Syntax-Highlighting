@@ -2,11 +2,13 @@
 
 ## [0.2.1]
 ### Planned
-- Builtin Functions will show parameter and functions documents
+- Builtin Functions will show parameters and functions documents
+### Fixed
+- Comma wont trigger showing parameters and functions documents
 
 ## [0.2.0]
 ### Added
-- Builtin Functions will show parameter
+- Builtin Functions will show parameters
 
 ## [0.1.4]
 ### Added
@@ -22,7 +24,6 @@
 ### Added
 - Support for .hjmc
 - Diagnostics
-
 
 ## [0.1.2]
 ### Added
