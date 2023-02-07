@@ -15,7 +15,7 @@ import {
 	SignatureHelpParams,
 } from "vscode-languageserver/node";
 import { TextDocument } from "vscode-languageserver-textdocument";
-import { BuiltInFunctions } from "./data/builtinFunctions";
+import { BuiltInFunctions, methodInfoToDoc } from "./data/builtinFunctions";
 import {
 	KEYWORDS as Keywords,
 	VANILLA_COMMANDS,
@@ -23,7 +23,11 @@ import {
 } from "./data/common";
 import { getDiagnostics } from "./diagnostics";
 import * as url from "url";
-import { getImportDocumentText, getVariables } from "./helpers/documentAnalyze";
+import {
+	getCurrentCommand,
+	getImportDocumentText,
+	getVariables,
+} from "./helpers/documentAnalyze";
 
 let connection = createConnection(ProposedFeatures.all);
 let text: string;
@@ -246,16 +250,17 @@ connection.onSignatureHelp(
 			let index = document.offsetAt(v.position);
 			let text = document.getText();
 
-			let commaCount = 0;
-			while ((index -= 1) !== -1) {
-				let char = text[index];
-				if (char === "(") {
-					break;
-				}
-				if (char === ",") {
-					commaCount += 1;
-				}
-			}
+			let command = getCurrentCommand(document.getText(), index);
+			let commaCount = command.match(/,/g || [])?.length;
+			// while ((index -= 1) !== -1) {
+			// 	let char = text[index];
+			// 	if (char === "(") {
+			// 		break;
+			// 	}
+			// 	if (char === ",") {
+			// 		commaCount += 1;
+			// 	}
+			// }
 
 			if (v.context?.triggerCharacter === ",") {
 				if (
@@ -263,6 +268,44 @@ connection.onSignatureHelp(
 					v.context.activeSignatureHelp.activeParameter !== undefined
 				) {
 					v.context.activeSignatureHelp.activeParameter = commaCount;
+				} else {
+					let pattern = /(\w+)\.(\w+)\(([\w\s,()$]*)\)/g;
+					let m: RegExpExecArray | null;
+					console.log(command);
+					while ((m = pattern.exec(command)) !== null) {
+						let func = m[1];
+						let method = m[2];
+
+						let methods = BuiltInFunctions.flatMap((v) => {
+							var target = v.methods.filter((value) => {
+								return (
+									func === v.class && method === value.name
+								);
+							});
+							return target;
+						});
+						var target = methods[0];
+
+						v.context.activeSignatureHelp = {
+							signatures: [
+								{
+									label: methodInfoToDoc(target),
+									parameters: target.args.flatMap((v) => {
+										let def =
+											v.default !== undefined
+												? ` = ${v.default}`
+												: "";
+										let arg = `${v.name}: ${v.type}${def}`;
+										return {
+											label: arg,
+										};
+									}),
+								},
+							],
+							activeSignature: 0,
+							activeParameter: commaCount,
+						};
+					}
 				}
 			}
 		}

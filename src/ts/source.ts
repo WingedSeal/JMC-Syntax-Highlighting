@@ -108,7 +108,6 @@ export async function activate(context: ExtensionContext) {
 				const linePrefix = document
 					.lineAt(position)
 					.text.substring(0, position.character);
-				console.log(ctx.activeSignatureHelp);
 				if (ctx.triggerCharacter === "(") {
 					let methods = BuiltInFunctions.flatMap((v) => {
 						var target = v.methods.filter((value) => {

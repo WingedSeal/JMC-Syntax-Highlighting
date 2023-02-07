@@ -121,3 +121,36 @@ export function getImportDocumentText(
 	}
 	return datas;
 }
+
+export function getCurrentCommand(text: string, offset: number): string {
+	let str = "";
+	let stopChar: string[] = ["{", ";"];
+	let index = offset;
+
+	while ((index -= 1) !== -1) {
+		let current = text[index];
+		if (current === "\n") {
+			continue;
+		} else if (stopChar.includes(current)) {
+			break;
+		} else {
+			str += current;
+		}
+	}
+	
+	str = str.split("").reverse().join("").trim()
+
+	index = offset - 1;
+
+	while ((index += 1) !== text.length) {
+		let current = text[index];
+		if (current === "\n") {
+			continue;
+		} else if (stopChar.includes(current)) {
+			break;
+		} else {
+			str += current;
+		}
+	}	
+	return str;
+}
