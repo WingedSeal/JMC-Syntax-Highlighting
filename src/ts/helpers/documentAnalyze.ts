@@ -66,7 +66,9 @@ export function getFunctions(text: string, root: string): string[] {
 	const definedFunctions: string[] = [];
 
 	const functionPattern = /function\s*([\w\.]+)\s*\(/g;
+	const classPattern = /class\s*([\w.]+)/g;
 	let m: RegExpExecArray | null;
+	let mn: RegExpExecArray | null;
 
 	const files = getImportDocumentText(text, root);
 	files.push({
@@ -79,6 +81,38 @@ export function getFunctions(text: string, root: string): string[] {
 		while ((m = functionPattern.exec(text)) !== null) {
 			definedFunctions.push(m[1]);
 		}
+
+		let t = "";
+		let bracketCount = 0;
+		let started = false;
+		while ((m = classPattern.exec(text)) !== null) {
+			let index = m.index + m[0].length;
+			while ((index += 1) !== text.length - 1) {
+				const current = text[index];
+				if (current === "{") {
+					started = true;
+					bracketCount++;
+				}
+				else if (started) {
+					if (current === "{") { 
+						bracketCount++;
+					}
+					if (current === "}") { 
+						bracketCount--;
+					}
+					if (bracketCount === 0) break;
+					t += current;
+				}
+			}
+
+			while ((mn = functionPattern.exec(t)) !== null) {
+				if (!mn[1].startsWith(m[1] + ".") && !definedFunctions.includes(`${m[1]}.${mn[1]}`)) {
+					definedFunctions.push(`${m[1]}.${mn[1]}`);
+				}
+			}
+
+			t = "";
+		}
 	}
 
 	return definedFunctions;
@@ -87,7 +121,7 @@ export function getFunctions(text: string, root: string): string[] {
 export function getClass(text: string, root: string): string[] {
 	const definedClasses: string[] = [];
 
-	const functionPattern = /class\s*([\w\.]+)/g;
+	const classPattern = /class\s*([\w\.]+)/g;
 	let m: RegExpExecArray | null;
 
 	const files = getImportDocumentText(text, root);
@@ -98,7 +132,7 @@ export function getClass(text: string, root: string): string[] {
 
 	for (const i of files) {
 		const text = i.text;
-		while ((m = functionPattern.exec(text)) !== null) {
+		while ((m = classPattern.exec(text)) !== null) {
 			definedClasses.push(m[1]);
 		}
 	}
@@ -137,7 +171,7 @@ export function getCurrentCommand(text: string, offset: number): string {
 			str += current;
 		}
 	}
-	
+
 	str = str.split("").reverse().join("").trim();
 
 	index = offset - 1;
@@ -151,6 +185,6 @@ export function getCurrentCommand(text: string, offset: number): string {
 		} else {
 			str += current;
 		}
-	}	
+	}
 	return str;
 }

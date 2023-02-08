@@ -13,7 +13,7 @@ import {
 import * as path from "path";
 import { BuiltInFunctions, methodInfoToDoc } from "./data/builtinFunctions";
 import * as vscode from "vscode";
-import { HEADERS, JSON_FILE_TYPES } from "./data/common";
+import { HEADERS, JSON_FILE_TYPES, SEMI_CHECKCHAR } from "./data/common";
 import { getAllFiles } from "get-all-files";
 import {
 	getClassClient as getClassesClient,
@@ -257,6 +257,39 @@ export async function activate(context: ExtensionContext) {
 		" "
 	);
 
+	// const classMethodCompletion = languages.registerCompletionItemProvider(
+	// 	selector,
+	// 	{
+	// 		async provideCompletionItems(document, position, token, context) {
+	// 			const text = document.getText();
+	// 			let offset = document.offsetAt(position);
+	// 			let t = "";
+	// 			while ((offset -= 1) !== -1) {
+	// 				const current = text[offset].trim();
+	// 				if (current === "") continue;
+	// 				else if (SEMI_CHECKCHAR.includes(current)) break;
+	// 				else t += current;
+	// 			}
+	// 			const dotNum = t.split(".").length;
+	// 			const func = getFunctionsClient(text);
+
+	// 			const target = func.filter((v) => {
+	// 				return v.startsWith(t) && v.split(".").length > dotNum;
+	// 			});
+	// 			const items: vscode.CompletionItem[] = [];
+	// 			for (const i of target) {
+	// 				items.push({
+	// 					label: i.split(".")[dotNum],
+	// 					kind: vscode.CompletionItemKind.Method,
+	// 				});
+	// 			}
+	// 			console.log(items);
+	// 			return items;
+	// 		},
+	// 	},
+	// 	"."
+	// );
+
 	// const vanillaCommandsCompletion = languages.registerCompletionItemProvider(
 	// 	selector,
 	// 	{
@@ -366,8 +399,10 @@ export async function activate(context: ExtensionContext) {
 					while ((m = pattern.exec(text)) !== null) {
 						const pos = getLineByIndex(m.index, getLinePos(text));
 						const lineText = document.lineAt(pos.line).text.trim();
-						console.log(text[m.index + m[0].length + 1]);
-						if (!lineText.startsWith("//") && text[m.index + m[1].length] !== '"') {
+						if (
+							!lineText.startsWith("//") &&
+							text[m.index + m[1].length] !== '"'
+						) {
 							builder.push(
 								new vscode.Range(
 									new vscode.Position(pos.line, pos.pos),

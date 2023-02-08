@@ -24,7 +24,9 @@ import {
 import { getDiagnostics } from "./diagnostics";
 import * as url from "url";
 import {
+	getClass,
 	getCurrentCommand,
+	getFunctions,
 	getVariables,
 } from "./helpers/documentAnalyze";
 
@@ -33,6 +35,7 @@ let text: string;
 
 export let userVariables: CompletionItem[] = [];
 export let userFunctions: CompletionItem[] = [];
+export let userClasses: CompletionItem[] = [];
 
 const documents: TextDocuments<TextDocument> = new TextDocuments(TextDocument);
 
@@ -139,6 +142,7 @@ documents.onDidChangeContent((change) => {
 interface ValidateData {
 	variables: CompletionItem[];
 	functions: CompletionItem[];
+	classes: CompletionItem[];
 }
 
 async function validateText(text: string, path: string): Promise<ValidateData> {
@@ -156,17 +160,25 @@ async function validateText(text: string, path: string): Promise<ValidateData> {
 	}
 
 	const functions: CompletionItem[] = [];
-	const functionPattern = /function\s*([\w\.]+)/g;
-	while ((m = functionPattern.exec(text))) {
-		const filter = functions.filter((v) => v.label == m![1]);
+	for (const func of getFunctions(text, getCurrentFolder(path))) {
+		const filter = functions.filter((v) => v.label == func);
 		if (!(filter.length > 0)) {
-			functions.push({ label: m[1], kind: CompletionItemKind.Function });
+			functions.push({ label: func, kind: CompletionItemKind.Function });
 		}
+	}
+
+	const classes: CompletionItem[] = [];
+	for (const c of getClass(text, getCurrentFolder(path))) {
+		const filter = classes.filter((v) => v.label == c);
+		if (!(filter.length > 0)) {
+			classes.push({ label: c, kind: CompletionItemKind.Class });
+		}		
 	}
 
 	return {
 		variables: variables,
 		functions: functions,
+		classes: classes
 	};
 }
 
@@ -178,6 +190,7 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 	const data = await validateText(text, url.fileURLToPath(textDocument.uri));
 	userVariables = data.variables;
 	userFunctions = data.functions;
+	userClasses = data.classes;
 
 	const diagnostics: Diagnostic[] = getDiagnostics(
 		text,
@@ -212,6 +225,11 @@ connection.onCompletion(
 			num++;
 		}
 		for (const i of userFunctions) {
+			i.data = num;
+			items.push(i);
+			num++;
+		}
+		for (const i of userClasses) {
 			i.data = num;
 			items.push(i);
 			num++;
@@ -270,7 +288,6 @@ connection.onSignatureHelp(
 				} else {
 					const pattern = /(\w+)\.(\w+)\(([\w\s,()$]*)\)/g;
 					let m: RegExpExecArray | null;
-					console.log(command);
 					while ((m = pattern.exec(command)) !== null) {
 						const func = m[1];
 						const method = m[2];
