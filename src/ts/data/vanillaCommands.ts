@@ -1,5 +1,5 @@
 const SELECTORS: string[] = ["@p", "@a", "@r", "@s", "@e"];
-export const NAMESPACE: string = "NAMESPACE";
+export const NAMESPACE = "NAMESPACE";
 
 interface CommandArgument {
 	command: string;

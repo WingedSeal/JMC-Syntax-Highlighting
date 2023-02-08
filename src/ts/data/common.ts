@@ -10,6 +10,20 @@ export const KEYWORDS: Array<string> = [
 	"case",
 ];
 
+export const SEMI_CHECKCHAR: string[] = [
+	";",
+	"{",
+	"=",
+	"}",
+	".",
+	"(",
+	")",
+	"/",
+	"[",
+	"]",
+	",",
+];
+
 export const VANILLA_COMMANDS: Array<string> = [
 	"advancement",
 	"attribute",
@@ -97,7 +111,7 @@ export const JSON_FILE_TYPES = [
 ];
 
 export function getCurrentFolder(path: string): string {
-	let edited = path.split("\\");
+	const edited = path.split("\\");
 	edited.pop();
 	return edited.join("\\");
 }

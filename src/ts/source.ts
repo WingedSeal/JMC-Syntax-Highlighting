@@ -131,10 +131,10 @@ export async function activate(context: ExtensionContext) {
 									const arg = `${v.name}: ${v.type}${def}`;
 									return {
 										label: arg,
-										documentation: v.doc
+										documentation: v.doc,
 									};
 								}),
-								documentation: method.doc
+								documentation: method.doc,
 							},
 						],
 						activeSignature: 0,
@@ -321,7 +321,10 @@ export async function activate(context: ExtensionContext) {
 							if (m[2] !== undefined) {
 								builder.push(
 									new vscode.Range(
-										new vscode.Position(pos.line, pos.pos + m[1].length),
+										new vscode.Position(
+											pos.line,
+											pos.pos + m[1].length
+										),
 										new vscode.Position(
 											pos.line,
 											pos.pos + m[1].length + m[0].length
@@ -329,10 +332,10 @@ export async function activate(context: ExtensionContext) {
 									),
 									"function",
 									["declaration"]
-								);								
+								);
 							}
 						}
-					}				
+					}
 				}
 
 				const functions = getFunctionsClient(text);
@@ -341,7 +344,6 @@ export async function activate(context: ExtensionContext) {
 					while ((m = pattern.exec(text)) !== null) {
 						const pos = getLineByIndex(m.index, getLinePos(text));
 						const lineText = document.lineAt(pos.line).text.trim();
-
 						if (!lineText.startsWith("//")) {
 							builder.push(
 								new vscode.Range(
@@ -364,8 +366,8 @@ export async function activate(context: ExtensionContext) {
 					while ((m = pattern.exec(text)) !== null) {
 						const pos = getLineByIndex(m.index, getLinePos(text));
 						const lineText = document.lineAt(pos.line).text.trim();
-
-						if (!lineText.startsWith("//")) {
+						console.log(text[m.index + m[0].length + 1]);
+						if (!lineText.startsWith("//") && text[m.index + m[1].length] !== '"') {
 							builder.push(
 								new vscode.Range(
 									new vscode.Position(pos.line, pos.pos),

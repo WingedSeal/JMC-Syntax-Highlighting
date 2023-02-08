@@ -44,8 +44,8 @@ interface BuiltInFunction {
 }
 
 export function methodInfoToDoc(info: MethodInfo): string {
-	let argString = info.args.flatMap((v): string => {
-		let def = v.default !== undefined ? ` = ${v.default}` : "";
+	const argString = info.args.flatMap((v): string => {
+		const def = v.default !== undefined ? ` = ${v.default}` : "";
 		return `${v.name}: ${v.type}${def}`;
 	});
 	return `${info.name}(${argString}): ${info.returnType} `;

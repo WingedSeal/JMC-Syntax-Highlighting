@@ -1,5 +1,9 @@
 # Change Log
 
+## [0.2.2]
+### Fixed
+- Using old js files
+
 ## [0.2.1]
 ### Added
 - Builtin Functions will show parameters and functions documents

@@ -65,7 +65,7 @@ export function getUnusedVariables(
 export function getFunctions(text: string, root: string): string[] {
 	const definedFunctions: string[] = [];
 
-	const functionPattern = /function\s*([\w\.]+)\(/g;
+	const functionPattern = /function\s*([\w\.]+)\s*\(/g;
 	let m: RegExpExecArray | null;
 
 	const files = getImportDocumentText(text, root);
