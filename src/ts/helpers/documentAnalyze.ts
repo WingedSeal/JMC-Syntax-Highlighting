@@ -6,19 +6,19 @@ export interface ImportData {
 }
 
 export function getVariables(text: string, root: string): string[] {
-	let definedVariables: string[] = [];
+	const definedVariables: string[] = [];
 
-	let variablePattern = /\$(\w+)\s*\??=(?!=)/g;
+	const variablePattern = /\$(\w+)\s*\??=(?!=)/g;
 	let m: RegExpExecArray | null;
 
-	let files = getImportDocumentText(text, root);
+	const files = getImportDocumentText(text, root);
 	files.push({
 		filename: "main",
 		text: text,
 	});
 
-	for (let i of files) {
-		let text = i.text;
+	for (const i of files) {
+		const text = i.text;
 		while ((m = variablePattern.exec(text)) !== null) {
 			definedVariables.push(m[1]);
 		}
@@ -31,19 +31,19 @@ export function getUnusedVariables(
 	text: string,
 	root: string | undefined
 ): string[] {
-	let variables: string[] = [];
+	const variables: string[] = [];
 
-	let variablePattern = /\$([\w\.]+)/g;
+	const variablePattern = /\$([\w\.]+)/g;
 	let m: RegExpExecArray | null;
 
-	let files = getImportDocumentText(text, root);
+	const files = getImportDocumentText(text, root);
 	files.push({
 		filename: "main",
 		text: text,
 	});
 
-	for (let i of files) {
-		let text = i.text;
+	for (const i of files) {
+		const text = i.text;
 		while ((m = variablePattern.exec(text)) !== null) {
 			if (m[1].endsWith(".get")) {
 				variables.push(m[1].slice(0, -4));
@@ -53,7 +53,7 @@ export function getUnusedVariables(
 		}
 	}
 
-	let nonDuplicate = variables.filter((item, index) => {
+	const nonDuplicate = variables.filter((item, index) => {
 		variables.splice(index, 1);
 		const unique = !variables.includes(item) && !item.endsWith(".get");
 		variables.splice(index, 0, item);
@@ -63,19 +63,19 @@ export function getUnusedVariables(
 	return nonDuplicate;
 }
 export function getFunctions(text: string, root: string): string[] {
-	let definedFunctions: string[] = [];
+	const definedFunctions: string[] = [];
 
-	let functionPattern = /function\s*([\w\.]+)\(/g;
+	const functionPattern = /function\s*([\w\.]+)\(/g;
 	let m: RegExpExecArray | null;
 
-	let files = getImportDocumentText(text, root);
+	const files = getImportDocumentText(text, root);
 	files.push({
 		filename: "main",
 		text: text,
 	});
 
-	for (let i of files) {
-		let text = i.text;
+	for (const i of files) {
+		const text = i.text;
 		while ((m = functionPattern.exec(text)) !== null) {
 			definedFunctions.push(m[1]);
 		}
@@ -85,19 +85,19 @@ export function getFunctions(text: string, root: string): string[] {
 }
 
 export function getClass(text: string, root: string): string[] {
-	let definedClasses: string[] = [];
+	const definedClasses: string[] = [];
 
-	let functionPattern = /class\s*([\w\.]+)/g;
+	const functionPattern = /class\s*([\w\.]+)/g;
 	let m: RegExpExecArray | null;
 
-	let files = getImportDocumentText(text, root);
+	const files = getImportDocumentText(text, root);
 	files.push({
 		filename: "main",
 		text: text,
 	});
 
-	for (let i of files) {
-		let text = i.text;
+	for (const i of files) {
+		const text = i.text;
 		while ((m = functionPattern.exec(text)) !== null) {
 			definedClasses.push(m[1]);
 		}
@@ -110,10 +110,10 @@ export function getImportDocumentText(
 	text: string,
 	root: string | undefined
 ): ImportData[] {
-	let datas: ImportData[] = [];
-	let files = getImport(text);
-	for (let file of files) {
-		let text = getDocumentText(file, root).replace("\r\n", "\n");
+	const datas: ImportData[] = [];
+	const files = getImport(text);
+	for (const file of files) {
+		const text = getDocumentText(file, root).replace("\r\n", "\n");
 		datas.push({
 			filename: file,
 			text: text,
@@ -124,11 +124,11 @@ export function getImportDocumentText(
 
 export function getCurrentCommand(text: string, offset: number): string {
 	let str = "";
-	let stopChar: string[] = ["{", ";"];
+	const stopChar: string[] = ["{", ";"];
 	let index = offset;
 
 	while ((index -= 1) !== -1) {
-		let current = text[index];
+		const current = text[index];
 		if (current === "\n") {
 			continue;
 		} else if (stopChar.includes(current)) {
@@ -138,12 +138,12 @@ export function getCurrentCommand(text: string, offset: number): string {
 		}
 	}
 	
-	str = str.split("").reverse().join("").trim()
+	str = str.split("").reverse().join("").trim();
 
 	index = offset - 1;
 
 	while ((index += 1) !== text.length) {
-		let current = text[index];
+		const current = text[index];
 		if (current === "\n") {
 			continue;
 		} else if (stopChar.includes(current)) {

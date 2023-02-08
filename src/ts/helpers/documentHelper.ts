@@ -9,7 +9,7 @@ export function getLineByIndex(
 	index: number,
 	linepos: TextLinePos[]
 ): { line: number; pos: number } {
-	for (let i of linepos) {
+	for (const i of linepos) {
 		if (index < i.length) {
 			return { line: i.line, pos: index };
 		}
@@ -19,10 +19,10 @@ export function getLineByIndex(
 }
 
 export function getLinePos(text: string): TextLinePos[] {
-	let textLinePos: TextLinePos[] = [];
-	let textLines = text.split("\n");
+	const textLinePos: TextLinePos[] = [];
+	const textLines = text.split("\n");
 	for (let i = 0; i < textLines.length; i++) {
-		let textLine = textLines[i];
+		const textLine = textLines[i];
 		textLinePos.push({
 			line: i,
 			length: textLine.length + 1,
@@ -32,9 +32,9 @@ export function getLinePos(text: string): TextLinePos[] {
 }
 
 export function getImport(text: string): string[] {
-	let importPattern = /@import\s*\"(.+)\"/g;
+	const importPattern = /@import\s*\"(.+)\"/g;
 	let m: RegExpExecArray | null;
-	let files: string[] = [];
+	const files: string[] = [];
 
 	while ((m = importPattern.exec(text)) !== null) {
 		files.push(`${m[1]}.jmc`);

@@ -35,7 +35,7 @@ const headerSelector: DocumentSelector = {
 
 export function getCurrentFile(): string | undefined {
 	if (vscode.window.activeTextEditor !== undefined) {
-		let path =
+		const path =
 			vscode.window.activeTextEditor.document.uri.fsPath.split("\\");
 		path.pop();
 		return path.join("/");
@@ -46,7 +46,7 @@ let client: LanguageClient;
 
 export async function activate(context: ExtensionContext) {
 	//setup client
-	let clientOptions: LanguageClientOptions = {
+	const clientOptions: LanguageClientOptions = {
 		documentSelector: [
 			{ scheme: "file", language: "jmc" },
 			{ scheme: "file", language: "hjmc" },
@@ -57,12 +57,12 @@ export async function activate(context: ExtensionContext) {
 	};
 
 	//setup server
-	let serverModule = context.asAbsolutePath(
+	const serverModule = context.asAbsolutePath(
 		path.join("src", "js", "server.js")
 	);
-	let debugOptions = { execArgv: ["--nolazy", "--inspect=6009"] };
+	const debugOptions = { execArgv: ["--nolazy", "--inspect=6009"] };
 
-	let serverOptions: ServerOptions = {
+	const serverOptions: ServerOptions = {
 		run: { module: serverModule, transport: TransportKind.ipc },
 		debug: {
 			module: serverModule,
@@ -82,11 +82,11 @@ export async function activate(context: ExtensionContext) {
 				const linePrefix = document
 					.lineAt(position)
 					.text.substring(0, position.character);
-				for (let i of BuiltInFunctions) {
+				for (const i of BuiltInFunctions) {
 					if (linePrefix.endsWith(`${i.class}.`)) {
-						var methods: vscode.CompletionItem[] = [];
-						for (let method of i.methods) {
-							let item = new vscode.CompletionItem(
+						const methods: vscode.CompletionItem[] = [];
+						for (const method of i.methods) {
+							const item = new vscode.CompletionItem(
 								method.name,
 								vscode.CompletionItemKind.Method
 							);
@@ -109,26 +109,26 @@ export async function activate(context: ExtensionContext) {
 					.lineAt(position)
 					.text.substring(0, position.character);
 				if (ctx.triggerCharacter === "(") {
-					let methods = BuiltInFunctions.flatMap((v) => {
-						var target = v.methods.filter((value) => {
+					const methods = BuiltInFunctions.flatMap((v) => {
+						const target = v.methods.filter((value) => {
 							return linePrefix.endsWith(
 								`${v.class}.${value.name}(`
 							);
 						});
 						return target;
 					});
-					var method = methods[0];
+					const method = methods[0];
 
 					return {
 						signatures: [
 							{
 								label: methodInfoToDoc(method),
 								parameters: method.args.flatMap((v) => {
-									let def =
+									const def =
 										v.default !== undefined
 											? ` = ${v.default}`
 											: "";
-									let arg = `${v.name}: ${v.type}${def}`;
+									const arg = `${v.name}: ${v.type}${def}`;
 									return {
 										label: arg,
 										documentation: v.doc
@@ -174,8 +174,8 @@ export async function activate(context: ExtensionContext) {
 		headerSelector,
 		{
 			provideCompletionItems(document, position, token, c) {
-				let headers: vscode.CompletionItem[] = [];
-				for (let i of HEADERS) {
+				const headers: vscode.CompletionItem[] = [];
+				for (const i of HEADERS) {
 					headers.push({
 						label: i,
 						kind: vscode.CompletionItemKind.Keyword,
@@ -210,13 +210,13 @@ export async function activate(context: ExtensionContext) {
 					.lineAt(position)
 					.text.substring(0, position.character);
 				if (linePrefix.endsWith("@import ")) {
-					let path = document.uri.fsPath.split("\\");
+					const path = document.uri.fsPath.split("\\");
 					path.pop();
-					let folder = path.join("/");
+					const folder = path.join("/");
 
-					let files: string[] = await getAllFiles(folder).toArray();
-					let items: vscode.CompletionItem[] = [];
-					for (let i of files) {
+					const files: string[] = await getAllFiles(folder).toArray();
+					const items: vscode.CompletionItem[] = [];
+					for (const i of files) {
 						if (i.endsWith(".jmc")) {
 							items.push({
 								label: `"${i
@@ -242,8 +242,8 @@ export async function activate(context: ExtensionContext) {
 					.lineAt(position)
 					.text.substring(0, position.character);
 				if (linePrefix.endsWith("new ")) {
-					let items: vscode.CompletionItem[] = [];
-					for (let i of JSON_FILE_TYPES) {
+					const items: vscode.CompletionItem[] = [];
+					for (const i of JSON_FILE_TYPES) {
 						items.push({
 							label: i,
 							kind: vscode.CompletionItemKind.Value,
@@ -294,16 +294,16 @@ export async function activate(context: ExtensionContext) {
 				const builder = new vscode.SemanticTokensBuilder(
 					semanticLegend
 				);
-				var text = document.getText();
+				const text = document.getText();
 
 				// let scoreboardPattern = /(.+):(@[parse])/g;
 				let m: RegExpExecArray | null;
-				let variables = getVariablesClient(text);
-				for (let variable of variables) {
-					let pattern = RegExp(`(\\\$${variable})(\.get)?\\b`, "g");
+				const variables = getVariablesClient(text);
+				for (const variable of variables) {
+					const pattern = RegExp(`(\\\$${variable})(\.get)?\\b`, "g");
 					while ((m = pattern.exec(text)) !== null) {
-						var pos = getLineByIndex(m.index, getLinePos(text));
-						var lineText = document.lineAt(pos.line).text.trim();
+						const pos = getLineByIndex(m.index, getLinePos(text));
+						const lineText = document.lineAt(pos.line).text.trim();
 
 						if (!lineText.startsWith("//")) {
 							builder.push(
@@ -335,12 +335,12 @@ export async function activate(context: ExtensionContext) {
 					}				
 				}
 
-				let functions = getFunctionsClient(text);
-				for (let func of functions) {
-					let pattern = RegExp(`\\b${func}\\b`, "g");
+				const functions = getFunctionsClient(text);
+				for (const func of functions) {
+					const pattern = RegExp(`\\b${func}\\b`, "g");
 					while ((m = pattern.exec(text)) !== null) {
-						var pos = getLineByIndex(m.index, getLinePos(text));
-						var lineText = document.lineAt(pos.line).text.trim();
+						const pos = getLineByIndex(m.index, getLinePos(text));
+						const lineText = document.lineAt(pos.line).text.trim();
 
 						if (!lineText.startsWith("//")) {
 							builder.push(
@@ -358,12 +358,12 @@ export async function activate(context: ExtensionContext) {
 					}
 				}
 
-				let classes = getClassesClient(text);
-				for (let clas of classes) {
-					let pattern = RegExp(`\\b(${clas})\\b`, "g");
+				const classes = getClassesClient(text);
+				for (const clas of classes) {
+					const pattern = RegExp(`\\b(${clas})\\b`, "g");
 					while ((m = pattern.exec(text)) !== null) {
-						var pos = getLineByIndex(m.index, getLinePos(text));
-						var lineText = document.lineAt(pos.line).text.trim();
+						const pos = getLineByIndex(m.index, getLinePos(text));
+						const lineText = document.lineAt(pos.line).text.trim();
 
 						if (!lineText.startsWith("//")) {
 							builder.push(

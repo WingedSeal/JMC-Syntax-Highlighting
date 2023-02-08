@@ -28,20 +28,20 @@ import {
 	getVariables,
 } from "./helpers/documentAnalyze";
 
-let connection = createConnection(ProposedFeatures.all);
+const connection = createConnection(ProposedFeatures.all);
 let text: string;
 
-export var userVariables: CompletionItem[] = [];
-export var userFunctions: CompletionItem[] = [];
+export let userVariables: CompletionItem[] = [];
+export let userFunctions: CompletionItem[] = [];
 
-let documents: TextDocuments<TextDocument> = new TextDocuments(TextDocument);
+const documents: TextDocuments<TextDocument> = new TextDocuments(TextDocument);
 
-let hasConfigurationCapability: boolean = false;
-let hasWorkspaceFolderCapability: boolean = false;
-let hasDiagnosticRelatedInformationCapability: boolean = false;
+let hasConfigurationCapability = false;
+let hasWorkspaceFolderCapability = false;
+let hasDiagnosticRelatedInformationCapability = false;
 
 connection.onInitialize((params: InitializeParams) => {
-	let capabilities = params.capabilities;
+	const capabilities = params.capabilities;
 
 	hasConfigurationCapability = !!(
 		capabilities.workspace && !!capabilities.workspace.configuration
@@ -99,7 +99,7 @@ interface ServerSettings {
 const defaultSettings: ServerSettings = { maxNumberOfProblems: 1000 };
 let globalSettings: ServerSettings = defaultSettings;
 
-let documentSettings: Map<string, Thenable<ServerSettings>> = new Map();
+const documentSettings: Map<string, Thenable<ServerSettings>> = new Map();
 
 connection.onDidChangeConfiguration((change) => {
 	if (hasConfigurationCapability) {
@@ -144,9 +144,9 @@ interface ValidateData {
 async function validateText(text: string, path: string): Promise<ValidateData> {
 	let m: RegExpExecArray | null;
 
-	let variables: CompletionItem[] = [];
-	for (let variable of getVariables(text, getCurrentFolder(path))) {
-		let filter = variables.filter((v) => v.label == variable);
+	const variables: CompletionItem[] = [];
+	for (const variable of getVariables(text, getCurrentFolder(path))) {
+		const filter = variables.filter((v) => v.label == variable);
 		if (!(filter.length > 0)) {
 			variables.push({
 				label: variable,
@@ -155,10 +155,10 @@ async function validateText(text: string, path: string): Promise<ValidateData> {
 		}
 	}
 
-	let functions: CompletionItem[] = [];
-	let functionPattern = /function\s*([\w\.]+)/g;
+	const functions: CompletionItem[] = [];
+	const functionPattern = /function\s*([\w\.]+)/g;
 	while ((m = functionPattern.exec(text))) {
-		let filter = functions.filter((v) => v.label == m![1]);
+		const filter = functions.filter((v) => v.label == m![1]);
 		if (!(filter.length > 0)) {
 			functions.push({ label: m[1], kind: CompletionItemKind.Function });
 		}
@@ -171,15 +171,15 @@ async function validateText(text: string, path: string): Promise<ValidateData> {
 }
 
 async function validateTextDocument(textDocument: TextDocument): Promise<void> {
-	let settings = await getDocumentSettings(textDocument.uri);
+	const settings = await getDocumentSettings(textDocument.uri);
 
 	text = textDocument.getText();
 
-	let data = await validateText(text, url.fileURLToPath(textDocument.uri));
+	const data = await validateText(text, url.fileURLToPath(textDocument.uri));
 	userVariables = data.variables;
 	userFunctions = data.functions;
 
-	let diagnostics: Diagnostic[] = getDiagnostics(
+	const diagnostics: Diagnostic[] = getDiagnostics(
 		text,
 		url.fileURLToPath(textDocument.uri)
 	);
@@ -192,13 +192,13 @@ connection.onDidChangeWatchedFiles((_change) => {
 
 connection.onCompletion(
 	async (pos: TextDocumentPositionParams): Promise<CompletionItem[]> => {
-		var builtinFunctionsName = BuiltInFunctions.map((v) => ({
+		const builtinFunctionsName = BuiltInFunctions.map((v) => ({
 			name: v.class,
 		}));
-		var items: CompletionItem[] = [];
-		var num = 0;
+		const items: CompletionItem[] = [];
+		let num = 0;
 
-		for (let i of builtinFunctionsName) {
+		for (const i of builtinFunctionsName) {
 			items.push({
 				label: i.name,
 				kind: CompletionItemKind.Class,
@@ -206,17 +206,17 @@ connection.onCompletion(
 			});
 			num++;
 		}
-		for (let i of userVariables) {
+		for (const i of userVariables) {
 			i.data = num;
 			items.push(i);
 			num++;
 		}
-		for (let i of userFunctions) {
+		for (const i of userFunctions) {
 			i.data = num;
 			items.push(i);
 			num++;
 		}
-		for (let i of Keywords) {
+		for (const i of Keywords) {
 			items.push({
 				label: i,
 				kind: CompletionItemKind.Keyword,
@@ -224,7 +224,7 @@ connection.onCompletion(
 			});
 			num++;
 		}
-		for (let i of VANILLA_COMMANDS) {
+		for (const i of VANILLA_COMMANDS) {
 			items.push({
 				label: i,
 				kind: CompletionItemKind.Keyword,
@@ -244,13 +244,13 @@ connection.onSignatureHelp(
 	(
 		v: SignatureHelpParams
 	): HandlerResult<SignatureHelp | null | undefined, void> => {
-		let document = documents.get(v.textDocument.uri);
+		const document = documents.get(v.textDocument.uri);
 		if (document !== undefined) {
-			let index = document.offsetAt(v.position);
-			let text = document.getText();
+			const index = document.offsetAt(v.position);
+			const text = document.getText();
 
-			let command = getCurrentCommand(document.getText(), index);
-			let commaCount = command.match(/,/g || [])?.length;
+			const command = getCurrentCommand(document.getText(), index);
+			const commaCount = command.match(/,/g || [])?.length;
 			// while ((index -= 1) !== -1) {
 			// 	let char = text[index];
 			// 	if (char === "(") {
@@ -268,33 +268,33 @@ connection.onSignatureHelp(
 				) {
 					v.context.activeSignatureHelp.activeParameter = commaCount;
 				} else {
-					let pattern = /(\w+)\.(\w+)\(([\w\s,()$]*)\)/g;
+					const pattern = /(\w+)\.(\w+)\(([\w\s,()$]*)\)/g;
 					let m: RegExpExecArray | null;
 					console.log(command);
 					while ((m = pattern.exec(command)) !== null) {
-						let func = m[1];
-						let method = m[2];
+						const func = m[1];
+						const method = m[2];
 
-						let methods = BuiltInFunctions.flatMap((v) => {
-							var target = v.methods.filter((value) => {
+						const methods = BuiltInFunctions.flatMap((v) => {
+							const target = v.methods.filter((value) => {
 								return (
 									func === v.class && method === value.name
 								);
 							});
 							return target;
 						});
-						var target = methods[0];
+						const target = methods[0];
 
 						v.context.activeSignatureHelp = {
 							signatures: [
 								{
 									label: methodInfoToDoc(target),
 									parameters: target.args.flatMap((v) => {
-										let def =
+										const def =
 											v.default !== undefined
 												? ` = ${v.default}`
 												: "";
-										let arg = `${v.name}: ${v.type}${def}`;
+										const arg = `${v.name}: ${v.type}${def}`;
 										return {
 											label: arg,
 										};

@@ -4,12 +4,18 @@
         "commonjs": true,
         "es2021": true
     },
-    "extends": "standard-with-typescript",
+    "extends": ["eslint:recommended","plugin:@typescript-eslint/recommended"],
+    "plugins": ["@typescript-eslint"],
     "overrides": [
     ],
     "parserOptions": {
         "ecmaVersion": "latest"
     },
     "rules": {
+        "semi": [2, "always"],
+        "@typescript-eslint/no-non-null-assertion": 0,
+        "@typescript-eslint/explicit-module-boundary-types": 0,
+        "@typescript-eslint/no-unused-vars": 0,
+        "no-useless-escape": 0
     }
 }
