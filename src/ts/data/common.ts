@@ -89,6 +89,7 @@ export const HEADERS: Array<string> = [
 	"command",
 	"override_minecraft",
 	"static",
+	"uninstall"
 ];
 
 export const JSON_FILE_TYPES = [

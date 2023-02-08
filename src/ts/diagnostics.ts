@@ -238,7 +238,7 @@ export function getDiagnostics(text: string, filePath: string): Diagnostic[] {
 		}
 
 		for (const keyword of VANILLA_COMMANDS) {
-			const pattern = RegExp(`\\b(${keyword})\\b`, "g");
+			const pattern = RegExp(`\\b(${keyword}).*;`, "g");
 			while ((m = pattern.exec(text)) !== null) {
 				let index = m.index;
 				if (text[m.index + m[0].length] === '"' && text[m.index - 1] === '"') {continue;}

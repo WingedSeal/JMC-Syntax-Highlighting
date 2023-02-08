@@ -38,7 +38,7 @@
             "patterns": [
                 {
                     "name": "keyword.control.hjmc",
-                    "match": "#(credit|define|include|command|override_minecraft|static)"
+                    "match": "#(credit|define|include|command|override_minecraft|static|uninstall)"
                 }
             ]
         },

@@ -371,6 +371,17 @@ export async function activate(context: ExtensionContext) {
 					}
 				}
 
+				const builtinFuncClass = BuiltInFunctions.flatMap((v) => {
+					return v.class;
+				});
+
+				const builtinFuncMethod = BuiltInFunctions.flatMap((v) => {
+					const methods = v.methods.flatMap((value) => {
+						return `${v.class}.${value.name}`;
+					});
+					return methods;
+				});				
+
 				const functions = getFunctionsClient(text);
 				for (const func of functions) {
 					const pattern = RegExp(`\\b${func}\\b`, "g");
@@ -393,7 +404,32 @@ export async function activate(context: ExtensionContext) {
 					}
 				}
 
-				const classes = getClassesClient(text);
+				for (const func of builtinFuncMethod) {
+					const pattern = RegExp(`\\b${func}\\b`, "g");
+					while ((m = pattern.exec(text)) !== null) {
+						const pos = getLineByIndex(m.index, getLinePos(text));
+						const lineText = document.lineAt(pos.line).text.trim();
+
+						const classLength = m[0].split(".")[0].length;
+						const funcLength = m[0].split(".")[1].length;
+
+						if (!lineText.startsWith("//")) {
+							builder.push(
+								new vscode.Range(
+									new vscode.Position(pos.line, pos.pos + classLength + 1),
+									new vscode.Position(
+										pos.line,
+										pos.pos + classLength + funcLength + 1
+									)
+								),
+								"function",
+								["declaration"]
+							);
+						}						
+					}
+				}
+
+				const classes = getClassesClient(text).concat(builtinFuncClass);
 				for (const clas of classes) {
 					const pattern = RegExp(`\\b(${clas})\\b`, "g");
 					while ((m = pattern.exec(text)) !== null) {
