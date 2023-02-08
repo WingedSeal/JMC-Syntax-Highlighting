@@ -25,7 +25,6 @@ import { getDiagnostics } from "./diagnostics";
 import * as url from "url";
 import {
 	getCurrentCommand,
-	getImportDocumentText,
 	getVariables,
 } from "./helpers/documentAnalyze";
 
