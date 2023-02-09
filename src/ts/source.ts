@@ -100,7 +100,6 @@ export async function activate(context: ExtensionContext) {
 		"."
 	);
 
-	//TODO:
 	const signatureHelper = languages.registerSignatureHelpProvider(
 		selector,
 		{
@@ -380,7 +379,7 @@ export async function activate(context: ExtensionContext) {
 						return `${v.class}.${value.name}`;
 					});
 					return methods;
-				});				
+				});
 
 				const functions = getFunctionsClient(text);
 				for (const func of functions) {
@@ -416,7 +415,10 @@ export async function activate(context: ExtensionContext) {
 						if (!lineText.startsWith("//")) {
 							builder.push(
 								new vscode.Range(
-									new vscode.Position(pos.line, pos.pos + classLength + 1),
+									new vscode.Position(
+										pos.line,
+										pos.pos + classLength + 1
+									),
 									new vscode.Position(
 										pos.line,
 										pos.pos + classLength + funcLength + 1
@@ -425,7 +427,7 @@ export async function activate(context: ExtensionContext) {
 								"function",
 								["declaration"]
 							);
-						}						
+						}
 					}
 				}
 

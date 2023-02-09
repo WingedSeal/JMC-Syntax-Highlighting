@@ -31,7 +31,11 @@ const headerPattern = /#(\w+)/g;
 
 let m: RegExpExecArray | null;
 
-export async function getDiagnostics(text: string, filePath: string, workspaceFolder: string): Promise<Diagnostic[]> {
+export async function getDiagnostics(
+	text: string,
+	filePath: string,
+	workspaceFolder: string
+): Promise<Diagnostic[]> {
 	const diagnostics: Diagnostic[] = [];
 
 	const path = filePath.split("\\");
@@ -108,7 +112,7 @@ export async function getDiagnostics(text: string, filePath: string, workspaceFo
 		while ((m = functionPattern.exec(text)) !== null) {
 			let index = m.index;
 			let t = "";
-			while((index -= 1) !== -1) {
+			while ((index -= 1) !== -1) {
 				const current = text[index].trim();
 				if (current === "") continue;
 				else if (SEMI_CHECKCHAR.includes(current)) break;
@@ -117,8 +121,6 @@ export async function getDiagnostics(text: string, filePath: string, workspaceFo
 			if (t.split("").reverse().join("") === "new") {
 				continue;
 			}
-
-
 
 			const builtinFunc = BuiltInFunctions.flatMap((v) => {
 				const methods = v.methods.flatMap((value) => {
@@ -129,9 +131,10 @@ export async function getDiagnostics(text: string, filePath: string, workspaceFo
 
 			const ifExists =
 				getFunctions(text, workspaceFolder).filter((v) => {
-					return v.toLowerCase() === m![1].toLowerCase() || v == m![1];
-				}).length > 0 ||
-				builtinFunc.includes(m[1]);
+					return (
+						v.toLowerCase() === m![1].toLowerCase() || v == m![1]
+					);
+				}).length > 0 || builtinFunc.includes(m[1]);
 			const isVariable = getVariables(text, workspaceFolder).includes(
 				m[1].split(".")[0]
 			);
@@ -146,7 +149,7 @@ export async function getDiagnostics(text: string, filePath: string, workspaceFo
 				!isVariable
 			) {
 				const startPos = Position.create(pos.line, pos.pos);
-				const endPos = Position.create(pos.line, pos.pos + m[0].length);
+				const endPos = Position.create(pos.line, pos.pos + m[0].length - 1);
 				const range = Range.create(startPos, endPos);
 
 				diagnostics.push({
@@ -242,7 +245,12 @@ export async function getDiagnostics(text: string, filePath: string, workspaceFo
 			const pattern = RegExp(`\\b(${keyword}).*;`, "g");
 			while ((m = pattern.exec(text)) !== null) {
 				let index = m.index;
-				if (text[m.index + m[0].length] === '"' && text[m.index - 1] === '"') {continue;}
+				if (
+					text[m.index + m[0].length] === '"' &&
+					text[m.index - 1] === '"'
+				) {
+					continue;
+				}
 				while ((index -= 1) !== -1) {
 					const current = text[m.index - 1].trim();
 					if (SEMI_CHECKCHAR.includes(current)) {

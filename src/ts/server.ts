@@ -198,7 +198,7 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 		url.fileURLToPath(textDocument.uri),
 		workspaceFolder
 	);
-	connection.sendDiagnostics({ uri: textDocument.uri, diagnostics });
+	await connection.sendDiagnostics({ uri: textDocument.uri, diagnostics });
 	
 }
 
