@@ -22,6 +22,7 @@ export const SEMI_CHECKCHAR: string[] = [
 	"[",
 	"]",
 	",",
+	"$",
 ];
 
 export const VANILLA_COMMANDS: Array<string> = [
@@ -89,7 +90,7 @@ export const HEADERS: Array<string> = [
 	"command",
 	"override_minecraft",
 	"static",
-	"uninstall"
+	"uninstall",
 ];
 
 export const JSON_FILE_TYPES = [
@@ -110,9 +111,3 @@ export const JSON_FILE_TYPES = [
 	"worldgen/processor_list",
 	"worldgen/template_pool",
 ];
-
-export function getCurrentFolder(path: string): string {
-	const edited = path.split("\\");
-	edited.pop();
-	return edited.join("\\");
-}

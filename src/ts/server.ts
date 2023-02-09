@@ -19,7 +19,6 @@ import { BuiltInFunctions, methodInfoToDoc } from "./data/builtinFunctions";
 import {
 	KEYWORDS as Keywords,
 	VANILLA_COMMANDS,
-	getCurrentFolder,
 } from "./data/common";
 import { getDiagnostics } from "./diagnostics";
 import * as url from "url";
@@ -32,6 +31,7 @@ import {
 
 const connection = createConnection(ProposedFeatures.all);
 let text: string;
+let workspaceFolder: string;
 
 export let userVariables: CompletionItem[] = [];
 export let userFunctions: CompletionItem[] = [];
@@ -45,6 +45,7 @@ let hasDiagnosticRelatedInformationCapability = false;
 
 connection.onInitialize((params: InitializeParams) => {
 	const capabilities = params.capabilities;
+	workspaceFolder = url.fileURLToPath(params.workspaceFolders![0].uri);
 
 	hasConfigurationCapability = !!(
 		capabilities.workspace && !!capabilities.workspace.configuration
@@ -149,7 +150,7 @@ async function validateText(text: string, path: string): Promise<ValidateData> {
 	let m: RegExpExecArray | null;
 
 	const variables: CompletionItem[] = [];
-	for (const variable of getVariables(text, getCurrentFolder(path))) {
+	for (const variable of getVariables(text, workspaceFolder)) {
 		const filter = variables.filter((v) => v.label == variable);
 		if (!(filter.length > 0)) {
 			variables.push({
@@ -160,7 +161,7 @@ async function validateText(text: string, path: string): Promise<ValidateData> {
 	}
 
 	const functions: CompletionItem[] = [];
-	for (const func of getFunctions(text, getCurrentFolder(path))) {
+	for (const func of getFunctions(text, workspaceFolder)) {
 		const filter = functions.filter((v) => v.label == func);
 		if (!(filter.length > 0)) {
 			functions.push({ label: func, kind: CompletionItemKind.Function });
@@ -168,7 +169,7 @@ async function validateText(text: string, path: string): Promise<ValidateData> {
 	}
 
 	const classes: CompletionItem[] = [];
-	for (const c of getClass(text, getCurrentFolder(path))) {
+	for (const c of getClass(text, workspaceFolder)) {
 		const filter = classes.filter((v) => v.label == c);
 		if (!(filter.length > 0)) {
 			classes.push({ label: c, kind: CompletionItemKind.Class });
@@ -192,11 +193,13 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 	userFunctions = data.functions;
 	userClasses = data.classes;
 
-	const diagnostics: Diagnostic[] = getDiagnostics(
+	const diagnostics: Diagnostic[] = await getDiagnostics(
 		text,
-		url.fileURLToPath(textDocument.uri)
+		url.fileURLToPath(textDocument.uri),
+		workspaceFolder
 	);
 	connection.sendDiagnostics({ uri: textDocument.uri, diagnostics });
+	
 }
 
 connection.onDidChangeWatchedFiles((_change) => {

@@ -7,7 +7,6 @@ import {
 import * as fs from "fs";
 import {
 	HEADERS,
-	JSON_FILE_TYPES,
 	KEYWORDS,
 	SEMI_CHECKCHAR,
 	VANILLA_COMMANDS,
@@ -32,7 +31,7 @@ const headerPattern = /#(\w+)/g;
 
 let m: RegExpExecArray | null;
 
-export function getDiagnostics(text: string, filePath: string): Diagnostic[] {
+export async function getDiagnostics(text: string, filePath: string, workspaceFolder: string): Promise<Diagnostic[]> {
 	const diagnostics: Diagnostic[] = [];
 
 	const path = filePath.split("\\");
@@ -54,7 +53,7 @@ export function getDiagnostics(text: string, filePath: string): Diagnostic[] {
 					diagnostics.push({
 						range: range,
 						message: `ImportError: '${m[1]}' does not exist`,
-						severity: DiagnosticSeverity.Error,
+						severity: DiagnosticSeverity.Warning,
 					});
 				}
 			}
@@ -75,7 +74,7 @@ export function getDiagnostics(text: string, filePath: string): Diagnostic[] {
 						diagnostics.push({
 							range: range,
 							message: `Missing Semicolon`,
-							severity: DiagnosticSeverity.Error,
+							severity: DiagnosticSeverity.Warning,
 						});
 						break;
 					}
@@ -87,7 +86,7 @@ export function getDiagnostics(text: string, filePath: string): Diagnostic[] {
 		while ((m = variablePattern.exec(text)) !== null) {
 			const pos = getLineByIndex(m.index, getLinePos(text));
 			const lineText = getTextByLine(text, pos.line).trim();
-			const variables = getVariables(text, f);
+			const variables = getVariables(text, workspaceFolder);
 
 			if (
 				!variables.includes(m[1]) &&
@@ -101,7 +100,7 @@ export function getDiagnostics(text: string, filePath: string): Diagnostic[] {
 				diagnostics.push({
 					range: range,
 					message: `NameError: '${m[1]}' is not defined`,
-					severity: DiagnosticSeverity.Error,
+					severity: DiagnosticSeverity.Warning,
 				});
 			}
 		}
@@ -129,9 +128,11 @@ export function getDiagnostics(text: string, filePath: string): Diagnostic[] {
 			});
 
 			const ifExists =
-				getFunctions(text, f).includes(m[1]) ||
+				getFunctions(text, workspaceFolder).filter((v) => {
+					return v.toLowerCase() === m![1].toLowerCase() || v == m![1];
+				}).length > 0 ||
 				builtinFunc.includes(m[1]);
-			const isVariable = getVariables(text, f).includes(
+			const isVariable = getVariables(text, workspaceFolder).includes(
 				m[1].split(".")[0]
 			);
 
@@ -151,7 +152,7 @@ export function getDiagnostics(text: string, filePath: string): Diagnostic[] {
 				diagnostics.push({
 					range: range,
 					message: `NameError: '${m[1]}' is not defined`,
-					severity: DiagnosticSeverity.Error,
+					severity: DiagnosticSeverity.Warning,
 				});
 			}
 
@@ -178,7 +179,7 @@ export function getDiagnostics(text: string, filePath: string): Diagnostic[] {
 							diagnostics.push({
 								range: range,
 								message: `Missing Semicolon`,
-								severity: DiagnosticSeverity.Error,
+								severity: DiagnosticSeverity.Warning,
 							});
 							break;
 						}
@@ -187,7 +188,7 @@ export function getDiagnostics(text: string, filePath: string): Diagnostic[] {
 			}
 		}
 
-		for (const variable of getUnusedVariables(text, f)) {
+		for (const variable of getUnusedVariables(text, workspaceFolder)) {
 			const pattern = RegExp(`\\\$(${variable})\\b`, "g");
 			while ((m = pattern.exec(text)) !== null) {
 				const line = getLineByIndex(m.index, getLinePos(text));
@@ -228,7 +229,7 @@ export function getDiagnostics(text: string, filePath: string): Diagnostic[] {
 							diagnostics.push({
 								range: range,
 								message: `Missing Semicolon`,
-								severity: DiagnosticSeverity.Error,
+								severity: DiagnosticSeverity.Warning,
 							});
 							break;
 						}
@@ -263,7 +264,7 @@ export function getDiagnostics(text: string, filePath: string): Diagnostic[] {
 							diagnostics.push({
 								range: range,
 								message: `Missing Semicolon`,
-								severity: DiagnosticSeverity.Error,
+								severity: DiagnosticSeverity.Warning,
 							});
 							break;
 						}
@@ -286,7 +287,7 @@ export function getDiagnostics(text: string, filePath: string): Diagnostic[] {
 				diagnostics.push({
 					range: range,
 					message: `ValueError: '${m[1]}' does not exist`,
-					severity: DiagnosticSeverity.Error,
+					severity: DiagnosticSeverity.Warning,
 				});
 			}
 		}

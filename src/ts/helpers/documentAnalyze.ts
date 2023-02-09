@@ -8,10 +8,10 @@ export interface ImportData {
 export function getVariables(text: string, root: string): string[] {
 	const definedVariables: string[] = [];
 
-	const variablePattern = /\$(\w+)\s*\??=(?!=)/g;
+	const variablePattern = /\$([\w.]+)\s*\??=(?!=)/g;
 	let m: RegExpExecArray | null;
 
-	const files = getImportDocumentText(text, root);
+	const files = getImportDocumentText(root);
 	files.push({
 		filename: "main",
 		text: text,
@@ -29,14 +29,14 @@ export function getVariables(text: string, root: string): string[] {
 
 export function getUnusedVariables(
 	text: string,
-	root: string | undefined
+	root: string
 ): string[] {
 	const variables: string[] = [];
 
 	const variablePattern = /\$([\w\.]+)/g;
 	let m: RegExpExecArray | null;
 
-	const files = getImportDocumentText(text, root);
+	const files = getImportDocumentText(root);
 	files.push({
 		filename: "main",
 		text: text,
@@ -66,11 +66,11 @@ export function getFunctions(text: string, root: string): string[] {
 	const definedFunctions: string[] = [];
 
 	const functionPattern = /function\s*([\w\.]+)\s*\(/g;
-	const classPattern = /class\s*([\w.]+)/g;
+	const classPattern = /\bclass\s*([\w.]+)\b/g;
 	let m: RegExpExecArray | null;
 	let mn: RegExpExecArray | null;
 
-	const files = getImportDocumentText(text, root);
+	const files = getImportDocumentText(root);
 	files.push({
 		filename: "main",
 		text: text,
@@ -124,7 +124,7 @@ export function getClass(text: string, root: string): string[] {
 	const classPattern = /class\s*([\w\.]+)/g;
 	let m: RegExpExecArray | null;
 
-	const files = getImportDocumentText(text, root);
+	const files = getImportDocumentText(root);
 	files.push({
 		filename: "main",
 		text: text,
@@ -141,13 +141,12 @@ export function getClass(text: string, root: string): string[] {
 }
 
 export function getImportDocumentText(
-	text: string,
-	root: string | undefined
+	root: string
 ): ImportData[] {
 	const datas: ImportData[] = [];
-	const files = getImport(text);
+	const files = getImport(root);
 	for (const file of files) {
-		const text = getDocumentText(file, root).replace("\r\n", "\n");
+		const text = getDocumentText(file).replace("\r\n", "\n");
 		datas.push({
 			filename: file,
 			text: text,

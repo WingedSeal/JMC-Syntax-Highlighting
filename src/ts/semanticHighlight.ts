@@ -1,5 +1,4 @@
 import * as vscode from "vscode";
-import { getCurrentFile } from "./source";
 import {
 	getClass as getClasses,
 	getFunctions,
@@ -22,13 +21,13 @@ export const semanticLegend = new vscode.SemanticTokensLegend(
 );
 
 export function getVariablesClient(text: string): string[] {
-	return getVariables(text, getCurrentFile()!);
+	return getVariables(text, vscode.workspace.workspaceFolders![0].uri.fsPath);
 }
 
 export function getFunctionsClient(text: string): string[] {
-	return getFunctions(text, getCurrentFile()!);
+	return getFunctions(text, vscode.workspace.workspaceFolders![0].uri.fsPath);
 }
 
 export function getClassClient(text: string): string[] {
-	return getClasses(text, getCurrentFile()!);
+	return getClasses(text, vscode.workspace.workspaceFolders![0].uri.fsPath);
 }

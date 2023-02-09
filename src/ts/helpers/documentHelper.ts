@@ -1,4 +1,5 @@
 import * as fs from "fs";
+import { getAllFilesSync } from "get-all-files";
 
 export interface TextLinePos {
 	line: number;
@@ -31,22 +32,24 @@ export function getLinePos(text: string): TextLinePos[] {
 	return textLinePos;
 }
 
-export function getImport(text: string): string[] {
-	const importPattern = /@import\s*\"(.+)\"/g;
-	let m: RegExpExecArray | null;
-	const files: string[] = [];
+export function getImport(workspaceFolder: string): string[] {
+	// const importPattern = /@import\s*\"(.+)\"/g;
+	// let m: RegExpExecArray | null;
+	// const files: string[] = [];
 
-	while ((m = importPattern.exec(text)) !== null) {
-		files.push(`${m[1]}.jmc`);
-	}
-	return files;
+	// while ((m = importPattern.exec(text)) !== null) {
+	// 	files.push(`${m[1]}.jmc`);
+	// }
+	// return files;
+	return getAllFilesSync(workspaceFolder).toArray().filter((v) => {
+		return v.endsWith(".jmc");
+	});
 }
 
 export function getDocumentText(
-	path: string,
-	root: string | undefined
+	path: string
 ): string {
-	return fs.readFileSync(`${root}/${path}`, "utf-8");
+	return fs.readFileSync(path, "utf-8");
 }
 
 export function getTextByLine(text: string, line: number): string {
