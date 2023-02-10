@@ -20,14 +20,14 @@ export const semanticLegend = new vscode.SemanticTokensLegend(
 	tokenModifiers
 );
 
-export function getVariablesClient(text: string): string[] {
-	return getVariables(text, vscode.workspace.workspaceFolders![0].uri.fsPath);
+export async function getVariablesClient(text: string): Promise<string[]> {
+	return await getVariables(text, vscode.workspace.workspaceFolders![0].uri.fsPath);
 }
 
-export function getFunctionsClient(text: string): string[] {
-	return getFunctions(text, vscode.workspace.workspaceFolders![0].uri.fsPath);
+export async function getFunctionsClient(text: string): Promise<string[]> {
+	return await getFunctions(text, vscode.workspace.workspaceFolders![0].uri.fsPath);
 }
 
-export function getClassClient(text: string): string[] {
-	return getClasses(text, vscode.workspace.workspaceFolders![0].uri.fsPath);
+export async function getClassClient(text: string): Promise<string[]> {
+	return await getClasses(text, vscode.workspace.workspaceFolders![0].uri.fsPath);
 }

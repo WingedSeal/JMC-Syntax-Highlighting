@@ -41,17 +41,20 @@ export function getImport(workspaceFolder: string): string[] {
 	// 	files.push(`${m[1]}.jmc`);
 	// }
 	// return files;
-	return getAllFilesSync(workspaceFolder).toArray().filter((v) => {
-		return v.endsWith(".jmc");
-	});
+	return getAllFilesSync(workspaceFolder)
+		.toArray()
+		.filter((v) => {
+			return v.endsWith(".jmc");
+		});
 }
 
-export function getDocumentText(
-	path: string
-): string {
-	return fs.readFileSync(path, "utf-8");
+export async function getDocumentText(path: string): Promise<string> {
+	return new Promise((resolve, reject) => {
+		resolve(fs.readFileSync(path, { encoding: "utf-8", flag: "r" }));
+	}); 
 }
 
 export function getTextByLine(text: string, line: number): string {
-	return text.split("\n")[line];
+	const t = text.split("\n")[line];
+	return t;
 }

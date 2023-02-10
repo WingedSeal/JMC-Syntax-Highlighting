@@ -5,13 +5,13 @@ export interface ImportData {
 	text: string;
 }
 
-export function getVariables(text: string, root: string): string[] {
+export async function getVariables(text: string, root: string): Promise<string[]> {
 	const definedVariables: string[] = [];
 
 	const variablePattern = /\$([\w.]+)\s*\??=(?!=)/g;
 	let m: RegExpExecArray | null;
 
-	const files = getImportDocumentText(root);
+	const files = await getImportDocumentText(root);
 	files.push({
 		filename: "main",
 		text: text,
@@ -27,16 +27,16 @@ export function getVariables(text: string, root: string): string[] {
 	return definedVariables;
 }
 
-export function getUnusedVariables(
+export async function getUnusedVariables(
 	text: string,
 	root: string
-): string[] {
+): Promise<string[]> {
 	const variables: string[] = [];
 
 	const variablePattern = /\$([\w\.]+)/g;
 	let m: RegExpExecArray | null;
 
-	const files = getImportDocumentText(root);
+	const files = await getImportDocumentText(root);
 	files.push({
 		filename: "main",
 		text: text,
@@ -62,7 +62,7 @@ export function getUnusedVariables(
 
 	return nonDuplicate;
 }
-export function getFunctions(text: string, root: string): string[] {
+export async function getFunctions(text: string, root: string): Promise<string[]> {
 	const definedFunctions: string[] = [];
 
 	const functionPattern = /function\s*([\w\.]+)\s*\(/g;
@@ -70,7 +70,7 @@ export function getFunctions(text: string, root: string): string[] {
 	let m: RegExpExecArray | null;
 	let mn: RegExpExecArray | null;
 
-	const files = getImportDocumentText(root);
+	const files = await getImportDocumentText(root);
 	files.push({
 		filename: "main",
 		text: text,
@@ -118,13 +118,13 @@ export function getFunctions(text: string, root: string): string[] {
 	return definedFunctions;
 }
 
-export function getClass(text: string, root: string): string[] {
+export async function getClass(text: string, root: string): Promise<string[]> {
 	const definedClasses: string[] = [];
 
 	const classPattern = /class\s*([\w\.]+)/g;
 	let m: RegExpExecArray | null;
 
-	const files = getImportDocumentText(root);
+	const files = await getImportDocumentText(root);
 	files.push({
 		filename: "main",
 		text: text,
@@ -140,13 +140,13 @@ export function getClass(text: string, root: string): string[] {
 	return definedClasses;
 }
 
-export function getImportDocumentText(
+export async function getImportDocumentText(
 	root: string
-): ImportData[] {
+): Promise<ImportData[]> {
 	const datas: ImportData[] = [];
 	const files = getImport(root);
 	for (const file of files) {
-		const text = getDocumentText(file).replace("\r\n", "\n");
+		const text = (await getDocumentText(file)).replace("\r\n", "\n");
 		datas.push({
 			filename: file,
 			text: text,

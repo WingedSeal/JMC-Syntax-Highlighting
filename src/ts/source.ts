@@ -322,7 +322,7 @@ export async function activate(context: ExtensionContext) {
 	const semanticHighlight = languages.registerDocumentSemanticTokensProvider(
 		selector,
 		{
-			provideDocumentSemanticTokens(document, token) {
+			async provideDocumentSemanticTokens(document, token) {
 				const builder = new vscode.SemanticTokensBuilder(
 					semanticLegend
 				);
@@ -331,7 +331,7 @@ export async function activate(context: ExtensionContext) {
 				// let scoreboardPattern = /(.+):(@[parse])/g;
 				let m: RegExpExecArray | null;
 				const variables = getVariablesClient(text);
-				for (const variable of variables) {
+				for (const variable of await variables) {
 					const pattern = RegExp(`(\\\$${variable})(\.get)?\\b`, "g");
 					while ((m = pattern.exec(text)) !== null) {
 						const pos = getLineByIndex(m.index, getLinePos(text));
@@ -381,19 +381,24 @@ export async function activate(context: ExtensionContext) {
 					return methods;
 				});
 
-				const functions = getFunctionsClient(text);
+				const functions = await getFunctionsClient(text);
 				for (const func of functions) {
 					const pattern = RegExp(`\\b${func}\\b`, "g");
 					while ((m = pattern.exec(text)) !== null) {
 						const pos = getLineByIndex(m.index, getLinePos(text));
 						const lineText = document.lineAt(pos.line).text.trim();
+
+						const funcs = m[0].split(".");
+						const funcPos = funcs.pop()!.length;
+						const startPos = funcs.join(".").length;
+
 						if (!lineText.startsWith("//")) {
 							builder.push(
 								new vscode.Range(
-									new vscode.Position(pos.line, pos.pos),
+									new vscode.Position(pos.line, pos.pos + startPos),
 									new vscode.Position(
 										pos.line,
-										pos.pos + m[0].length
+										pos.pos + startPos + funcPos + 1
 									)
 								),
 								"function",
@@ -431,7 +436,7 @@ export async function activate(context: ExtensionContext) {
 					}
 				}
 
-				const classes = getClassesClient(text).concat(builtinFuncClass);
+				const classes = (await getClassesClient(text)).concat(builtinFuncClass);
 				for (const clas of classes) {
 					const pattern = RegExp(`\\b(${clas})\\b`, "g");
 					while ((m = pattern.exec(text)) !== null) {

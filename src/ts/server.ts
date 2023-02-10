@@ -150,7 +150,7 @@ async function validateText(text: string, path: string): Promise<ValidateData> {
 	let m: RegExpExecArray | null;
 
 	const variables: CompletionItem[] = [];
-	for (const variable of getVariables(text, workspaceFolder)) {
+	for (const variable of await getVariables(text, workspaceFolder)) {
 		const filter = variables.filter((v) => v.label == variable);
 		if (!(filter.length > 0)) {
 			variables.push({
@@ -161,7 +161,7 @@ async function validateText(text: string, path: string): Promise<ValidateData> {
 	}
 
 	const functions: CompletionItem[] = [];
-	for (const func of getFunctions(text, workspaceFolder)) {
+	for (const func of await getFunctions(text, workspaceFolder)) {
 		const filter = functions.filter((v) => v.label == func);
 		if (!(filter.length > 0)) {
 			functions.push({ label: func, kind: CompletionItemKind.Function });
@@ -169,7 +169,7 @@ async function validateText(text: string, path: string): Promise<ValidateData> {
 	}
 
 	const classes: CompletionItem[] = [];
-	for (const c of getClass(text, workspaceFolder)) {
+	for (const c of await getClass(text, workspaceFolder)) {
 		const filter = classes.filter((v) => v.label == c);
 		if (!(filter.length > 0)) {
 			classes.push({ label: c, kind: CompletionItemKind.Class });
@@ -198,8 +198,23 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 		url.fileURLToPath(textDocument.uri),
 		workspaceFolder
 	);
-	await connection.sendDiagnostics({ uri: textDocument.uri, diagnostics });
-	
+	await connection.sendDiagnostics({ uri: textDocument.uri, diagnostics });	
+
+	// const diagnostics: Diagnostic[] = await getDiagnostics(
+	// 	text,
+	// 	url.fileURLToPath(textDocument.uri),
+	// 	workspaceFolder
+	// );
+	// await connection.sendDiagnostics({ uri: textDocument.uri, diagnostics });
+
+	// for (const doc of documents.all()) {
+	// 	const diagnostics: Diagnostic[] = await getDiagnostics(
+	// 		doc.getText(),
+	// 		url.fileURLToPath(doc.uri),
+	// 		workspaceFolder
+	// 	);
+	// 	await connection.sendDiagnostics({ uri: doc.uri, diagnostics });
+	// }
 }
 
 connection.onDidChangeWatchedFiles((_change) => {

@@ -90,7 +90,7 @@ export async function getDiagnostics(
 		while ((m = variablePattern.exec(text)) !== null) {
 			const pos = getLineByIndex(m.index, getLinePos(text));
 			const lineText = getTextByLine(text, pos.line).trim();
-			const variables = getVariables(text, workspaceFolder);
+			const variables = await getVariables(text, workspaceFolder);
 
 			if (
 				!variables.includes(m[1]) &&
@@ -130,12 +130,12 @@ export async function getDiagnostics(
 			});
 
 			const ifExists =
-				getFunctions(text, workspaceFolder).filter((v) => {
+				(await getFunctions(text, workspaceFolder)).filter((v) => {
 					return (
 						v.toLowerCase() === m![1].toLowerCase() || v == m![1]
 					);
 				}).length > 0 || builtinFunc.includes(m[1]);
-			const isVariable = getVariables(text, workspaceFolder).includes(
+			const isVariable = (await getVariables(text, workspaceFolder)).includes(
 				m[1].split(".")[0]
 			);
 
@@ -191,7 +191,7 @@ export async function getDiagnostics(
 			}
 		}
 
-		for (const variable of getUnusedVariables(text, workspaceFolder)) {
+		for (const variable of await getUnusedVariables(text, workspaceFolder)) {
 			const pattern = RegExp(`\\\$(${variable})\\b`, "g");
 			while ((m = pattern.exec(text)) !== null) {
 				const line = getLineByIndex(m.index, getLinePos(text));
