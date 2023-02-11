@@ -5,7 +5,10 @@ export interface ImportData {
 	text: string;
 }
 
-export async function getVariables(text: string, root: string): Promise<string[]> {
+export async function getVariables(
+	text: string,
+	root: string
+): Promise<string[]> {
 	const definedVariables: string[] = [];
 
 	const variablePattern = /\$([\w.]+)\s*\??=(?!=)/g;
@@ -62,7 +65,10 @@ export async function getUnusedVariables(
 
 	return nonDuplicate;
 }
-export async function getFunctions(text: string, root: string): Promise<string[]> {
+export async function getFunctions(
+	text: string,
+	root: string
+): Promise<string[]> {
 	const definedFunctions: string[] = [];
 
 	const functionPattern = /function\s*([\w\.]+)\s*\(/g;
@@ -92,12 +98,11 @@ export async function getFunctions(text: string, root: string): Promise<string[]
 				if (current === "{") {
 					started = true;
 					bracketCount++;
-				}
-				else if (started) {
-					if (current === "{") { 
+				} else if (started) {
+					if (current === "{") {
 						bracketCount++;
 					}
-					if (current === "}") { 
+					if (current === "}") {
 						bracketCount--;
 					}
 					if (bracketCount === 0) break;
@@ -106,7 +111,10 @@ export async function getFunctions(text: string, root: string): Promise<string[]
 			}
 
 			while ((mn = functionPattern.exec(t)) !== null) {
-				if (!mn[1].startsWith(m[1] + ".") && !definedFunctions.includes(`${m[1]}.${mn[1]}`)) {
+				if (
+					!mn[1].startsWith(m[1] + ".") &&
+					!definedFunctions.includes(`${m[1]}.${mn[1]}`)
+				) {
 					definedFunctions.push(`${m[1]}.${mn[1]}`);
 				}
 			}

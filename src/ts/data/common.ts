@@ -8,6 +8,8 @@ export const KEYWORDS: Array<string> = [
 	"do",
 	"switch",
 	"case",
+	"true",
+	"false",
 ];
 
 export const SEMI_CHECKCHAR: string[] = [

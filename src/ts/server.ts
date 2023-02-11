@@ -16,10 +16,7 @@ import {
 } from "vscode-languageserver/node";
 import { TextDocument } from "vscode-languageserver-textdocument";
 import { BuiltInFunctions, methodInfoToDoc } from "./data/builtinFunctions";
-import {
-	KEYWORDS as Keywords,
-	VANILLA_COMMANDS,
-} from "./data/common";
+import { KEYWORDS as Keywords, VANILLA_COMMANDS } from "./data/common";
 import { getDiagnostics } from "./diagnostics";
 import * as url from "url";
 import {
@@ -173,13 +170,13 @@ async function validateText(text: string, path: string): Promise<ValidateData> {
 		const filter = classes.filter((v) => v.label == c);
 		if (!(filter.length > 0)) {
 			classes.push({ label: c, kind: CompletionItemKind.Class });
-		}		
+		}
 	}
 
 	return {
 		variables: variables,
 		functions: functions,
-		classes: classes
+		classes: classes,
 	};
 }
 
@@ -198,7 +195,7 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 		url.fileURLToPath(textDocument.uri),
 		workspaceFolder
 	);
-	await connection.sendDiagnostics({ uri: textDocument.uri, diagnostics });	
+	await connection.sendDiagnostics({ uri: textDocument.uri, diagnostics });
 
 	// const diagnostics: Diagnostic[] = await getDiagnostics(
 	// 	text,

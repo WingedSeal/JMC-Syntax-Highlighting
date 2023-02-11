@@ -51,7 +51,7 @@ export function getImport(workspaceFolder: string): string[] {
 export async function getDocumentText(path: string): Promise<string> {
 	return new Promise((resolve, reject) => {
 		resolve(fs.readFileSync(path, { encoding: "utf-8", flag: "r" }));
-	}); 
+	});
 }
 
 export function getTextByLine(text: string, line: number): string {

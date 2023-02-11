@@ -135,9 +135,9 @@ export async function getDiagnostics(
 						v.toLowerCase() === m![1].toLowerCase() || v == m![1]
 					);
 				}).length > 0 || builtinFunc.includes(m[1]);
-			const isVariable = (await getVariables(text, workspaceFolder)).includes(
-				m[1].split(".")[0]
-			);
+			const isVariable = (
+				await getVariables(text, workspaceFolder)
+			).includes(m[1].split(".")[0]);
 
 			const pos = getLineByIndex(m.index, getLinePos(text));
 			const lineText = getTextByLine(text, pos.line).trim();
@@ -149,7 +149,10 @@ export async function getDiagnostics(
 				!isVariable
 			) {
 				const startPos = Position.create(pos.line, pos.pos);
-				const endPos = Position.create(pos.line, pos.pos + m[0].length - 1);
+				const endPos = Position.create(
+					pos.line,
+					pos.pos + m[0].length - 1
+				);
 				const range = Range.create(startPos, endPos);
 
 				diagnostics.push({
@@ -191,7 +194,10 @@ export async function getDiagnostics(
 			}
 		}
 
-		for (const variable of await getUnusedVariables(text, workspaceFolder)) {
+		for (const variable of await getUnusedVariables(
+			text,
+			workspaceFolder
+		)) {
 			const pattern = RegExp(`\\\$(${variable})\\b`, "g");
 			while ((m = pattern.exec(text)) !== null) {
 				const line = getLineByIndex(m.index, getLinePos(text));

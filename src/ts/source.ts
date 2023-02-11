@@ -13,7 +13,7 @@ import {
 import * as path from "path";
 import { BuiltInFunctions, methodInfoToDoc } from "./data/builtinFunctions";
 import * as vscode from "vscode";
-import { HEADERS, JSON_FILE_TYPES, SEMI_CHECKCHAR } from "./data/common";
+import { HEADERS, JSON_FILE_TYPES } from "./data/common";
 import { getAllFiles } from "get-all-files";
 import {
 	getClassClient as getClassesClient,
@@ -70,6 +70,8 @@ export async function activate(context: ExtensionContext) {
 			options: debugOptions,
 		},
 	};
+
+	
 
 	//define client
 	client = new LanguageClient("jmc", "JMC", serverOptions, clientOptions);
@@ -383,7 +385,10 @@ export async function activate(context: ExtensionContext) {
 
 				const functions = await getFunctionsClient(text);
 				for (const func of functions) {
-					const pattern = RegExp(`\\b${func}\\b`, "g");
+					const pattern = RegExp(
+						`\\b${func}|${func.toLowerCase()}\\b`,
+						"g"
+					);
 					while ((m = pattern.exec(text)) !== null) {
 						const pos = getLineByIndex(m.index, getLinePos(text));
 						const lineText = document.lineAt(pos.line).text.trim();
@@ -395,7 +400,10 @@ export async function activate(context: ExtensionContext) {
 						if (!lineText.startsWith("//")) {
 							builder.push(
 								new vscode.Range(
-									new vscode.Position(pos.line, pos.pos + startPos),
+									new vscode.Position(
+										pos.line,
+										pos.pos + startPos
+									),
 									new vscode.Position(
 										pos.line,
 										pos.pos + startPos + funcPos + 1
@@ -436,7 +444,9 @@ export async function activate(context: ExtensionContext) {
 					}
 				}
 
-				const classes = (await getClassesClient(text)).concat(builtinFuncClass);
+				const classes = (await getClassesClient(text)).concat(
+					builtinFuncClass
+				);
 				for (const clas of classes) {
 					const pattern = RegExp(`\\b(${clas})\\b`, "g");
 					while ((m = pattern.exec(text)) !== null) {
