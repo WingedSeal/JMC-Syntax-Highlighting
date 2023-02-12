@@ -9,7 +9,6 @@ import {
 	HEADERS,
 	KEYWORDS,
 	SEMI_CHECKCHAR,
-	VANILLA_COMMANDS,
 } from "./data/common";
 import {
 	getLineByIndex,
@@ -22,12 +21,12 @@ import {
 	getVariables,
 } from "./helpers/documentAnalyze";
 import { BuiltInFunctions } from "./data/builtinFunctions";
-
-const importPattern = /@import\s*"([\w\s]*)"/g;
-const variablePattern = /\$([\w\.]+)/g;
-const functionPattern = /\b([\w\.]+)\s*\(/g;
-
-const headerPattern = /#(\w+)/g;
+import {
+	FunctionPattern,
+	HeaderPattern,
+	ImportPattern,
+	VariablePattern,
+} from "./data/pattern";
 
 let m: RegExpExecArray | null;
 
@@ -44,7 +43,7 @@ export async function getDiagnostics(
 
 	if (filename?.endsWith(".jmc")) {
 		//import check
-		while ((m = importPattern.exec(text)) !== null) {
+		while ((m = ImportPattern.exec(text)) !== null) {
 			const line = getLineByIndex(m.index + 9, getLinePos(text));
 			if (line.line > -1 && line.pos > -1) {
 				const startPos = Position.create(line.line, line.pos);
@@ -87,7 +86,7 @@ export async function getDiagnostics(
 		}
 
 		//variable check
-		while ((m = variablePattern.exec(text)) !== null) {
+		while ((m = VariablePattern.exec(text)) !== null) {
 			const pos = getLineByIndex(m.index, getLinePos(text));
 			const lineText = getTextByLine(text, pos.line).trim();
 			const variables = await getVariables(text, workspaceFolder);
@@ -109,7 +108,7 @@ export async function getDiagnostics(
 			}
 		}
 
-		while ((m = functionPattern.exec(text)) !== null) {
+		while ((m = FunctionPattern.exec(text)) !== null) {
 			let index = m.index;
 			let t = "";
 			while ((index -= 1) !== -1) {
@@ -247,47 +246,47 @@ export async function getDiagnostics(
 			}
 		}
 
-		for (const keyword of VANILLA_COMMANDS) {
-			const pattern = RegExp(`\\b(${keyword}).*;`, "g");
-			while ((m = pattern.exec(text)) !== null) {
-				let index = m.index;
-				if (
-					text[m.index + m[0].length] === '"' &&
-					text[m.index - 1] === '"'
-				) {
-					continue;
-				}
-				while ((index -= 1) !== -1) {
-					const current = text[m.index - 1].trim();
-					if (SEMI_CHECKCHAR.includes(current)) {
-						break;
-					} else if (current === "") continue;
-					else {
-						const line = getLineByIndex(index, getLinePos(text));
-						const lineText = getTextByLine(text, line.line).trim();
-						if (!lineText.startsWith("//")) {
-							const startPos = Position.create(
-								line.line,
-								line.pos
-							);
-							const endPos = Position.create(
-								line.line,
-								line.pos + 1
-							);
-							const range = Range.create(startPos, endPos);
-							diagnostics.push({
-								range: range,
-								message: `Missing Semicolon`,
-								severity: DiagnosticSeverity.Warning,
-							});
-							break;
-						}
-					}
-				}
-			}
-		}
+		// for (const keyword of VANILLA_COMMANDS) {
+		// 	const pattern = RegExp(`\\b(${keyword}).*;`, "g");
+		// 	while ((m = pattern.exec(text)) !== null) {
+		// 		let index = m.index;
+		// 		if (
+		// 			text[m.index + m[0].length] === '"' &&
+		// 			text[m.index - 1] === '"'
+		// 		) {
+		// 			continue;
+		// 		}
+		// 		while ((index -= 1) !== -1) {
+		// 			const current = text[m.index - 1].trim();
+		// 			if (SEMI_CHECKCHAR.includes(current)) {
+		// 				break;
+		// 			} else if (current === "") continue;
+		// 			else {
+		// 				const line = getLineByIndex(index, getLinePos(text));
+		// 				const lineText = getTextByLine(text, line.line).trim();
+		// 				if (!lineText.startsWith("//")) {
+		// 					const startPos = Position.create(
+		// 						line.line,
+		// 						line.pos
+		// 					);
+		// 					const endPos = Position.create(
+		// 						line.line,
+		// 						line.pos + 1
+		// 					);
+		// 					const range = Range.create(startPos, endPos);
+		// 					diagnostics.push({
+		// 						range: range,
+		// 						message: `Missing Semicolon`,
+		// 						severity: DiagnosticSeverity.Warning,
+		// 					});
+		// 					break;
+		// 				}
+		// 			}
+		// 		}
+		// 	}
+		// }
 	} else if (filename?.endsWith(".hjmc")) {
-		while ((m = headerPattern.exec(text)) !== null) {
+		while ((m = HeaderPattern.exec(text)) !== null) {
 			const header = m[1];
 			const pos = getLineByIndex(m.index, getLinePos(text));
 			if (!HEADERS.includes(header)) {

@@ -13,7 +13,7 @@ import {
 import * as path from "path";
 import { BuiltInFunctions, methodInfoToDoc } from "./data/builtinFunctions";
 import * as vscode from "vscode";
-import { HEADERS, JSON_FILE_TYPES } from "./data/common";
+import { HEADERS, JSON_FILE_TYPES, SEMI_CHECKCHAR, VANILLA_COMMANDS } from "./data/common";
 import { getAllFiles } from "get-all-files";
 import {
 	getClassClient as getClassesClient,
@@ -21,7 +21,13 @@ import {
 	getVariablesClient,
 	semanticLegend,
 } from "./semanticHighlight";
-import { getLineByIndex, getLinePos } from "./helpers/documentHelper";
+import {
+	getCurrentCommand,
+	getLineByIndex,
+	getLinePos,
+} from "./helpers/documentHelper";
+import { tokenizeCommand } from "./helpers/lexer";
+import { CommandArguments } from "./data/vanillaCommands";
 
 const selector: DocumentSelector = {
 	language: "jmc",
@@ -32,15 +38,6 @@ const headerSelector: DocumentSelector = {
 	language: "hjmc",
 	scheme: "file",
 };
-
-export function getCurrentFile(): string | undefined {
-	if (vscode.window.activeTextEditor !== undefined) {
-		const path =
-			vscode.window.activeTextEditor.document.uri.fsPath.split("\\");
-		path.pop();
-		return path.join("/");
-	}
-}
 
 let client: LanguageClient;
 
@@ -71,8 +68,6 @@ export async function activate(context: ExtensionContext) {
 		},
 	};
 
-	
-
 	//define client
 	client = new LanguageClient("jmc", "JMC", serverOptions, clientOptions);
 
@@ -80,10 +75,11 @@ export async function activate(context: ExtensionContext) {
 	const builtinFunctionsCompletion = languages.registerCompletionItemProvider(
 		selector,
 		{
-			provideCompletionItems(document, position, token, context) {
-				const linePrefix = document
-					.lineAt(position)
-					.text.substring(0, position.character);
+			async provideCompletionItems(document, position, token, context) {
+				const linePrefix = await getCurrentCommand(
+					document.getText(),
+					document.offsetAt(position)
+				);
 				for (const i of BuiltInFunctions) {
 					if (linePrefix.endsWith(`${i.class}.`)) {
 						const methods: vscode.CompletionItem[] = [];
@@ -106,9 +102,10 @@ export async function activate(context: ExtensionContext) {
 		selector,
 		{
 			async provideSignatureHelp(document, position, token, ctx) {
-				const linePrefix = document
-					.lineAt(position)
-					.text.substring(0, position.character);
+				const linePrefix = await getCurrentCommand(
+					document.getText(),
+					document.offsetAt(position)
+				);
 				if (ctx.triggerCharacter === "(") {
 					const methods = BuiltInFunctions.flatMap((v) => {
 						const target = v.methods.filter((value) => {
@@ -153,10 +150,16 @@ export async function activate(context: ExtensionContext) {
 		languages.registerCompletionItemProvider(
 			selector,
 			{
-				provideCompletionItems(document, position, token, context) {
-					const linePrefix = document
-						.lineAt(position)
-						.text.substring(0, position.character);
+				async provideCompletionItems(
+					document,
+					position,
+					token,
+					context
+				) {
+					const linePrefix = await getCurrentCommand(
+						document.getText(),
+						document.offsetAt(position)
+					);
 					if (/\$(\w+)\./g.test(linePrefix)) {
 						return [
 							{
@@ -207,9 +210,10 @@ export async function activate(context: ExtensionContext) {
 		selector,
 		{
 			async provideCompletionItems(document, position, token, c) {
-				const linePrefix = document
-					.lineAt(position)
-					.text.substring(0, position.character);
+				const linePrefix = await getCurrentCommand(
+					document.getText(),
+					document.offsetAt(position)
+				);
 				if (linePrefix.endsWith("@import ")) {
 					const path = document.uri.fsPath.split("\\");
 					path.pop();
@@ -239,9 +243,10 @@ export async function activate(context: ExtensionContext) {
 		selector,
 		{
 			async provideCompletionItems(document, position, token, context) {
-				const linePrefix = document
-					.lineAt(position)
-					.text.substring(0, position.character);
+				const linePrefix = await getCurrentCommand(
+					document.getText(),
+					document.offsetAt(position)
+				);
 				if (linePrefix.endsWith("new ")) {
 					const items: vscode.CompletionItem[] = [];
 					for (const i of JSON_FILE_TYPES) {
@@ -319,6 +324,43 @@ export async function activate(context: ExtensionContext) {
 	// 	},
 	// 	" "
 	// );
+
+	const vanillaCommandsCompletion = languages.registerCompletionItemProvider(
+		selector,
+		{
+			async provideCompletionItems(document, position, token, context) {
+				const text = document.getText();
+				const linePrefix = await getCurrentCommand(
+					text,
+					document.offsetAt(position)
+				);
+				const items: vscode.CompletionItem[] = [];
+				for (const command of CommandArguments) {
+					const data = linePrefix.split(" ").filter((v) => v !== "");
+					console.log(data);
+					if (data[0] === command.command) {
+						const arg = command.args[data.length - 1];
+						if (typeof arg.value === "string") {
+							items.push({
+								label: arg.value,
+								kind: vscode.CompletionItemKind.Value,
+							});
+						} else {
+							for (const v of arg.value) {
+								items.push({
+									label: v,
+									kind: vscode.CompletionItemKind.Value,
+								});
+							}
+						}
+						return items;
+					}
+				}
+				return undefined;
+			},
+		},
+		" "
+	);
 
 	//TODO: add it for vanilla commands
 	const semanticHighlight = languages.registerDocumentSemanticTokensProvider(
@@ -470,6 +512,18 @@ export async function activate(context: ExtensionContext) {
 						}
 					}
 				}
+
+				// for (const command of CommandArguments) {
+				// 	const pattern = RegExp(`(?:\\;|\\{|\\})\\s*(${command.command})`);
+				// 	while ((m = pattern.exec(text)) !== null) {
+				// 		const startPos = document.positionAt(m.index);
+				// 		const endPos = document.positionAt(m.index + 1);
+				// 		const range = new vscode.Range(startPos, endPos);
+				// 		console.log(range);
+
+				// 		builder.push(range, "class", ["declaration"]);
+				// 	}
+				// }
 
 				// let pattern = RegExp(`\\\$${variable}\\b`,'g');
 				// while ((m = variablePattern.exec(text)) !== null) {

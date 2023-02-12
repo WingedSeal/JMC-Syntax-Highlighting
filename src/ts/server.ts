@@ -219,7 +219,7 @@ connection.onDidChangeWatchedFiles((_change) => {
 });
 
 connection.onCompletion(
-	async (pos: TextDocumentPositionParams): Promise<CompletionItem[]> => {
+	async (args: TextDocumentPositionParams): Promise<CompletionItem[]> => {
 		const builtinFunctionsName = BuiltInFunctions.map((v) => ({
 			name: v.class,
 		}));

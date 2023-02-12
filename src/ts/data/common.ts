@@ -15,16 +15,9 @@ export const KEYWORDS: Array<string> = [
 export const SEMI_CHECKCHAR: string[] = [
 	";",
 	"{",
-	"=",
 	"}",
-	".",
-	"(",
-	")",
-	"/",
 	"[",
 	"]",
-	",",
-	"$",
 ];
 
 export const VANILLA_COMMANDS: Array<string> = [
@@ -45,7 +38,6 @@ export const VANILLA_COMMANDS: Array<string> = [
 	"fill",
 	"fillbiome",
 	"foceload",
-	"function",
 	"gamemode",
 	"gamerule",
 	"give",

@@ -94,6 +94,9 @@
                     ],
                     "clas": [
                         "entity.name.class.jmc"
+                    ],
+                    "command": [
+                        "keyword.control.jmc"
                     ]
                 }
             }
@@ -117,6 +120,11 @@
             {
                 "id": "clas",
                 "superType": "class",
+                "description": "NA"
+            },
+            {
+                "id": "command",
+                "superType": "keyword",
                 "description": "NA"
             }
         ]
