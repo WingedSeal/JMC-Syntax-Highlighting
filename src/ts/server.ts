@@ -25,6 +25,7 @@ import {
 	getFunctions,
 	getVariables,
 } from "./helpers/documentAnalyze";
+import { Language, TokenType } from "./helpers/lexer";
 
 const connection = createConnection(ProposedFeatures.all);
 let text: string;
@@ -185,17 +186,43 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 
 	text = textDocument.getText();
 
-	const data = await validateText(text, url.fileURLToPath(textDocument.uri));
-	userVariables = data.variables;
-	userFunctions = data.functions;
-	userClasses = data.classes;
+	// const data = await validateText(text, url.fileURLToPath(textDocument.uri));
+	// userVariables = data.variables;
+	// userFunctions = data.functions;
+	// userClasses = data.classes;
 
-	const diagnostics: Diagnostic[] = await getDiagnostics(
-		text,
-		url.fileURLToPath(textDocument.uri),
-		workspaceFolder
-	);
-	await connection.sendDiagnostics({ uri: textDocument.uri, diagnostics });
+	// const diagnostics: Diagnostic[] = await getDiagnostics(
+	// 	text,
+	// 	url.fileURLToPath(textDocument.uri),
+	// 	workspaceFolder
+	// );
+	// await connection.sendDiagnostics({ uri: textDocument.uri, diagnostics });
+
+	const language = new Language(text);
+	userVariables = language.tokens
+		.filter((v) => v.type === TokenType.VARIABLE)
+		.map(
+			(v): CompletionItem => ({
+				label: v.value![0],
+				kind: CompletionItemKind.Variable,
+			})
+		);
+	userFunctions = language.tokens
+		.filter((v) => v.type === TokenType.FUNCTION)
+		.map(
+			(v): CompletionItem => ({
+				label: v.value![0],
+				kind: CompletionItemKind.Function,
+			})
+		);
+	userClasses = language.tokens
+		.filter((v) => v.type === TokenType.CLASS)
+		.map(
+			(v): CompletionItem => ({
+				label: v.value![0],
+				kind: CompletionItemKind.Class,
+			})
+		);
 
 	// const diagnostics: Diagnostic[] = await getDiagnostics(
 	// 	text,

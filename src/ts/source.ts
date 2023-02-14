@@ -26,7 +26,6 @@ import {
 	getLineByIndex,
 	getLinePos,
 } from "./helpers/documentHelper";
-import { tokenizeCommand } from "./helpers/lexer";
 import { CommandArguments } from "./data/vanillaCommands";
 
 const selector: DocumentSelector = {
