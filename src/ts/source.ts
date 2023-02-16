@@ -16,20 +16,13 @@ import * as vscode from "vscode";
 import {
 	HEADERS,
 	JSON_FILE_TYPES,
-	SEMI_CHECKCHAR,
-	VANILLA_COMMANDS,
 } from "./data/common";
 import { getAllFiles } from "get-all-files";
 import {
-	getClassClient as getClassesClient,
-	getFunctionsClient,
-	getVariablesClient,
 	semanticLegend,
 } from "./semanticHighlight";
 import {
 	getCurrentCommand,
-	getLineByIndex,
-	getLinePos,
 } from "./helpers/documentHelper";
 import { CommandArguments } from "./data/vanillaCommands";
 import { Language, TokenType } from "./helpers/lexer";
@@ -51,6 +44,7 @@ const headerSelector: DocumentSelector = {
 };
 
 let client: LanguageClient;
+let classesMethods: ClassesMethods[] | undefined;
 
 export async function activate(context: ExtensionContext) {
 	await initLogger(context);
@@ -115,21 +109,12 @@ export async function activate(context: ExtensionContext) {
 		selector,
 		{
 			async provideCompletionItems(document, position, token, context) {
+				if (classesMethods === undefined) return;
 				const linePrefix = await getCurrentCommand(
 					document.getText(),
 					document.offsetAt(position)
 				);
-				const text = document.getText();
-				const language = new Language(text);
-				const items = language.tokens
-					.filter((v) => v.type === TokenType.CLASS)
-					.map((v): ClassesMethods => {
-						return {
-							name: v.value![0],
-							methods: v.value!.slice(1),
-						};
-					});
-				for (const item of items) {
+				for (const item of classesMethods) {
 					const cItems: vscode.CompletionItem[] = [];
 					if (linePrefix.endsWith(`${item.name}.`)) {
 						item.methods.forEach((v) => {
@@ -138,8 +123,8 @@ export async function activate(context: ExtensionContext) {
 								kind: vscode.CompletionItemKind.Function
 							});
 						});
+						return cItems;
 					}
-					return cItems;
 				}
 				return undefined;
 			},
@@ -410,7 +395,6 @@ export async function activate(context: ExtensionContext) {
 		" "
 	);
 
-	//TODO: add it for vanilla commands
 	const semanticHighlight = languages.registerDocumentSemanticTokensProvider(
 		selector,
 		{
@@ -639,14 +623,29 @@ export async function activate(context: ExtensionContext) {
 						const range = new vscode.Range(startPos, endPos);
 						builder.push(range, "class", ["declaration"]);
 					} else if (_var.type === TokenType.CALL_FUNCTION) {
-						if (_var.value !== undefined && _var.length === 1) {
+						if (_var.value !== undefined && _var.value.length === 1) {
 							const startPos = document.positionAt(_var.offset);
 							const endPos = document.positionAt(
 								_var.offset + _var.value[0].length
 							);
 							const range = new vscode.Range(startPos, endPos);
 							builder.push(range, "function", ["declaration"]);
-						} else if (_var.value !== undefined) {
+						} else if (_var.value !== undefined && _var.value.length === 2) {
+							const startPos = document.positionAt(_var.offset);
+							const endPos = document.positionAt(
+								_var.offset + _var.value[0].length
+							);
+							const range = new vscode.Range(startPos, endPos);
+							builder.push(range, "class", ["declaration"]);
+
+							const startPos2 = document.positionAt(_var.offset + _var.value[0].length + 1);
+							const endPos2 = document.positionAt(
+								_var.offset + _var.value[0].length + 1 + _var.value[1].length
+							);
+							const range2 = new vscode.Range(startPos2, endPos2);
+							builder.push(range2, "function", ["declaration"]);							
+
+						} else if (_var.value !== undefined && _var.value.length > 2) {
 							const startPos = document.positionAt(_var.offset);
 							const endPos = document.positionAt(
 								_var.offset + _var.value[0].length
@@ -687,6 +686,10 @@ export async function activate(context: ExtensionContext) {
 	);
 
 	client.start();
+
+	client.onNotification("data/classesData", (datas: ClassesMethods[]) => {
+		classesMethods = datas;
+	});
 }
 
 export function deactivate(): Thenable<void> | undefined {

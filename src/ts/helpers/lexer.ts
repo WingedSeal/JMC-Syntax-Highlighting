@@ -101,6 +101,8 @@ export class Language {
 			this.praseDefineFunction(current);
 		} else if (current.startsWith("class")) {
 			this.parseClass(current);
+		} else if (current.startsWith("switch")) {
+			this.parseSwitch(current);
 		} else if (current.startsWith("$")) {
 			this.parseVariable(current);
 		} else if (current.startsWith("if") || current.startsWith("else")) {
@@ -115,6 +117,51 @@ export class Language {
 			this.parseCallFunction(current);
 		} else {
 			return;
+		}
+	}
+
+	private parseSwitch(text: string) {
+		const offset = this.getOffset();
+		const rawText = this.raw[this.currentIndex];
+
+		if (this.rtrim[this.currentIndex + 1] !== "(") {
+			this.errors.push({
+				type: ErrorType.INVALID_SYNTAX,
+				offset: offset + 7,
+				length: 1,
+				message: "Expected '('",
+			});
+			return;
+		}
+
+		if (!this.checkBracket()) {
+			this.errors.push({
+				type: ErrorType.INVALID_SYNTAX,
+				offset: offset + 7,
+				length: 1,
+				message: "Expected ')'",
+			});
+		}
+		while (this.currentIndex++ !== this.rtrim.length - 1) {
+			const current = this.rtrim[this.currentIndex];
+			this.parseText(current);
+			if (current === "{") break;
+		}
+		let bracketCount = 1;
+
+		while (this.currentIndex++ !== this.rtrim.length - 1) {
+			const current = this.rtrim[this.currentIndex];
+			if (current.startsWith("case")) {
+				const data = current.split(":").map((v) => v.trim());
+				this.parseText(data[1]);
+			}
+			else {
+				this.parseText(current);
+			}
+
+			if (current === "{") bracketCount++;
+			else if (current === "}") bracketCount--;
+			if (bracketCount === 0) break;
 		}
 	}
 
@@ -383,6 +430,13 @@ export class Language {
 			offset -= empty;
 		}
 
+		if (rawText.trim().startsWith("case")) {
+			const firstLength = rawText.split(":")[0].trim().length;
+			const secondEmpty = rawText.split(":")[1].match(/^(\s+)/g || []);
+			const empLength = secondEmpty !== null ? secondEmpty[0].length : 0;
+			offset += firstLength + empLength + 1;
+		}
+
 		// this.currentIndex += 1;
 		// let bracketCount = 1;
 		// let commaCount = 0;
@@ -538,5 +592,27 @@ export class Language {
 			);
 		}
 		return joined.length - this.raw[this.currentIndex].length;
+	}
+	/**
+	 *
+	 */
+	private checkBracket(): boolean {
+		let index = this.currentIndex;
+		let bracketCount = 0;
+		while (index++ !== this.rtrim.length - 1) {
+			// this.errors.push({
+			// 	type: ErrorType.INVALID_SYNTAX,
+			// 	offset: offset + 7,
+			// 	length: 1,
+			// 	message: "Expected '('",
+			// });
+			const current = this.rtrim[index];
+			if (current === "(") bracketCount++;
+			else if (current === ")") bracketCount--;
+			else if (bracketCount === 0) {
+				return true;
+			}
+		}
+		return false;
 	}
 }

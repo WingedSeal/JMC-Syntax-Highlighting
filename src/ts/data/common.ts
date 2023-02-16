@@ -1,3 +1,8 @@
+export interface ClassesMethods {
+	name: string;
+	methods: string[];
+}
+
 export const KEYWORDS: Array<string> = [
 	"function",
 	"new",

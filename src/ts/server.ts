@@ -16,15 +16,12 @@ import {
 } from "vscode-languageserver/node";
 import { TextDocument } from "vscode-languageserver-textdocument";
 import { BuiltInFunctions, methodInfoToDoc } from "./data/builtinFunctions";
-import { KEYWORDS as Keywords, VANILLA_COMMANDS } from "./data/common";
+import { ClassesMethods, KEYWORDS as Keywords, VANILLA_COMMANDS } from "./data/common";
 import { getDiagnostics } from "./diagnostics";
 import * as url from "url";
 import {
-	getClass,
 	getCurrentCommand,
-	getFunctions,
 	getImportDocumentText,
-	getVariables,
 } from "./helpers/documentAnalyze";
 import { Language, TokenType } from "./helpers/lexer";
 
@@ -32,10 +29,7 @@ const connection = createConnection(ProposedFeatures.all);
 let text: string;
 let workspaceFolder: string;
 
-interface ClassesMethods {
-	name: string;
-	methods: string[];
-}
+
 
 export let userVariables: CompletionItem[] = [];
 export let userFunctions: CompletionItem[] = [];
@@ -188,6 +182,7 @@ interface ValidateData {
 // 	};
 // }
 
+
 async function validateText(fileText: string): Promise<ValidateData> {
 	const language = new Language(fileText);
 	const variables = language.tokens
@@ -262,6 +257,8 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 		userClasses = userClasses.concat(fileData.classes);
 	}
 
+	connection.sendNotification("data/classesData", userClassesMethods);
+
 	// const diagnostics: Diagnostic[] = await getDiagnostics(
 	// 	text,
 	// 	url.fileURLToPath(textDocument.uri),
@@ -279,6 +276,8 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 	// }
 }
 
+
+
 connection.onDidChangeWatchedFiles((_change) => {
 	connection.console.log("We received a file change event");
 });
@@ -290,6 +289,16 @@ connection.onCompletion(
 		}));
 		const items: CompletionItem[] = [];
 		let num = 0;
+
+		
+
+		// const document = documents.get(arg.textDocument.uri);
+		// if (document !== undefined) {
+		// 	const text = document.getText();
+		// 	const offset = document.offsetAt(arg.position);
+		// 	const linePrefix = getCurrentCommand(text, offset);
+		// 	console.log(linePrefix);
+		// }
 
 		for (const i of builtinFunctionsName) {
 			items.push({
