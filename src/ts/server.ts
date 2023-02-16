@@ -23,6 +23,7 @@ import {
 	getClass,
 	getCurrentCommand,
 	getFunctions,
+	getImportDocumentText,
 	getVariables,
 } from "./helpers/documentAnalyze";
 import { Language, TokenType } from "./helpers/lexer";
@@ -31,9 +32,15 @@ const connection = createConnection(ProposedFeatures.all);
 let text: string;
 let workspaceFolder: string;
 
+interface ClassesMethods {
+	name: string;
+	methods: string[];
+}
+
 export let userVariables: CompletionItem[] = [];
 export let userFunctions: CompletionItem[] = [];
 export let userClasses: CompletionItem[] = [];
+export let userClassesMethods: ClassesMethods[] = [];
 
 const documents: TextDocuments<TextDocument> = new TextDocuments(TextDocument);
 
@@ -144,42 +151,86 @@ interface ValidateData {
 	classes: CompletionItem[];
 }
 
-async function validateText(text: string, path: string): Promise<ValidateData> {
-	let m: RegExpExecArray | null;
+// async function validateText(text: string, path: string): Promise<ValidateData> {
+// 	let m: RegExpExecArray | null;
 
-	const variables: CompletionItem[] = [];
-	for (const variable of await getVariables(text, workspaceFolder)) {
-		const filter = variables.filter((v) => v.label == variable);
-		if (!(filter.length > 0)) {
-			variables.push({
-				label: variable,
+// 	const variables: CompletionItem[] = [];
+// 	for (const variable of await getVariables(text, workspaceFolder)) {
+// 		const filter = variables.filter((v) => v.label == variable);
+// 		if (!(filter.length > 0)) {
+// 			variables.push({
+// 				label: variable,
+// 				kind: CompletionItemKind.Variable,
+// 			});
+// 		}
+// 	}
+
+// 	const functions: CompletionItem[] = [];
+// 	for (const func of await getFunctions(text, workspaceFolder)) {
+// 		const filter = functions.filter((v) => v.label == func);
+// 		if (!(filter.length > 0)) {
+// 			functions.push({ label: func, kind: CompletionItemKind.Function });
+// 		}
+// 	}
+
+// 	const classes: CompletionItem[] = [];
+// 	for (const c of await getClass(text, workspaceFolder)) {
+// 		const filter = classes.filter((v) => v.label == c);
+// 		if (!(filter.length > 0)) {
+// 			classes.push({ label: c, kind: CompletionItemKind.Class });
+// 		}
+// 	}
+
+// 	return {
+// 		variables: variables,
+// 		functions: functions,
+// 		classes: classes,
+// 	};
+// }
+
+async function validateText(fileText: string): Promise<ValidateData> {
+	const language = new Language(fileText);
+	const variables = language.tokens
+		.filter((v) => v.type === TokenType.VARIABLE)
+		.map(
+			(v): CompletionItem => ({
+				label: v.value![0].slice(1),
 				kind: CompletionItemKind.Variable,
+			})
+		);
+	const functions = language.tokens
+		.filter((v) => v.type === TokenType.FUNCTION)
+		.filter((v) => v.value![1] === "")
+		.map(
+			(v): CompletionItem => ({
+				label: v.value![0],
+				kind: CompletionItemKind.Function,
+			})
+		);
+	const classes = language.tokens
+		.filter((v) => v.type === TokenType.CLASS)
+		.map((v): CompletionItem => {
+			userClassesMethods.push({
+				name: v.value![0],
+				methods: language.tokens
+					.filter(
+						(v) =>
+							v.type === TokenType.FUNCTION && v.value![1] !== ""
+					)
+					.map((v) => v.value![0]),
 			});
-		}
-	}
-
-	const functions: CompletionItem[] = [];
-	for (const func of await getFunctions(text, workspaceFolder)) {
-		const filter = functions.filter((v) => v.label == func);
-		if (!(filter.length > 0)) {
-			functions.push({ label: func, kind: CompletionItemKind.Function });
-		}
-	}
-
-	const classes: CompletionItem[] = [];
-	for (const c of await getClass(text, workspaceFolder)) {
-		const filter = classes.filter((v) => v.label == c);
-		if (!(filter.length > 0)) {
-			classes.push({ label: c, kind: CompletionItemKind.Class });
-		}
-	}
-
+			return {
+				label: v.value![0],
+				kind: CompletionItemKind.Class,
+			};
+		});
 	return {
 		variables: variables,
 		functions: functions,
 		classes: classes,
-	};
+	};		
 }
+
 
 async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 	const settings = await getDocumentSettings(textDocument.uri);
@@ -197,32 +248,19 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 	// 	workspaceFolder
 	// );
 	// await connection.sendDiagnostics({ uri: textDocument.uri, diagnostics });
+	const datas = await getImportDocumentText(workspaceFolder);
 
-	const language = new Language(text);
-	userVariables = language.tokens
-		.filter((v) => v.type === TokenType.VARIABLE)
-		.map(
-			(v): CompletionItem => ({
-				label: v.value![0],
-				kind: CompletionItemKind.Variable,
-			})
-		);
-	userFunctions = language.tokens
-		.filter((v) => v.type === TokenType.FUNCTION)
-		.map(
-			(v): CompletionItem => ({
-				label: v.value![0],
-				kind: CompletionItemKind.Function,
-			})
-		);
-	userClasses = language.tokens
-		.filter((v) => v.type === TokenType.CLASS)
-		.map(
-			(v): CompletionItem => ({
-				label: v.value![0],
-				kind: CompletionItemKind.Class,
-			})
-		);
+	userVariables = [];
+	userClasses = [];
+	userFunctions = [];
+	userClassesMethods = [];
+	
+	for (const data of datas) {
+		const fileData = await validateText(data.text);
+		userVariables = userVariables.concat(fileData.variables);
+		userFunctions = userFunctions.concat(fileData.functions);
+		userClasses = userClasses.concat(fileData.classes);
+	}
 
 	// const diagnostics: Diagnostic[] = await getDiagnostics(
 	// 	text,
@@ -246,7 +284,7 @@ connection.onDidChangeWatchedFiles((_change) => {
 });
 
 connection.onCompletion(
-	async (args: TextDocumentPositionParams): Promise<CompletionItem[]> => {
+	async (arg, token, progress, result): Promise<CompletionItem[]> => {
 		const builtinFunctionsName = BuiltInFunctions.map((v) => ({
 			name: v.class,
 		}));

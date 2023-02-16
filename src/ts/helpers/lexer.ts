@@ -69,7 +69,7 @@ export class Language {
 	private currentIndex = 0;
 
 	constructor(text: string) {
-		this.raw = text.split(/(;|\{|\}|\(|\)|\,|\[|\])/g);
+		this.raw = text.split(/(;|\{|\}|\(|\)|\,|\[|\]|\/\/.*)/g);
 		this.rtrim = this.raw.map((v) => v.trim());
 		for (
 			this.currentIndex = 0;
@@ -82,7 +82,15 @@ export class Language {
 
 	/**
 	 * parse text
-	 * @param text 
+	 * @order EMPTY
+	 * @order COMMENT (//)
+	 * @order FUNCTION (function)
+	 * @order CLASS (class)
+	 * @order VARIABLE ($)
+	 * @order IF-ELSE (if/else)
+	 * @order VANILLA_COMMANDS
+	 * @order FUNCTION_CALL
+	 * @param text
 	 * @returns void
 	 */
 	private parseText(text: string): void {
@@ -99,99 +107,146 @@ export class Language {
 			this.praseIfElse(current);
 		} else if (VANILLA_COMMANDS.includes(current.split(" ")[0])) {
 			this.parseCommand(current);
+		} else if (current.endsWith("=")) {
+			return;
+		} else if (current.startsWith('"')) {
+			return;
 		} else if (this.rtrim[this.currentIndex + 1] === "(") {
-			this.parseFunction(current);
+			this.parseCallFunction(current);
 		} else {
 			return;
 		}
-		
-	}
-
-	/**
-	 * test if text can be parsed
-	 * @param text 
-	 * @returns 
-	 */
-	private testText(text: string): boolean {
-		//return text.startsWith("function") || text.startsWith("$");
-		return true;
 	}
 
 	/**
 	 * parse vanilla command
-	 * @param text 
+	 * @param text
 	 */
 	private parseCommand(text: string) {
 		const index = this.getOffset();
-		const rawText = this.raw[this.currentIndex];
-		let length = text.length;
-		
+		let startRaw = this.raw[this.currentIndex];
+
 		if (this.rtrim[this.currentIndex + 1] === "[") {
 			let bracketCount = 1;
-			this.currentIndex += 2;			
+			this.currentIndex += 2;
 			text += "[";
-			while (bracketCount !== 0) {
+			while (
+				bracketCount !== 0 &&
+				this.currentIndex < this.raw.length - 1
+			) {
 				const currentText = this.rtrim[this.currentIndex];
+				const currentRaw = this.raw[this.currentIndex];
+
 				if (currentText === "[") bracketCount++;
 				else if (currentText === "]") bracketCount--;
 				else {
 					text += currentText;
 				}
-				length += this.raw[this.currentIndex].length;
+				startRaw += currentRaw;
+
 				this.currentIndex++;
 			}
 			text += "]";
 		}
 
-		if (text.split(" ").map((v) => v.trim()).filter((v) => (v! += ""))[0] === "execute") {
-			let bracketCount = 1;
-			text += " ";
-			
-			while (bracketCount !== 0) {
-				const currentText = this.rtrim[this.currentIndex];
-				if (currentText === "{") bracketCount++;
-				else if (currentText === "}") bracketCount--;
-				else if (currentText === ";") break;
-				if (bracketCount === 1) {
-					text += currentText;
-					length += this.raw[this.currentIndex].length;
-				}
-				this.currentIndex++;
-			}
-		}
-		else {
+		const next = this.rtrim[this.currentIndex + 1];
+
+		if (!(next === ";" || next === "{")) {
 			this.currentIndex++;
-			text += " ";
 			let currentText = this.rtrim[this.currentIndex];
-			while (currentText !== ";") {
+
+			while (!(currentText === ";" || currentText === "{")) {
 				currentText = this.rtrim[this.currentIndex];
-				text += currentText;
-				length += this.raw[this.currentIndex].length;
-				if (this.rtrim[this.currentIndex] === ")") text += " ";
+				const currentRaw = this.raw[this.currentIndex];
+
+				if (currentText === ";" || currentText === "{") break;
+				if (currentText !== "(" && currentText !== ")") {
+					text += currentText;
+				}
+				if (currentText === ")") text += " ";
+				startRaw += currentRaw;
+
+				this.currentIndex++;
+			}
+		} else if (text.startsWith("execute")) {
+			let currentText = this.rtrim[this.currentIndex];
+			text += " ";
+
+			while (!(currentText === ";" || currentText === "{")) {
+				currentText = this.rtrim[this.currentIndex];
+				const currentRaw = this.raw[this.currentIndex];
+
+				if (currentText === ";" || currentText === "{") break;
+				if (currentText !== "(" && currentText !== ")") {
+					text += currentText;
+				}
+				if (currentText === ")") text += " ";
+				startRaw += currentRaw;
+
 				this.currentIndex++;
 			}
 		}
-		
+
+		// if (
+		// 	text
+		// 		.split(" ")
+		// 		.map((v) => v.trim())
+		// 		.filter((v) => (v! += ""))[0] === "execute"
+		// ) {
+		// 	let bracketCount = 1;
+		// 	text += " ";
+
+		// 	while (
+		// 		bracketCount !== 0 &&
+		// 		this.currentIndex < this.raw.length - 1
+		// 	) {
+		// 		const currentText = this.rtrim[this.currentIndex];
+		// 		if (currentText === "{") bracketCount++;
+		// 		else if (currentText === "}") bracketCount--;
+		// 		else if (currentText === ";") break;
+		// 		if (bracketCount === 1) {
+		// 			text += currentText;
+		// 			length += this.raw[this.currentIndex].length;
+		// 		}
+		// 		this.currentIndex++;
+		// 	}
+		// } else {
+		// 	this.currentIndex++;
+		// 	text += " ";
+		// 	let currentText = this.rtrim[this.currentIndex];
+		// 	while (
+		// 		currentText !== ";" &&
+		// 		this.currentIndex < this.raw.length - 1
+		// 	) {
+		// 		currentText = this.rtrim[this.currentIndex];
+		// 		text += currentText;
+		// 		length += this.raw[this.currentIndex].length;
+		// 		if (this.rtrim[this.currentIndex] === ")") text += " ";
+		// 		this.currentIndex++;
+		// 	}
+		// }
 
 		const digest = text
 			.split(" ")
 			.map((v) => v.trim())
-			.filter((v) => (v! += ""));		
+			.filter((v) => (v! += ""));
+		const emptyLength = startRaw.match(/^(\s+)/g || []);
+		const empty = emptyLength !== null ? emptyLength[0].length : 0;
 
 		this.tokens.push({
-			raw: rawText,
+			raw: startRaw,
 			trim: text,
 			type: TokenType.COMMAND,
-			offset: index,
-			length: length,
+			offset: index + empty,
+			length: startRaw.length - empty,
 			value: digest,
 		});
 	}
 
 	/**
 	 * prase If else block
-	 * @param text 
-	 * @returns 
+	 * @param text
+	 * @returns
 	 */
 	private praseIfElse(text: string) {
 		const startOffset = this.getOffset();
@@ -199,10 +254,12 @@ export class Language {
 		if (text.endsWith("if")) {
 			const next = this.rtrim[this.currentIndex + 1];
 			if (next !== "(") {
+				const length =
+					rawText.length - rawText.trim().length + text.length;
 				this.errors.push({
 					type: ErrorType.INVALID_SYNTAX,
 					message: "Expected '('",
-					offset: startOffset,
+					offset: startOffset + length,
 					length: 1,
 				});
 				return;
@@ -211,7 +268,10 @@ export class Language {
 			let bracketCount = 1;
 			let args: string[][] = [];
 			let lastTextIndex: number | undefined;
-			while (bracketCount !== 0) {
+			while (
+				bracketCount !== 0 &&
+				this.currentIndex < this.raw.length - 1
+			) {
 				const currentText = this.rtrim[this.currentIndex];
 				if (currentText === ")") bracketCount--;
 				else if (currentText === "(") bracketCount++;
@@ -260,8 +320,8 @@ export class Language {
 
 	/**
 	 * parse class
-	 * @param text 
-	 * @returns 
+	 * @param text
+	 * @returns
 	 */
 	private parseClass(text: string) {
 		const index = this.getOffset();
@@ -276,80 +336,99 @@ export class Language {
 			return;
 		}
 
+		const emptyLength = rawText.match(/^(\s+)/g || []);
+		const empty = emptyLength !== null ? emptyLength[0].length : 0;
+
+		const funcs: string[] = [];
+		let startIndex = this.currentIndex;
+		let bracketCount = 0;
+		while (startIndex++ !== this.rtrim.length - 1) {
+			const currentText = this.rtrim[startIndex];
+			if (currentText === "{") bracketCount++;
+			else if (currentText === "}") bracketCount--;
+			else if (currentText.startsWith("function")) {
+				funcs.push(currentText.split(" ")[1]);
+			}
+			if (bracketCount === 0) break;
+		}
+
 		const funcName = text.split(" ")[1];
 		this.tokens.push({
 			raw: rawText,
 			trim: text,
 			type: TokenType.CLASS,
-			length: rawText.length,
-			offset: index,
-			value: [funcName],
+			length: rawText.length - empty,
+			offset: index + empty,
+			value: [funcName].concat(funcs),
 		});
 	}
 
 	/**
 	 * prase functioncall
-	 * @param text 
-	 * @returns 
+	 * @param text
+	 * @returns
 	 */
-	private parseFunction(text: string) {
-		const args: string[] = [];
-
+	private parseCallFunction(text: string) {
 		const startIndex = this.currentIndex;
 		const rawText = this.raw[startIndex];
-		const startOffset = this.getOffset();
+		let offset = this.getOffset();
 		const funcName = text.split(".");
 
-		this.currentIndex += 1;
-		let bracketCount = 1;
-		let commaCount = 0;
-		let lastTextIndex: number | undefined;
-		while (bracketCount !== 0 && this.currentIndex < this.rtrim.length) {
-			const currentText = this.rtrim[this.currentIndex];
-			//TODO:
-			if (currentText === ")") bracketCount--;
-			else if (currentText === "(") bracketCount++;
-			else if (currentText === ",") commaCount++;
-			else if (currentText === ";") return;
-			else if (currentText === "[") {
-				const startIndex = this.currentIndex - 1;
-				this.rtrim[this.currentIndex - 1] = this.joinBracket();
-				this.parseText(this.rtrim[startIndex]);
-			}
-			else {
-				this.parseText(currentText);
-				args.push(currentText);
-			}
-			lastTextIndex = undefined;
-			this.currentIndex++;
-		}
-		const endOffset = this.getOffset();
-		const length = endOffset - startOffset;
+		const emptyLength = rawText.match(/^(\s+)/g || []);
+		const empty = emptyLength !== null ? emptyLength[0].length : 0;
 
-		if (args.length - 1 !== commaCount) {
-			this.errors.push({
-				type: ErrorType.INVALID_SYNTAX,
-				message: "",
-				length: length,
-				offset: endOffset - 1,
-			});
-			return;
+		if (rawText.trim().startsWith("$")) {
+			offset += rawText.length;
+			offset -= text.length;
+			offset -= empty;
 		}
+
+		// this.currentIndex += 1;
+		// let bracketCount = 1;
+		// let commaCount = 0;
+		// while (bracketCount !== 0 && this.currentIndex < this.rtrim.length) {
+		// 	const currentText = this.rtrim[this.currentIndex];
+		// 	if (currentText === ")") bracketCount--;
+		// 	else if (currentText === "(") bracketCount++;
+		// 	else if (currentText === ",") commaCount++;
+		// 	else if (currentText === ";") return;
+		// 	else if (currentText === "[") {
+		// 		const startIndex = this.currentIndex - 1;
+		// 		this.rtrim[this.currentIndex - 1] = this.joinBracket();
+		// 		this.parseText(this.rtrim[startIndex]);
+		// 	} else {
+		// 		this.parseText(currentText);
+		// 		args.push(currentText);
+		// 	}
+		// 	this.currentIndex++;
+		// }
+		// const endOffset = this.getOffset();
+		// const length = endOffset - startOffset;
+
+		// if (args.length - 1 !== commaCount) {
+		// 	this.errors.push({
+		// 		type: ErrorType.INVALID_SYNTAX,
+		// 		message: "",
+		// 		length: length,
+		// 		offset: endOffset - 1,
+		// 	});
+		// 	return;
+		// }
 
 		this.tokens.push({
 			raw: rawText,
 			trim: text,
 			type: TokenType.CALL_FUNCTION,
-			length: length,
-			offset: startOffset,
+			length: text.length - empty,
+			offset: offset + empty,
 			value: funcName,
 		});
 	}
 
 	/**
 	 * parse defining variables
-	 * @param text 
-	 * @returns 
+	 * @param text
+	 * @returns
 	 */
 	private parseVariable(text: string) {
 		const index = this.getOffset();
@@ -361,12 +440,14 @@ export class Language {
 
 		const eData = data[1].split(/(\?=|=)/g).filter((v) => v !== "");
 		if (eData[0] !== "=" && eData[0] !== "?=") {
+			const emptyLength = rawText.match(/^(\s+)/g || []);
+			const empty = emptyLength !== null ? emptyLength[0].length : 0;
 			this.tokens.push({
 				raw: rawText,
 				trim: text,
 				type: TokenType.USE_VARIABLE,
-				length: rawText.length,
-				offset: index,
+				length: data[0].length,
+				offset: index + empty,
 				value: [data[0]],
 			});
 			return;
@@ -388,20 +469,23 @@ export class Language {
 		const varName = data[0];
 		this.parseText(operation);
 
+		const emptyLength = rawText.match(/^(\s+)/g || []);
+		const empty = emptyLength !== null ? emptyLength[0].length : 0;
+
 		this.tokens.push({
 			raw: rawText,
 			trim: text,
 			type: TokenType.VARIABLE,
-			length: rawText.length,
-			offset: index,
+			length: rawText.length - empty,
+			offset: index + empty,
 			value: [varName, operator, operation],
 		});
 	}
 
 	/**
 	 * prase function defining
-	 * @param text 
-	 * @returns 
+	 * @param text
+	 * @returns
 	 */
 	private praseDefineFunction(text: string) {
 		const index = this.getOffset();
@@ -416,14 +500,28 @@ export class Language {
 			return;
 		}
 
-		const funcName = text.split(" ")[1];
+		let startIndex = this.currentIndex;
+		let bracketCount = 1;
+		let inClass = "";
+		while (startIndex-- !== -1) {
+			const currentText = this.rtrim[startIndex];
+			if (currentText === "{") bracketCount--;
+			else if (currentText === "}") bracketCount++;
+			else if (bracketCount === 0) {
+				inClass = this.rtrim[startIndex].split(" ")[1];
+				break;
+			}
+		}
+
+		const emptyLength = rawText.match(/^(\s+)/g || []);
+		const empty = emptyLength !== null ? emptyLength[0].length : 0;
 		this.tokens.push({
 			raw: rawText,
 			trim: text,
 			type: TokenType.FUNCTION,
-			length: rawText.length,
-			offset: index,
-			value: [funcName],
+			length: rawText.length - empty,
+			offset: index + empty,
+			value: [text.split(" ")[1], inClass],
 		});
 	}
 
@@ -433,32 +531,12 @@ export class Language {
 	 */
 	private getOffset(): number {
 		const joined = this.raw.slice(0, this.currentIndex + 1).join("");
-		if (joined === undefined) { 
-			return this.raw.slice(0, this.currentIndex).join("").length - this.raw[this.currentIndex].length;
+		if (joined === undefined) {
+			return (
+				this.raw.slice(0, this.currentIndex).join("").length -
+				this.raw[this.currentIndex].length
+			);
 		}
 		return joined.length - this.raw[this.currentIndex].length;
-	}
-
-	/**
-	 * 
-	 * @returns 
-	 */
-	private joinBracket(): string {
-		const startIndex = this.currentIndex;
-		let cText = this.rtrim[startIndex - 1];
-		cText += "[";
-		let mbracketCount = 1;
-		this.currentIndex++;
-		while (mbracketCount !== 0) {
-			const pText = this.rtrim[this.currentIndex];
-			if (pText === "[") mbracketCount++;
-			else if (pText === "]") mbracketCount--;
-			else {
-				cText += pText;
-			}
-			this.currentIndex++;
-		}
-		cText += "]";
-		return cText;
 	}
 }

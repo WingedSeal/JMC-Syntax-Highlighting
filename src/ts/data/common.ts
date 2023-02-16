@@ -18,6 +18,8 @@ export const SEMI_CHECKCHAR: string[] = [
 	"}",
 	"[",
 	"]",
+	"(",
+	")"
 ];
 
 export const VANILLA_COMMANDS: Array<string> = [
