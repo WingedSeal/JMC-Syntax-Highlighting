@@ -1,2 +1,2 @@
-START /B /wait "tsc --build tsconfig.json"
+START /B /wait cmd /c "tsc --build tsconfig.json"
 vsce publish
