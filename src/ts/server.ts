@@ -310,6 +310,7 @@ connection.onCompletion(
 		}
 		for (const i of userVariables) {
 			i.data = num;
+			i.insertText = `$${i.label}`;
 			items.push(i);
 			num++;
 		}
