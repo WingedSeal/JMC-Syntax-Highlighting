@@ -60,10 +60,13 @@ export function getTextByLine(text: string, line: number): string {
 	return t;
 }
 
-export async function getCurrentCommand(text: string, offset: number): Promise<string> {
+export async function getCurrentCommand(
+	text: string,
+	offset: number
+): Promise<string> {
 	let index = offset;
 	let currentText = "";
-	while ((index--) !== -1) {
+	while (index-- !== -1) {
 		const current = text[index];
 		if (SEMI_CHECKCHAR.includes(current)) {
 			return currentText.split("").reverse().join("").trim();

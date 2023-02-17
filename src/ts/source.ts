@@ -13,17 +13,10 @@ import {
 import * as path from "path";
 import { BuiltInFunctions, methodInfoToDoc } from "./data/builtinFunctions";
 import * as vscode from "vscode";
-import {
-	HEADERS,
-	JSON_FILE_TYPES,
-} from "./data/common";
+import { HEADERS, JSON_FILE_TYPES } from "./data/common";
 import { getAllFiles } from "get-all-files";
-import {
-	semanticLegend,
-} from "./semanticHighlight";
-import {
-	getCurrentCommand,
-} from "./helpers/documentHelper";
+import { semanticLegend } from "./semanticHighlight";
+import { getCurrentCommand } from "./helpers/documentHelper";
 import { CommandArguments } from "./data/vanillaCommands";
 import { Language, TokenType } from "./helpers/lexer";
 import { getLogger, initLogger } from "./helpers/logger";
@@ -120,7 +113,7 @@ export async function activate(context: ExtensionContext) {
 						item.methods.forEach((v) => {
 							cItems.push({
 								label: v,
-								kind: vscode.CompletionItemKind.Function
+								kind: vscode.CompletionItemKind.Function,
 							});
 						});
 						return cItems;
@@ -623,14 +616,20 @@ export async function activate(context: ExtensionContext) {
 						const range = new vscode.Range(startPos, endPos);
 						builder.push(range, "class", ["declaration"]);
 					} else if (_var.type === TokenType.CALL_FUNCTION) {
-						if (_var.value !== undefined && _var.value.length === 1) {
+						if (
+							_var.value !== undefined &&
+							_var.value.length === 1
+						) {
 							const startPos = document.positionAt(_var.offset);
 							const endPos = document.positionAt(
 								_var.offset + _var.value[0].length
 							);
 							const range = new vscode.Range(startPos, endPos);
 							builder.push(range, "function", ["declaration"]);
-						} else if (_var.value !== undefined && _var.value.length === 2) {
+						} else if (
+							_var.value !== undefined &&
+							_var.value.length === 2
+						) {
 							const startPos = document.positionAt(_var.offset);
 							const endPos = document.positionAt(
 								_var.offset + _var.value[0].length
@@ -638,14 +637,21 @@ export async function activate(context: ExtensionContext) {
 							const range = new vscode.Range(startPos, endPos);
 							builder.push(range, "class", ["declaration"]);
 
-							const startPos2 = document.positionAt(_var.offset + _var.value[0].length + 1);
+							const startPos2 = document.positionAt(
+								_var.offset + _var.value[0].length + 1
+							);
 							const endPos2 = document.positionAt(
-								_var.offset + _var.value[0].length + 1 + _var.value[1].length
+								_var.offset +
+									_var.value[0].length +
+									1 +
+									_var.value[1].length
 							);
 							const range2 = new vscode.Range(startPos2, endPos2);
-							builder.push(range2, "function", ["declaration"]);							
-
-						} else if (_var.value !== undefined && _var.value.length > 2) {
+							builder.push(range2, "function", ["declaration"]);
+						} else if (
+							_var.value !== undefined &&
+							_var.value.length > 2
+						) {
 							const startPos = document.positionAt(_var.offset);
 							const endPos = document.positionAt(
 								_var.offset + _var.value[0].length

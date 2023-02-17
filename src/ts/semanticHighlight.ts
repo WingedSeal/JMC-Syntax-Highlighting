@@ -13,7 +13,7 @@ const tokenTypes = [
 	"enumMember",
 	"method",
 	"undefinedVariable",
-	"keyword"
+	"keyword",
 ];
 const tokenModifiers = ["declaration"];
 export const semanticLegend = new vscode.SemanticTokensLegend(

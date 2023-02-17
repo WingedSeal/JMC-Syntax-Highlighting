@@ -154,8 +154,7 @@ export class Language {
 			if (current.startsWith("case")) {
 				const data = current.split(":").map((v) => v.trim());
 				this.parseText(data[1]);
-			}
-			else {
+			} else {
 				this.parseText(current);
 			}
 
