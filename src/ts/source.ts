@@ -133,6 +133,7 @@ export async function activate(context: ExtensionContext) {
 					document.getText(),
 					document.offsetAt(position)
 				);
+				console.log(linePrefix);
 				if (ctx.triggerCharacter === "(") {
 					const methods = BuiltInFunctions.flatMap((v) => {
 						const target = v.methods.filter((value) => {

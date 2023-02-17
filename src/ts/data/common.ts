@@ -17,7 +17,7 @@ export const KEYWORDS: Array<string> = [
 	"false",
 ];
 
-export const SEMI_CHECKCHAR: string[] = [";", "{", "}", "[", "]", "(", ")"];
+export const SEMI_CHECKCHAR: string[] = [";", "{", "}", "[", "]"];
 
 export const VANILLA_COMMANDS: Array<string> = [
 	"advancement",
