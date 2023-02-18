@@ -17,9 +17,10 @@ import { HEADERS, JSON_FILE_TYPES } from "./data/common";
 import { getAllFiles } from "get-all-files";
 import { semanticLegend } from "./semanticHighlight";
 import { getCurrentCommand } from "./helpers/documentHelper";
-import { CommandArguments } from "./data/vanillaCommands";
+import { COMMANDS, Command, ValueType } from "./data/vanillaCommands";
 import { Language, TokenType } from "./helpers/lexer";
 import { getLogger, initLogger } from "./helpers/logger";
+import { BLOCKS_ID, ITEMS_ID } from "./data/staticData";
 
 interface ClassesMethods {
 	name: string;
@@ -133,7 +134,6 @@ export async function activate(context: ExtensionContext) {
 					document.getText(),
 					document.offsetAt(position)
 				);
-				console.log(linePrefix);
 				if (ctx.triggerCharacter === "(") {
 					const methods = BuiltInFunctions.flatMap((v) => {
 						const target = v.methods.filter((value) => {
@@ -362,28 +362,286 @@ export async function activate(context: ExtensionContext) {
 					text,
 					document.offsetAt(position)
 				);
+				const data = linePrefix
+					.split(/\s/g)
+					.map((v) => v.trim())
+					.filter((v) => v !== "");
+				const current = data.length - 1;
+				const commands = COMMANDS.filter((v) => v.command === data[0]);
+				const match: Command[] = [];
+				for (const command of commands) {
+					let num = current;
+					(function () {
+						if (current === 0) {
+							match.push(command);
+							return;
+						}
+						while (num-- !== 0) {
+							const arg = command.args[num];
+							const currentData = data[num + 1];
+							if (arg === undefined) return;
+							switch (arg.type) {
+								case ValueType.VECTOR:
+									if (
+										!/(?:(?:~|\^)(?:\d*(?:\.\d+)?)?)|\d+(?:\.\d+)?/g.test(
+											currentData
+										)
+									) {
+										return;
+									}
+									break;
+								case ValueType.KEYWORD:
+									if (arg.value !== undefined) {
+										if (!arg.value.includes(currentData)) {
+											return;
+										}
+									}
+									break;
+								case ValueType.ENUM:
+									if (arg.value !== undefined) {
+										if (!arg.value.includes(currentData)) {
+											return;
+										}
+									}
+									break;
+								case ValueType.TARGET:
+								case ValueType.NUMBER:
+								case ValueType.ADVANCEMENT:
+								case ValueType.CRITERION:
+								case ValueType.ATTRIBUTE:
+								case ValueType.VALUE:
+								case ValueType.UUID:
+								case ValueType.NAME:
+								case ValueType.ID:
+								case ValueType.BOOLEANS:
+								case ValueType.ITEM:
+								case ValueType.BLOCK:
+								case ValueType.DIMENSION:
+									break;
+							}
+							if (num === 0) match.push(command);
+						}
+					})();
+				}
+
+				const result = match.map((v) => v.args[current]);
 				const items: vscode.CompletionItem[] = [];
-				for (const command of CommandArguments) {
-					const data = linePrefix.split(" ").filter((v) => v !== "");
-					if (data[0] === command.command) {
-						const arg = command.args[data.length - 1];
-						if (typeof arg.value === "string") {
-							items.push({
-								label: arg.value,
-								kind: vscode.CompletionItemKind.Value,
-							});
-						} else {
-							for (const v of arg.value) {
-								items.push({
-									label: v,
-									kind: vscode.CompletionItemKind.Value,
+
+				let vector = false;
+				let item = false;
+				let block = false;
+				let booleans = false;
+
+				for (const arg of result) {
+					switch (arg.type) {
+						case ValueType.KEYWORD:
+							if (arg.value !== undefined) {
+								arg.value.forEach((v) => {
+									items.push({
+										label: v,
+										kind: vscode.CompletionItemKind.Keyword,
+									});
 								});
 							}
-						}
-						return items;
+							break;
+						case ValueType.ENUM:
+							if (arg.value !== undefined) {
+								arg.value.forEach((v) => {
+									items.push({
+										label: v,
+										kind: vscode.CompletionItemKind
+											.EnumMember,
+									});
+								});
+							}
+							break;
+						case ValueType.VECTOR:
+							vector = true;
+							break;
+						case ValueType.ITEM:
+							item = true;
+							break;
+						case ValueType.BLOCK:
+							block = true;
+							break;
+						case ValueType.BOOLEANS:
+							booleans = true;
+							break;
+						case ValueType.TARGET:
+						case ValueType.NUMBER:
+						case ValueType.ADVANCEMENT:
+						case ValueType.CRITERION:
+						case ValueType.ATTRIBUTE:
+						case ValueType.VALUE:
+						case ValueType.UUID:
+						case ValueType.NAME:
+						case ValueType.ID:
+						case ValueType.DIMENSION:
+							break;
 					}
 				}
-				return undefined;
+
+				if (booleans) {
+					items.push({
+						label: "true",
+						kind: vscode.CompletionItemKind.Keyword
+					});
+					items.push({
+						label: "false",
+						kind: vscode.CompletionItemKind.Keyword
+					});					
+				}
+
+				if (item) {
+					for (const i of ITEMS_ID) {
+						items.push({
+							label: i,
+							kind: vscode.CompletionItemKind.Value,
+						});
+					}
+				}
+
+				if (block) {
+					for (const i of BLOCKS_ID) {
+						items.push({
+							label: i,
+							kind: vscode.CompletionItemKind.Value,
+						});
+					}
+				}
+
+				if (vector) {
+					items.push({
+						label: "^",
+						kind: vscode.CompletionItemKind.Struct,
+						insertText: new vscode.SnippetString("^${1}"),
+					});
+					items.push({
+						label: "~",
+						kind: vscode.CompletionItemKind.Struct,
+						insertText: new vscode.SnippetString("~${1}"),
+					});
+					items.push({
+						label: "^ ^ ^",
+						kind: vscode.CompletionItemKind.Snippet,
+						insertText: new vscode.SnippetString(
+							"^${1} ^${2} ^${3}"
+						),
+					});
+					items.push({
+						label: "~ ~ ~",
+						kind: vscode.CompletionItemKind.Snippet,
+						insertText: new vscode.SnippetString(
+							"~${1} ~${2} ~${3}"
+						),
+					});
+				}
+				vector = false;
+				return items;
+				// for (const command of CommandArguments) {
+				// 	const data = linePrefix.split(" ").filter((v) => v !== "");
+				// 	if (data[0] === command.command) {
+				// 		const arg = command.args[data.length - 1];
+				// 		if (typeof arg.value === "string") {
+				// 			items.push({
+				// 				label: arg.value,
+				// 				kind: vscode.CompletionItemKind.Value,
+				// 			});
+				// 		} else {
+				// 			if (arg.value instanceof Array) {
+				// 				for (const v of arg.value) {
+				// 					if (typeof v === "string")
+				// 					{
+				// 						items.push({
+				// 							label: v,
+				// 							kind: vscode.CompletionItemKind.Value,
+				// 						});
+				// 					}
+				// 				}
+				// 			}
+				// 		}
+				// 		return items;
+				// 	}
+				// }
+				// const data = linePrefix
+				// 	.trim()
+				// 	.split(" ")
+				// 	.filter((v) => v !== "");
+				// for (const command of CommandArguments) {
+				// 	if (data[0] === command.command) {
+				// 		// for (let i = 0; i < command.args.length; i++) {
+				// 		// 	const arg = command.args[i];
+				// 		// 	const current = data.length;
+				// 		// 	const argValue = arg.value;
+				// 		// 	if (typeof argValue === "number") {
+
+				// 		// 	} else if (Array.isArray(argValue)) {
+				// 		// 		if (typeof argValue[0] === "string") {
+				// 		// 			for (const v of argValue) {
+				// 		// 				items.push(
+				// 		// 					{
+				// 		// 						label: v as string,
+				// 		// 						kind: vscode.CompletionItemKind.Value
+				// 		// 					}
+				// 		// 				);
+				// 		// 			}
+				// 		// 		}
+				// 		// 		else {
+
+				// 		// 		}
+				// 		// 	}
+				// 		// }
+				// 		const current = command.args[data.length - 1];
+				// 		const arg = current.value;
+				// 		if (typeof arg === "number") {
+				// 			return [
+				// 				{
+				// 					label: "NUMBER",
+				// 					kind: vscode.CompletionItemKind.Color,
+				// 				},
+				// 			];
+				// 		} else if (
+				// 			Array.isArray(arg) &&
+				// 			(arg.length == 0 || typeof arg[0] == "string")
+				// 		) {
+				// 			const argValue = arg as string[];
+				// 			return argValue.map((v) => ({
+				// 				label: v,
+				// 				kind: vscode.CompletionItemKind.Value,
+				// 			}));
+				// 		} else {
+				// 			const argValue = (arg as ArgValue[]).filter((v) => {
+				// 				if (
+				// 					v.trigger !== undefined &&
+				// 					v.trigger.pos === undefined
+				// 				) {
+				// 					return v.trigger.value.includes(data.slice(-1)[0]);
+				// 				} else if (
+				// 					v.trigger !== undefined &&
+				// 					v.trigger.pos !== undefined
+				// 				) {
+				// 					console.log(data[v.trigger.pos]);
+				// 					return v.trigger.value.includes(data[v.trigger.pos + 1]);
+				// 				}
+				// 				return false;
+				// 			})[0];
+
+				// 			if (typeof argValue.value === "number") {
+				// 				return [
+				// 					{
+				// 						label: "NUMBER",
+				// 						kind: vscode.CompletionItemKind.Color,
+				// 					},
+				// 				];
+				// 			}
+
+				// 			return (argValue.value as string[]).map((v) => ({
+				// 				label: v,
+				// 				kind: vscode.CompletionItemKind.Value,
+				// 			}));
+				// 		}
+				// 	}
+				// }
 			},
 		},
 		" "
@@ -587,7 +845,6 @@ export async function activate(context: ExtensionContext) {
 					// builder.push(
 					// 	range, "variable", ["declaration"]
 					// );
-					console.log(_var);
 					if (_var.type === TokenType.USE_VARIABLE) {
 						const startPos = document.positionAt(_var.offset);
 						const endPos = document.positionAt(

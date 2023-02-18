@@ -17,12 +17,12 @@ import {
 import { TextDocument } from "vscode-languageserver-textdocument";
 import { BuiltInFunctions, methodInfoToDoc } from "./data/builtinFunctions";
 import { ClassesMethods, KEYWORDS as Keywords, VANILLA_COMMANDS } from "./data/common";
-import { getDiagnostics } from "./diagnostics";
+// import { getDiagnostics } from "./diagnostics";
 import * as url from "url";
 import {
 	getCurrentCommand,
 	getImportDocumentText,
-} from "./helpers/documentAnalyze";
+} from "./helpers/documentHelper";
 import { Language, TokenType } from "./helpers/lexer";
 
 const connection = createConnection(ProposedFeatures.all);
@@ -349,15 +349,15 @@ connection.onCompletionResolve((item: CompletionItem): CompletionItem => {
 });
 
 connection.onSignatureHelp(
-	(
+	async (
 		v: SignatureHelpParams
-	): HandlerResult<SignatureHelp | null | undefined, void> => {
+	) => {
 		const document = documents.get(v.textDocument.uri);
 		if (document !== undefined) {
 			const index = document.offsetAt(v.position);
 			const text = document.getText();
 
-			const command = getCurrentCommand(document.getText(), index);
+			const command = await getCurrentCommand(document.getText(), index);
 			const commaCount = command.match(/,/g || [])?.length;
 			// while ((index -= 1) !== -1) {
 			// 	let char = text[index];

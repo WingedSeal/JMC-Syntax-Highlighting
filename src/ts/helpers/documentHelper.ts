@@ -24,9 +24,31 @@ export async function getDocumentText(path: string): Promise<string> {
 	});
 }
 
+
+
 export function getTextByLine(text: string, line: number): string {
 	const t = text.split("\n")[line];
 	return t;
+}
+
+export interface ImportData {
+	filename: string;
+	text: string;
+}
+
+export async function getImportDocumentText(
+	root: string
+): Promise<ImportData[]> {
+	const datas: ImportData[] = [];
+	const files = getImport(root);
+	for (const file of files) {
+		const text = (await getDocumentText(file)).replace("\r\n", "\n");
+		datas.push({
+			filename: file,
+			text: text,
+		});
+	}
+	return datas;
 }
 
 export async function getCurrentCommand(

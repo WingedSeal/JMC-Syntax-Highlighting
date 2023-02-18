@@ -37,7 +37,7 @@
             "patterns": [
                 {
                     "name": "keyword.control.jmc",
-                    "match": "\\b(if|else|while|for|do|switch|case|class|true|false)\\b"
+                    "match": "\\b(if|else|while|for|do|switch|case|class|true|false|schedule)\\b"
                 },
                 {
                     "name": "storage.type.function.jmc",
