@@ -20,7 +20,7 @@ import { getCurrentCommand } from "./helpers/documentHelper";
 import { COMMANDS, Command, ValueType } from "./data/vanillaCommands";
 import { Language, TokenType } from "./helpers/lexer";
 import { getLogger, initLogger } from "./helpers/logger";
-import { BLOCKS_ID, ITEMS_ID } from "./data/staticData";
+import { ATTRIBUTE_LIST, BLOCKS_ID, ITEMS_ID } from "./data/staticData";
 
 interface ClassesMethods {
 	name: string;
@@ -431,6 +431,7 @@ export async function activate(context: ExtensionContext) {
 				let item = false;
 				let block = false;
 				let booleans = false;
+				let attr = false;
 
 				for (const arg of result) {
 					switch (arg.type) {
@@ -467,11 +468,13 @@ export async function activate(context: ExtensionContext) {
 						case ValueType.BOOLEANS:
 							booleans = true;
 							break;
+						case ValueType.ATTRIBUTE:
+							attr = true;
+							break;
 						case ValueType.TARGET:
 						case ValueType.NUMBER:
 						case ValueType.ADVANCEMENT:
 						case ValueType.CRITERION:
-						case ValueType.ATTRIBUTE:
 						case ValueType.VALUE:
 						case ValueType.UUID:
 						case ValueType.NAME:
@@ -484,12 +487,12 @@ export async function activate(context: ExtensionContext) {
 				if (booleans) {
 					items.push({
 						label: "true",
-						kind: vscode.CompletionItemKind.Keyword
+						kind: vscode.CompletionItemKind.Keyword,
 					});
 					items.push({
 						label: "false",
-						kind: vscode.CompletionItemKind.Keyword
-					});					
+						kind: vscode.CompletionItemKind.Keyword,
+					});
 				}
 
 				if (item) {
@@ -498,6 +501,15 @@ export async function activate(context: ExtensionContext) {
 							label: i,
 							kind: vscode.CompletionItemKind.Value,
 						});
+					}
+				}
+
+				if (attr) {
+					for (const i of ATTRIBUTE_LIST) {
+						items.push({
+							label: i,
+							kind: vscode.CompletionItemKind.Value,
+						});						
 					}
 				}
 
