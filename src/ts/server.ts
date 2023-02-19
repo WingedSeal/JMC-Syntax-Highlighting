@@ -22,6 +22,7 @@ import {
 	HeaderData,
 	HeaderType,
 	KEYWORDS as Keywords,
+	MacroData,
 	VANILLA_COMMANDS,
 } from "./data/common";
 // import { getDiagnostics } from "./diagnostics";
@@ -44,13 +45,78 @@ let userVariables: CompletionItem[] = [];
 let userFunctions: CompletionItem[] = [];
 let userClasses: CompletionItem[] = [];
 let userClassesMethods: ClassesMethods[] = [];
-const mainHeader: HeaderData[] = [];
+let marcros: MacroData[] = [];
+let mainHeader: HeaderData[] = [];
 
 const documents: TextDocuments<TextDocument> = new TextDocuments(TextDocument);
 
 let hasConfigurationCapability = false;
 let hasWorkspaceFolderCapability = false;
 let hasDiagnosticRelatedInformationCapability = false;
+//TODO: detect spaces
+function readHeader(headers: string[]) {
+	for (const i of headers) {
+		const headerData = i.split(" ");
+		switch (headerData[0]) {
+			case "#define":
+				mainHeader.push({
+					header: HeaderType.DEFINE,
+					value: [headerData[1]].concat(
+						headerData.slice(2).join(" ")
+					),
+				});
+				break;
+			case "#include":
+				// mainHeader.push({
+				// 	header: HeaderType.INCLUDE,
+				// 	value: [headerData.slice(1).join(" ")],
+				// });
+				readHeader(
+					fs
+						.readFileSync(
+							headerData.slice(1).join(" ").slice(1, -1),
+							"utf-8"
+						)
+						.split("\r\n")
+				);
+				break;
+			case "#override_minecraft":
+				mainHeader.push({
+					header: HeaderType.OVERRIDE_MINECRAFT,
+				});
+				break;
+			case "#credit":
+				mainHeader.push({
+					header: HeaderType.CREDIT,
+					value: [headerData.slice(1).join(" ").slice(1, -1)],
+				});
+				break;
+			case "#command":
+				mainHeader.push({
+					header: HeaderType.COMMAND,
+					value: headerData.slice(1),
+				});
+				break;
+			case "#delete":
+				mainHeader.push({
+					header: HeaderType.DEL,
+					value: headerData.slice(1),
+				});
+				break;
+			case "#uninstall":
+				mainHeader.push({
+					header: HeaderType.UNINSTALL,
+				});
+				break;
+			case "#static":
+				mainHeader.push({
+					header: HeaderType.STATIC,
+					value: [headerData.slice(1).join(" ").slice(1, -1)],
+				});
+				break;
+		}
+	}
+}
 
 connection.onInitialize((params: InitializeParams) => {
 	const capabilities = params.capabilities;
@@ -60,65 +126,8 @@ connection.onInitialize((params: InitializeParams) => {
 			fs.readFileSync(`${workspaceFolder}\\jmc_config.json`, "utf-8")
 		);
 
-		const mainhf =
-			config.target
-				.split(/\\\\|\//g)
-				.slice(-1)[0]
-				.split(".")[0] + ".hjmc";
-		const data = fs.readFileSync(mainhf, "utf-8").split("\r\n");
-		for (const i of data) {
-			const headerData = i.split(" ");
-			switch (headerData[0]) {
-				case "#define":
-					mainHeader.push({
-						header: HeaderType.DEFINE,
-						value: headerData.slice(1),
-					});
-					break;
-				case "#include":
-					mainHeader.push({
-						header: HeaderType.INCLUDE,
-						value: [headerData.slice(1).join(" ")],
-					});
-					break;
-				case "#override_minecraft":
-					mainHeader.push({
-						header: HeaderType.OVERRIDE_MINECRAFT,
-					});
-					break;
-				case "#credit":
-					mainHeader.push({
-						header: HeaderType.CREDIT,
-						value: [headerData.slice(1).join(" ")],
-					});
-					break;
-				case "#command":
-					mainHeader.push({
-						header: HeaderType.COMMAND,
-						value: headerData.slice(1),
-					});
-					break;
-				case "#delete":
-					mainHeader.push({
-						header: HeaderType.DEL,
-						value: headerData.slice(1),
-					});
-					break;
-				case "#uninstall":
-					mainHeader.push({
-						header: HeaderType.UNINSTALL,
-					});
-					break;
-				case "#static":
-					mainHeader.push({
-						header: HeaderType.STATIC,
-						value: [headerData.slice(1).join(" ")],
-					});
-					break;
-			}
-		}
+		validateHeader();
 	}
-	console.log(mainHeader);
 
 	hasConfigurationCapability = !!(
 		capabilities.workspace && !!capabilities.workspace.configuration
@@ -300,14 +309,37 @@ async function validateText(fileText: string): Promise<ValidateData> {
 }
 
 async function validateHeader() {
-	const headersFile = getHJMCFile(workspaceFolder);
+	mainHeader = [];
+	config = JSON.parse(
+		fs.readFileSync(`${workspaceFolder}\\jmc_config.json`, "utf-8")
+	);
+
+	const mainhf =
+		config.target
+			.split(/\\\\|\//g)
+			.slice(-1)[0]
+			.split(".")[0] + ".hjmc";
+	const data = fs.readFileSync(mainhf, "utf-8").split("\r\n");
+	readHeader(data);
+
+	marcros = mainHeader
+		.filter((v) => v.header == HeaderType.DEFINE)
+		.map((v) => {
+			return {
+				macro: v.value![0],
+				value: v.value![1],
+			};
+		});
 }
 
 async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 	const settings = await getDocumentSettings(textDocument.uri);
 
 	text = textDocument.getText();
-	if (textDocument.languageId === "hjmc") validateHeader();
+	if (textDocument.languageId === "hjmc") {
+		validateHeader();
+		return;
+	}
 
 	// const data = await validateText(text, url.fileURLToPath(textDocument.uri));
 	// userVariables = data.variables;
@@ -410,6 +442,15 @@ connection.onCompletion(
 				label: i,
 				kind: CompletionItemKind.Keyword,
 				data: num,
+			});
+			num++;
+		}
+		for (const i of marcros) {
+			items.push({
+				label: i.macro,
+				kind: CompletionItemKind.Snippet,
+				data: num,
+				detail: i.value
 			});
 			num++;
 		}

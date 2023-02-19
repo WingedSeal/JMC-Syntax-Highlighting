@@ -11,6 +11,11 @@ export interface ConfigData {
 	output: string;
 }
 
+export interface MacroData {
+	macro: string;
+	value: string;
+}
+
 
 export enum HeaderType {
 	DEFINE, OVERRIDE_MINECRAFT, CREDIT, DEL, INCLUDE, UNINSTALL, STATIC,
