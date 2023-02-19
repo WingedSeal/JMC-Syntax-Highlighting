@@ -16,25 +16,35 @@ import {
 } from "vscode-languageserver/node";
 import { TextDocument } from "vscode-languageserver-textdocument";
 import { BuiltInFunctions, methodInfoToDoc } from "./data/builtinFunctions";
-import { ClassesMethods, KEYWORDS as Keywords, VANILLA_COMMANDS } from "./data/common";
+import {
+	ClassesMethods,
+	ConfigData,
+	HeaderData,
+	HeaderType,
+	KEYWORDS as Keywords,
+	VANILLA_COMMANDS,
+} from "./data/common";
 // import { getDiagnostics } from "./diagnostics";
 import * as url from "url";
 import {
 	getCurrentCommand,
-	getImportDocumentText,
+	getAllJMCFileText,
+	getHJMCFile,
 } from "./helpers/documentHelper";
 import { Language, TokenType } from "./helpers/lexer";
+import fs from "fs";
+import pfs from "fs/promises";
 
 const connection = createConnection(ProposedFeatures.all);
 let text: string;
 let workspaceFolder: string;
+let config: ConfigData;
 
-
-
-export let userVariables: CompletionItem[] = [];
-export let userFunctions: CompletionItem[] = [];
-export let userClasses: CompletionItem[] = [];
-export let userClassesMethods: ClassesMethods[] = [];
+let userVariables: CompletionItem[] = [];
+let userFunctions: CompletionItem[] = [];
+let userClasses: CompletionItem[] = [];
+let userClassesMethods: ClassesMethods[] = [];
+const mainHeader: HeaderData[] = [];
 
 const documents: TextDocuments<TextDocument> = new TextDocuments(TextDocument);
 
@@ -45,6 +55,70 @@ let hasDiagnosticRelatedInformationCapability = false;
 connection.onInitialize((params: InitializeParams) => {
 	const capabilities = params.capabilities;
 	workspaceFolder = url.fileURLToPath(params.workspaceFolders![0].uri);
+	if (fs.existsSync("jmc_config.json")) {
+		config = JSON.parse(
+			fs.readFileSync(`${workspaceFolder}\\jmc_config.json`, "utf-8")
+		);
+
+		const mainhf =
+			config.target
+				.split(/\\\\|\//g)
+				.slice(-1)[0]
+				.split(".")[0] + ".hjmc";
+		const data = fs.readFileSync(mainhf, "utf-8").split("\r\n");
+		for (const i of data) {
+			const headerData = i.split(" ");
+			switch (headerData[0]) {
+				case "#define":
+					mainHeader.push({
+						header: HeaderType.DEFINE,
+						value: headerData.slice(1),
+					});
+					break;
+				case "#include":
+					mainHeader.push({
+						header: HeaderType.INCLUDE,
+						value: [headerData.slice(1).join(" ")],
+					});
+					break;
+				case "#override_minecraft":
+					mainHeader.push({
+						header: HeaderType.OVERRIDE_MINECRAFT,
+					});
+					break;
+				case "#credit":
+					mainHeader.push({
+						header: HeaderType.CREDIT,
+						value: [headerData.slice(1).join(" ")],
+					});
+					break;
+				case "#command":
+					mainHeader.push({
+						header: HeaderType.COMMAND,
+						value: headerData.slice(1),
+					});
+					break;
+				case "#delete":
+					mainHeader.push({
+						header: HeaderType.DEL,
+						value: headerData.slice(1),
+					});
+					break;
+				case "#uninstall":
+					mainHeader.push({
+						header: HeaderType.UNINSTALL,
+					});
+					break;
+				case "#static":
+					mainHeader.push({
+						header: HeaderType.STATIC,
+						value: [headerData.slice(1).join(" ")],
+					});
+					break;
+			}
+		}
+	}
+	console.log(mainHeader);
 
 	hasConfigurationCapability = !!(
 		capabilities.workspace && !!capabilities.workspace.configuration
@@ -182,7 +256,6 @@ interface ValidateData {
 // 	};
 // }
 
-
 async function validateText(fileText: string): Promise<ValidateData> {
 	const language = new Language(fileText);
 	const variables = language.tokens
@@ -223,14 +296,18 @@ async function validateText(fileText: string): Promise<ValidateData> {
 		variables: variables,
 		functions: functions,
 		classes: classes,
-	};		
+	};
 }
 
+async function validateHeader() {
+	const headersFile = getHJMCFile(workspaceFolder);
+}
 
 async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 	const settings = await getDocumentSettings(textDocument.uri);
 
 	text = textDocument.getText();
+	if (textDocument.languageId === "hjmc") validateHeader();
 
 	// const data = await validateText(text, url.fileURLToPath(textDocument.uri));
 	// userVariables = data.variables;
@@ -243,13 +320,13 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 	// 	workspaceFolder
 	// );
 	// await connection.sendDiagnostics({ uri: textDocument.uri, diagnostics });
-	const datas = await getImportDocumentText(workspaceFolder);
+	const datas = await getAllJMCFileText(workspaceFolder);
 
 	userVariables = [];
 	userClasses = [];
 	userFunctions = [];
 	userClassesMethods = [];
-	
+
 	for (const data of datas) {
 		const fileData = await validateText(data.text);
 		userVariables = userVariables.concat(fileData.variables);
@@ -276,8 +353,6 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 	// }
 }
 
-
-
 connection.onDidChangeWatchedFiles((_change) => {
 	connection.console.log("We received a file change event");
 });
@@ -289,8 +364,6 @@ connection.onCompletion(
 		}));
 		const items: CompletionItem[] = [];
 		let num = 0;
-
-		
 
 		// const document = documents.get(arg.textDocument.uri);
 		// if (document !== undefined) {
@@ -348,76 +421,70 @@ connection.onCompletionResolve((item: CompletionItem): CompletionItem => {
 	return item;
 });
 
-connection.onSignatureHelp(
-	async (
-		v: SignatureHelpParams
-	) => {
-		const document = documents.get(v.textDocument.uri);
-		if (document !== undefined) {
-			const index = document.offsetAt(v.position);
-			const text = document.getText();
+connection.onSignatureHelp(async (v: SignatureHelpParams) => {
+	const document = documents.get(v.textDocument.uri);
+	if (document !== undefined) {
+		const index = document.offsetAt(v.position);
+		const text = document.getText();
 
-			const command = await getCurrentCommand(document.getText(), index);
-			const commaCount = command.match(/,/g || [])?.length;
-			// while ((index -= 1) !== -1) {
-			// 	let char = text[index];
-			// 	if (char === "(") {
-			// 		break;
-			// 	}
-			// 	if (char === ",") {
-			// 		commaCount += 1;
-			// 	}
-			// }
+		const command = await getCurrentCommand(document.getText(), index);
+		const commaCount = command.match(/,/g || [])?.length;
+		// while ((index -= 1) !== -1) {
+		// 	let char = text[index];
+		// 	if (char === "(") {
+		// 		break;
+		// 	}
+		// 	if (char === ",") {
+		// 		commaCount += 1;
+		// 	}
+		// }
 
-			if (v.context?.triggerCharacter === ",") {
-				if (
-					v.context.activeSignatureHelp !== undefined &&
-					v.context.activeSignatureHelp.activeParameter !== undefined
-				) {
-					v.context.activeSignatureHelp.activeParameter = commaCount;
-				} else {
-					const pattern = /(\w+)\.(\w+)\(([\w\s,()$]*)\)/g;
-					let m: RegExpExecArray | null;
-					while ((m = pattern.exec(command)) !== null) {
-						const func = m[1];
-						const method = m[2];
+		if (v.context?.triggerCharacter === ",") {
+			if (
+				v.context.activeSignatureHelp !== undefined &&
+				v.context.activeSignatureHelp.activeParameter !== undefined
+			) {
+				v.context.activeSignatureHelp.activeParameter = commaCount;
+			} else {
+				const pattern = /(\w+)\.(\w+)\(([\w\s,()$]*)\)/g;
+				let m: RegExpExecArray | null;
+				while ((m = pattern.exec(command)) !== null) {
+					const func = m[1];
+					const method = m[2];
 
-						const methods = BuiltInFunctions.flatMap((v) => {
-							const target = v.methods.filter((value) => {
-								return (
-									func === v.class && method === value.name
-								);
-							});
-							return target;
+					const methods = BuiltInFunctions.flatMap((v) => {
+						const target = v.methods.filter((value) => {
+							return func === v.class && method === value.name;
 						});
-						const target = methods[0];
+						return target;
+					});
+					const target = methods[0];
 
-						v.context.activeSignatureHelp = {
-							signatures: [
-								{
-									label: methodInfoToDoc(target),
-									parameters: target.args.flatMap((v) => {
-										const def =
-											v.default !== undefined
-												? ` = ${v.default}`
-												: "";
-										const arg = `${v.name}: ${v.type}${def}`;
-										return {
-											label: arg,
-										};
-									}),
-								},
-							],
-							activeSignature: 0,
-							activeParameter: commaCount,
-						};
-					}
+					v.context.activeSignatureHelp = {
+						signatures: [
+							{
+								label: methodInfoToDoc(target),
+								parameters: target.args.flatMap((v) => {
+									const def =
+										v.default !== undefined
+											? ` = ${v.default}`
+											: "";
+									const arg = `${v.name}: ${v.type}${def}`;
+									return {
+										label: arg,
+									};
+								}),
+							},
+						],
+						activeSignature: 0,
+						activeParameter: commaCount,
+					};
 				}
 			}
 		}
-		return v.context?.activeSignatureHelp;
 	}
-);
+	return v.context?.activeSignatureHelp;
+});
 
 documents.listen(connection);
 connection.listen();

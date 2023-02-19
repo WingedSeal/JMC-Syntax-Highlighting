@@ -20,7 +20,12 @@ import { getCurrentCommand } from "./helpers/documentHelper";
 import { COMMANDS, Command, ValueType } from "./data/vanillaCommands";
 import { Language, TokenType } from "./helpers/lexer";
 import { getLogger, initLogger } from "./helpers/logger";
-import { ATTRIBUTE_LIST, BLOCKS_ID, ITEMS_ID } from "./data/staticData";
+import {
+	ATTRIBUTE_LIST,
+	BLOCKS_ID,
+	ITEMS_ID,
+	SELECTORS,
+} from "./data/staticData";
 
 interface ClassesMethods {
 	name: string;
@@ -380,6 +385,7 @@ export async function activate(context: ExtensionContext) {
 							const arg = command.args[num];
 							const currentData = data[num + 1];
 							if (arg === undefined) return;
+							if (arg.optional) continue;
 							switch (arg.type) {
 								case ValueType.VECTOR:
 									if (
@@ -391,21 +397,37 @@ export async function activate(context: ExtensionContext) {
 									}
 									break;
 								case ValueType.KEYWORD:
-									if (arg.value !== undefined) {
-										if (!arg.value.includes(currentData)) {
-											return;
-										}
-									}
+									if (
+										arg.value !== undefined &&
+										!arg.value.includes(currentData)
+									)
+										return;
 									break;
 								case ValueType.ENUM:
-									if (arg.value !== undefined) {
-										if (!arg.value.includes(currentData)) {
-											return;
-										}
-									}
+									if (
+										arg.value !== undefined &&
+										!arg.value.includes(currentData)
+									)
+										return;
+
 									break;
 								case ValueType.TARGET:
+									if (
+										!SELECTORS.includes(
+											currentData.slice(0, 1)
+										)
+									)
+										return;
+
+									break;
 								case ValueType.NUMBER:
+									if (
+										!/\d+(?:\.\d+)?|\.\d+/g.test(
+											currentData
+										)
+									)
+										return;
+									break;
 								case ValueType.ADVANCEMENT:
 								case ValueType.CRITERION:
 								case ValueType.ATTRIBUTE:
@@ -432,6 +454,7 @@ export async function activate(context: ExtensionContext) {
 				let block = false;
 				let booleans = false;
 				let attr = false;
+				let selector = false;
 
 				for (const arg of result) {
 					switch (arg.type) {
@@ -472,6 +495,8 @@ export async function activate(context: ExtensionContext) {
 							attr = true;
 							break;
 						case ValueType.TARGET:
+							selector = true;
+							break;
 						case ValueType.NUMBER:
 						case ValueType.ADVANCEMENT:
 						case ValueType.CRITERION:
@@ -509,7 +534,7 @@ export async function activate(context: ExtensionContext) {
 						items.push({
 							label: i,
 							kind: vscode.CompletionItemKind.Value,
-						});						
+						});
 					}
 				}
 
@@ -548,7 +573,16 @@ export async function activate(context: ExtensionContext) {
 						),
 					});
 				}
-				vector = false;
+
+				if (selector) {
+					for (const i of SELECTORS) {
+						items.push({
+							label: i,
+							kind: vscode.CompletionItemKind.Value,
+						});
+					}
+				}
+
 				return items;
 				// for (const command of CommandArguments) {
 				// 	const data = linePrefix.split(" ").filter((v) => v !== "");

@@ -3,6 +3,25 @@ export interface ClassesMethods {
 	methods: string[];
 }
 
+export interface ConfigData {
+	namespace: string;
+	description: string;
+	pack_format: string;
+	target: string;
+	output: string;
+}
+
+
+export enum HeaderType {
+	DEFINE, OVERRIDE_MINECRAFT, CREDIT, DEL, INCLUDE, UNINSTALL, STATIC,
+	COMMAND
+}
+
+export interface HeaderData {
+	header: HeaderType,
+	value?: string[]
+}
+
 export const KEYWORDS: Array<string> = [
 	"function",
 	"new",

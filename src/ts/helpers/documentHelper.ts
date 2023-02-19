@@ -2,7 +2,7 @@ import * as fs from "fs";
 import { getAllFilesSync } from "get-all-files";
 import { SEMI_CHECKCHAR } from "../data/common";
 
-export function getImport(workspaceFolder: string): string[] {
+export function getJMCFile(workspaceFolder: string): string[] {
 	// const importPattern = /@import\s*\"(.+)\"/g;
 	// let m: RegExpExecArray | null;
 	// const files: string[] = [];
@@ -18,13 +18,19 @@ export function getImport(workspaceFolder: string): string[] {
 		});
 }
 
-export async function getDocumentText(path: string): Promise<string> {
+export function getHJMCFile(workspaceFolder: string): string[] {
+	return getAllFilesSync(workspaceFolder)
+		.toArray()
+		.filter((v) => {
+			return v.endsWith(".hjmc");
+		});
+}
+
+export async function getFileText(path: string): Promise<string> {
 	return new Promise((resolve, reject) => {
 		resolve(fs.readFileSync(path, { encoding: "utf-8", flag: "r" }));
 	});
 }
-
-
 
 export function getTextByLine(text: string, line: number): string {
 	const t = text.split("\n")[line];
@@ -36,13 +42,11 @@ export interface ImportData {
 	text: string;
 }
 
-export async function getImportDocumentText(
-	root: string
-): Promise<ImportData[]> {
+export async function getAllJMCFileText(root: string): Promise<ImportData[]> {
 	const datas: ImportData[] = [];
-	const files = getImport(root);
+	const files = getJMCFile(root);
 	for (const file of files) {
-		const text = (await getDocumentText(file)).replace("\r\n", "\n");
+		const text = (await getFileText(file)).replace("\r\n", "\n");
 		datas.push({
 			filename: file,
 			text: text,
