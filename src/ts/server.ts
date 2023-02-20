@@ -118,6 +118,10 @@ function readHeader(headers: string[]) {
 	}
 }
 
+connection.onNotification("getData/mainHeader", () => {
+	return 5;
+});
+
 connection.onInitialize((params: InitializeParams) => {
 	const capabilities = params.capabilities;
 	workspaceFolder = url.fileURLToPath(params.workspaceFolders![0].uri);
@@ -228,45 +232,8 @@ interface ValidateData {
 	classes: CompletionItem[];
 }
 
-// async function validateText(text: string, path: string): Promise<ValidateData> {
-// 	let m: RegExpExecArray | null;
-
-// 	const variables: CompletionItem[] = [];
-// 	for (const variable of await getVariables(text, workspaceFolder)) {
-// 		const filter = variables.filter((v) => v.label == variable);
-// 		if (!(filter.length > 0)) {
-// 			variables.push({
-// 				label: variable,
-// 				kind: CompletionItemKind.Variable,
-// 			});
-// 		}
-// 	}
-
-// 	const functions: CompletionItem[] = [];
-// 	for (const func of await getFunctions(text, workspaceFolder)) {
-// 		const filter = functions.filter((v) => v.label == func);
-// 		if (!(filter.length > 0)) {
-// 			functions.push({ label: func, kind: CompletionItemKind.Function });
-// 		}
-// 	}
-
-// 	const classes: CompletionItem[] = [];
-// 	for (const c of await getClass(text, workspaceFolder)) {
-// 		const filter = classes.filter((v) => v.label == c);
-// 		if (!(filter.length > 0)) {
-// 			classes.push({ label: c, kind: CompletionItemKind.Class });
-// 		}
-// 	}
-
-// 	return {
-// 		variables: variables,
-// 		functions: functions,
-// 		classes: classes,
-// 	};
-// }
-
 async function validateText(fileText: string): Promise<ValidateData> {
-	const language = new Language(fileText);
+	const language = new Language(fileText, mainHeader);
 	const variables = language.tokens
 		.filter((v) => v.type === TokenType.VARIABLE)
 		.map(
@@ -340,6 +307,7 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 		validateHeader();
 		return;
 	}
+	connection.sendNotification("data/mainHeader", mainHeader);
 
 	// const data = await validateText(text, url.fileURLToPath(textDocument.uri));
 	// userVariables = data.variables;

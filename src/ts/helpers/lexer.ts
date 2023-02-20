@@ -1,4 +1,4 @@
-import { VANILLA_COMMANDS } from "../data/common";
+import { HeaderData, HeaderType, VANILLA_COMMANDS } from "../data/common";
 
 // interface CommandToken {
 // 	offset: number;
@@ -38,6 +38,7 @@ export enum TokenType {
 	CALL_FUNCTION,
 	USE_VARIABLE,
 	COMMAND,
+	MACRO
 }
 
 export enum ErrorType {
@@ -64,11 +65,16 @@ export interface Error {
 export class Language {
 	public tokens: Token[] = [];
 	public errors: Error[] = [];
+	public headerData: HeaderData[] = [];
+
+	private macros: string[];
 	private raw: string[];
 	private rtrim: string[];
 	private currentIndex = 0;
 
-	constructor(text: string) {
+	constructor(text: string, header: HeaderData[]) {
+		this.headerData = header;
+		this.macros = this.headerData.filter((v) => v.header === HeaderType.DEFINE).map((v) => v.value![0]);
 		this.raw = text.split(/(;|\{|\}|\(|\)|\,|\[|\]|\/\/.*)/g);
 		this.rtrim = this.raw.map((v) => v.trim());
 		for (
@@ -97,8 +103,10 @@ export class Language {
 		const current = text;
 		if (current === "") return;
 		if (current.startsWith("//")) return;
-		else if (current.startsWith("function")) {
-			this.praseDefineFunction(current);
+		else if (this.macros.includes(current)) {
+			this.parseMacro(current);
+		}else if (current.startsWith("function")) {
+			this.parseDefineFunction(current);
 		} else if (current.startsWith("class")) {
 			this.parseClass(current);
 		} else if (current.startsWith("switch")) {
@@ -118,6 +126,29 @@ export class Language {
 		} else {
 			return;
 		}
+	}
+
+	private parseMacro(text: string) {
+		let offset = this.getOffset();
+		const rawText = this.raw[this.currentIndex];
+
+		const emptyLength = rawText.match(/^(\s+)/g || []);
+		const empty = emptyLength !== null ? emptyLength[0].length : 0;		
+
+		if (rawText.trim().startsWith("$")) {
+			offset += rawText.length;
+			offset -= text.length;
+		}
+
+		this.tokens.push(
+			{
+				type: TokenType.MACRO,
+				offset: offset,
+				length: text.length,
+				raw: rawText,
+				trim: text,
+			}
+		);
 	}
 
 	private parseSwitch(text: string) {
@@ -540,7 +571,7 @@ export class Language {
 	 * @param text
 	 * @returns
 	 */
-	private praseDefineFunction(text: string) {
+	private parseDefineFunction(text: string) {
 		const index = this.getOffset();
 		const rawText = this.raw[this.currentIndex];
 		if (text.split(" ").length > 2) {

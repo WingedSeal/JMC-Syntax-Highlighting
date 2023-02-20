@@ -9,6 +9,7 @@ const tokenTypes = [
 	"method",
 	"undefinedVariable",
 	"keyword",
+	"macro"
 ];
 const tokenModifiers = ["declaration"];
 export const semanticLegend = new vscode.SemanticTokensLegend(

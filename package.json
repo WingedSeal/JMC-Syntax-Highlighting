@@ -97,6 +97,9 @@
 					],
 					"command": [
 						"keyword.control.jmc"
+					],
+					"macros": [
+						"storage.type.class.jmc"
 					]
 				}
 			}
@@ -125,6 +128,11 @@
 			{
 				"id": "command",
 				"superType": "keyword",
+				"description": "NA"
+			},
+			{
+				"id": "macros",
+				"superType": "macro",
 				"description": "NA"
 			}
 		]

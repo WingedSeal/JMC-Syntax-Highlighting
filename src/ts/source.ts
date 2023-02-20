@@ -13,7 +13,7 @@ import {
 import * as path from "path";
 import { BuiltInFunctions, methodInfoToDoc } from "./data/builtinFunctions";
 import * as vscode from "vscode";
-import { HEADERS, JSON_FILE_TYPES } from "./data/common";
+import { HEADERS, HeaderData, JSON_FILE_TYPES } from "./data/common";
 import { getAllFiles } from "get-all-files";
 import { semanticLegend } from "./semanticHighlight";
 import { getCurrentCommand } from "./helpers/documentHelper";
@@ -44,6 +44,7 @@ const headerSelector: DocumentSelector = {
 
 let client: LanguageClient;
 let classesMethods: ClassesMethods[] | undefined;
+let mainHeader: HeaderData[] = [];
 
 export async function activate(context: ExtensionContext) {
 	await initLogger(context);
@@ -329,35 +330,6 @@ export async function activate(context: ExtensionContext) {
 	// 	"."
 	// );
 
-	// const vanillaCommandsCompletion = languages.registerCompletionItemProvider(
-	// 	selector,
-	// 	{
-	// 		async provideCompletionItems(document, position, token, context) {
-	// 			const linePrefix = document
-	// 				.lineAt(position)
-	// 				.text.substring(0, position.character);
-	// 			let items: vscode.CompletionItem[] = [];
-
-	// 			for (let command of CommandArguments) {
-	// 				let current: number =
-	// 					linePrefix.split(" ").filter((v) => v !== "").length -
-	// 					1;
-	// 				let matchString: string = "";
-	// 				let args = command.args[current];
-	// 				for (let arg of args) {
-	// 					items.push({
-	// 						label: arg,
-	// 						kind: vscode.CompletionItemKind.Property,
-	// 					});
-	// 				}
-	// 			}
-
-	// 			return items;
-	// 		},
-	// 	},
-	// 	" "
-	// );
-
 	const vanillaCommandsCompletion = languages.registerCompletionItemProvider(
 		selector,
 		{
@@ -584,110 +556,6 @@ export async function activate(context: ExtensionContext) {
 				}
 
 				return items;
-				// for (const command of CommandArguments) {
-				// 	const data = linePrefix.split(" ").filter((v) => v !== "");
-				// 	if (data[0] === command.command) {
-				// 		const arg = command.args[data.length - 1];
-				// 		if (typeof arg.value === "string") {
-				// 			items.push({
-				// 				label: arg.value,
-				// 				kind: vscode.CompletionItemKind.Value,
-				// 			});
-				// 		} else {
-				// 			if (arg.value instanceof Array) {
-				// 				for (const v of arg.value) {
-				// 					if (typeof v === "string")
-				// 					{
-				// 						items.push({
-				// 							label: v,
-				// 							kind: vscode.CompletionItemKind.Value,
-				// 						});
-				// 					}
-				// 				}
-				// 			}
-				// 		}
-				// 		return items;
-				// 	}
-				// }
-				// const data = linePrefix
-				// 	.trim()
-				// 	.split(" ")
-				// 	.filter((v) => v !== "");
-				// for (const command of CommandArguments) {
-				// 	if (data[0] === command.command) {
-				// 		// for (let i = 0; i < command.args.length; i++) {
-				// 		// 	const arg = command.args[i];
-				// 		// 	const current = data.length;
-				// 		// 	const argValue = arg.value;
-				// 		// 	if (typeof argValue === "number") {
-
-				// 		// 	} else if (Array.isArray(argValue)) {
-				// 		// 		if (typeof argValue[0] === "string") {
-				// 		// 			for (const v of argValue) {
-				// 		// 				items.push(
-				// 		// 					{
-				// 		// 						label: v as string,
-				// 		// 						kind: vscode.CompletionItemKind.Value
-				// 		// 					}
-				// 		// 				);
-				// 		// 			}
-				// 		// 		}
-				// 		// 		else {
-
-				// 		// 		}
-				// 		// 	}
-				// 		// }
-				// 		const current = command.args[data.length - 1];
-				// 		const arg = current.value;
-				// 		if (typeof arg === "number") {
-				// 			return [
-				// 				{
-				// 					label: "NUMBER",
-				// 					kind: vscode.CompletionItemKind.Color,
-				// 				},
-				// 			];
-				// 		} else if (
-				// 			Array.isArray(arg) &&
-				// 			(arg.length == 0 || typeof arg[0] == "string")
-				// 		) {
-				// 			const argValue = arg as string[];
-				// 			return argValue.map((v) => ({
-				// 				label: v,
-				// 				kind: vscode.CompletionItemKind.Value,
-				// 			}));
-				// 		} else {
-				// 			const argValue = (arg as ArgValue[]).filter((v) => {
-				// 				if (
-				// 					v.trigger !== undefined &&
-				// 					v.trigger.pos === undefined
-				// 				) {
-				// 					return v.trigger.value.includes(data.slice(-1)[0]);
-				// 				} else if (
-				// 					v.trigger !== undefined &&
-				// 					v.trigger.pos !== undefined
-				// 				) {
-				// 					console.log(data[v.trigger.pos]);
-				// 					return v.trigger.value.includes(data[v.trigger.pos + 1]);
-				// 				}
-				// 				return false;
-				// 			})[0];
-
-				// 			if (typeof argValue.value === "number") {
-				// 				return [
-				// 					{
-				// 						label: "NUMBER",
-				// 						kind: vscode.CompletionItemKind.Color,
-				// 					},
-				// 				];
-				// 			}
-
-				// 			return (argValue.value as string[]).map((v) => ({
-				// 				label: v,
-				// 				kind: vscode.CompletionItemKind.Value,
-				// 			}));
-				// 		}
-				// 	}
-				// }
 			},
 		},
 		" "
@@ -701,189 +569,8 @@ export async function activate(context: ExtensionContext) {
 					semanticLegend
 				);
 				const text = document.getText();
-				// let scoreboardPattern = /(.+):(@[parse])/g;
-				// let m: RegExpExecArray | null;
-				// const variables = getVariablesClient(text);
-				// for (const variable of await variables) {
-				// 	const pattern = RegExp(`(\\\$${variable})(\.get)?\\b`, "g");
-				// 	while ((m = pattern.exec(text)) !== null) {
-				// 		const pos = getLineByIndex(m.index, getLinePos(text));
-				// 		const lineText = document.lineAt(pos.line).text.trim();
-
-				// 		if (!lineText.startsWith("//")) {
-				// 			builder.push(
-				// 				new vscode.Range(
-				// 					new vscode.Position(pos.line, pos.pos),
-				// 					new vscode.Position(
-				// 						pos.line,
-				// 						pos.pos + m[1].length
-				// 					)
-				// 				),
-				// 				"variable",
-				// 				["declaration"]
-				// 			);
-
-				// 			if (m[2] !== undefined) {
-				// 				builder.push(
-				// 					new vscode.Range(
-				// 						new vscode.Position(
-				// 							pos.line,
-				// 							pos.pos + m[1].length
-				// 						),
-				// 						new vscode.Position(
-				// 							pos.line,
-				// 							pos.pos + m[1].length + m[0].length
-				// 						)
-				// 					),
-				// 					"function",
-				// 					["declaration"]
-				// 				);
-				// 			}
-				// 		}
-				// 	}
-				// }
-
-				// const builtinFuncClass = BuiltInFunctions.flatMap((v) => {
-				// 	return v.class;
-				// });
-
-				// const builtinFuncMethod = BuiltInFunctions.flatMap((v) => {
-				// 	const methods = v.methods.flatMap((value) => {
-				// 		return `${v.class}.${value.name}`;
-				// 	});
-				// 	return methods;
-				// });
-
-				// const functions = await getFunctionsClient(text);
-				// for (const func of functions) {
-				// 	const pattern = RegExp(
-				// 		`\\b${func}|${func.toLowerCase()}\\b`,
-				// 		"g"
-				// 	);
-				// 	while ((m = pattern.exec(text)) !== null) {
-				// 		const pos = getLineByIndex(m.index, getLinePos(text));
-				// 		const lineText = document.lineAt(pos.line).text.trim();
-
-				// 		const funcs = m[0].split(".");
-				// 		const funcPos = funcs.pop()!.length;
-				// 		const startPos = funcs.join(".").length;
-
-				// 		if (!lineText.startsWith("//")) {
-				// 			builder.push(
-				// 				new vscode.Range(
-				// 					new vscode.Position(
-				// 						pos.line,
-				// 						pos.pos + startPos
-				// 					),
-				// 					new vscode.Position(
-				// 						pos.line,
-				// 						pos.pos + startPos + funcPos + 1
-				// 					)
-				// 				),
-				// 				"function",
-				// 				["declaration"]
-				// 			);
-				// 		}
-				// 	}
-				// }
-
-				// for (const func of builtinFuncMethod) {
-				// 	const pattern = RegExp(`\\b${func}\\b`, "g");
-				// 	while ((m = pattern.exec(text)) !== null) {
-				// 		const pos = getLineByIndex(m.index, getLinePos(text));
-				// 		const lineText = document.lineAt(pos.line).text.trim();
-
-				// 		const classLength = m[0].split(".")[0].length;
-				// 		const funcLength = m[0].split(".")[1].length;
-
-				// 		if (!lineText.startsWith("//")) {
-				// 			builder.push(
-				// 				new vscode.Range(
-				// 					new vscode.Position(
-				// 						pos.line,
-				// 						pos.pos + classLength + 1
-				// 					),
-				// 					new vscode.Position(
-				// 						pos.line,
-				// 						pos.pos + classLength + funcLength + 1
-				// 					)
-				// 				),
-				// 				"function",
-				// 				["declaration"]
-				// 			);
-				// 		}
-				// 	}
-				// }
-
-				// const classes = (await getClassesClient(text)).concat(
-				// 	builtinFuncClass
-				// );
-				// for (const clas of classes) {
-				// 	const pattern = RegExp(`\\b(${clas})\\b`, "g");
-				// 	while ((m = pattern.exec(text)) !== null) {
-				// 		const pos = getLineByIndex(m.index, getLinePos(text));
-				// 		const lineText = document.lineAt(pos.line).text.trim();
-				// 		if (
-				// 			!lineText.startsWith("//") &&
-				// 			text[m.index + m[1].length] !== '"'
-				// 		) {
-				// 			builder.push(
-				// 				new vscode.Range(
-				// 					new vscode.Position(pos.line, pos.pos),
-				// 					new vscode.Position(
-				// 						pos.line,
-				// 						pos.pos + m[1].length
-				// 					)
-				// 				),
-				// 				"class",
-				// 				["declaration"]
-				// 			);
-				// 		}
-				// 	}
-				// }
-
-				// for (const command of CommandArguments) {
-				// 	const pattern = RegExp(`(?:\\;|\\{|\\})\\s*(${command.command})`);
-				// 	while ((m = pattern.exec(text)) !== null) {
-				// 		const startPos = document.positionAt(m.index);
-				// 		const endPos = document.positionAt(m.index + 1);
-				// 		const range = new vscode.Range(startPos, endPos);
-				// 		console.log(range);
-
-				// 		builder.push(range, "class", ["declaration"]);
-				// 	}
-				// }
-
-				// let pattern = RegExp(`\\\$${variable}\\b`,'g');
-				// while ((m = variablePattern.exec(text)) !== null) {
-				// 	let variables = getUnusedVariables(text, getCurrentFile());
-
-				// 	if (variables.includes(m[1])) {
-				// 		var pos = getLineByIndex(m.index, getLinePos(text));
-				// 		builder.push(
-				// 			new vscode.Range(
-				// 				new vscode.Position(pos.line, pos.pos),
-				// 				new vscode.Position(pos.line, pos.pos + m[0].length)
-				// 			),
-				// 			'variable',
-				// 			['declaration']
-				// 		)
-				// 	}
-				// }
-
-				// while ((m = scoreboardPattern.exec(text)) !== null) {
-				// 	var pos = getLineByIndex(m.index, getLinePos(text));
-				// 	builder.push(
-				// 		new vscode.Range(
-				// 			new vscode.Position(pos.line, pos.pos),
-				// 			new vscode.Position(pos.line, pos.pos + m[0].length)
-				// 		),
-				// 		'variable',
-				// 		['declaration']
-				// 	)
-				// }
-
-				const language = new Language(text);
+				const language = new Language(text, mainHeader);
+				console.log(language.tokens.filter((v) => v.type === TokenType.MACRO));
 				for (const _var of language.tokens) {
 					// const startPos = document.positionAt(_var.offset);
 					// const endPos = document.positionAt(_var.offset + _var.length);
@@ -898,6 +585,13 @@ export async function activate(context: ExtensionContext) {
 						);
 						const range = new vscode.Range(startPos, endPos);
 						builder.push(range, "variable", ["declaration"]);
+					} else if (_var.type === TokenType.MACRO) {
+						const startPos = document.positionAt(_var.offset);
+						const endPos = document.positionAt(
+							_var.offset + _var.length
+						);
+						const range = new vscode.Range(startPos, endPos);
+						builder.push(range, "macro", ["declaration"]);
 					} else if (_var.type === TokenType.VARIABLE) {
 						const startPos = document.positionAt(_var.offset);
 						const endPos = document.positionAt(
@@ -999,6 +693,10 @@ export async function activate(context: ExtensionContext) {
 
 	client.onNotification("data/classesData", (datas: ClassesMethods[]) => {
 		classesMethods = datas;
+	});
+
+	client.onNotification("data/mainHeader", (data: HeaderData[]) => {
+		mainHeader = data;
 	});
 }
 
