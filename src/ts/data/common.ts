@@ -1,8 +1,21 @@
+/**
+ * classes methods defined by users
+ * @param name `string`
+ * @param methods `string[]`
+ */
 export interface ClassesMethods {
 	name: string;
 	methods: string[];
 }
 
+/**
+ * config data of `jmc_config.json`
+ * @param namespace `string`
+ * @param description `string`
+ * @param pack_format `string`
+ * @param target `string`
+ * @param output `string`
+ */
 export interface ConfigData {
 	namespace: string;
 	description: string;
@@ -11,6 +24,11 @@ export interface ConfigData {
 	output: string;
 }
 
+/**
+ * macros data defined by user in `.hjmc`
+ * @param macro `string` the macro name
+ * @param value `string` the value of the macro
+ */
 export interface MacroData {
 	macro: string;
 	value: string;
@@ -27,6 +45,13 @@ export enum HeaderType {
 	COMMAND,
 }
 
+/**
+ * the parsed data of header
+ * @param header `HeaderType`  
+ * @param value `string[]?` value after header (**splited by space**)
+ * @param offset `number`
+ * @param length `number`
+ */
 export interface ParsedHeaderData {
 	header: HeaderType;
 	value?: string[];
@@ -34,6 +59,11 @@ export interface ParsedHeaderData {
 	length: number;
 }
 
+/**
+ * data of header
+ * @param header `HeaderType`  
+ * @param value `string[]?` value after header (**splited by space**)
+ */
 export interface HeaderData {
 	header: HeaderType;
 	value?: string[];

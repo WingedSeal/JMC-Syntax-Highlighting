@@ -24,6 +24,13 @@ const LOAD_ONLY = "LoadOnly";
 const LOAD_ONCE = "LoadOnce";
 const VARIABLE_OPERATION = "VariableOperation";
 
+/**
+ * Infomation of the arguments in the functions
+ * @param name `string`
+ * @param type `string`
+ * @param default `string?`
+ * @param doc `string?`
+ */
 interface ArgInfo {
 	name: string;
 	type: string;
@@ -31,6 +38,12 @@ interface ArgInfo {
 	doc?: string;
 }
 
+/**
+ * Infomation of the methods of the method
+ * @param name `string`
+ * @param args `ArgInfo[]`
+ * @param returnType `MethodInfo[]`
+ */
 interface MethodInfo {
 	name: string;
 	args: ArgInfo[];
@@ -38,11 +51,22 @@ interface MethodInfo {
 	doc?: string;
 }
 
+
+/**
+ * Infomation of the built-in Functions
+ * @param class `string`
+ * @param methods `MethodInfo[]`
+ */
 interface BuiltInFunction {
 	class: string;
 	methods: MethodInfo[];
 }
 
+/**
+ * convert a `MethodInfo` into `string`
+ * @param info 
+ * @returns `name`(`args`): `returnType`
+ */
 export function methodInfoToDoc(info: MethodInfo): string {
 	const argString = info.args.flatMap((v): string => {
 		const def = v.default !== undefined ? ` = ${v.default}` : "";
@@ -51,6 +75,9 @@ export function methodInfoToDoc(info: MethodInfo): string {
 	return `${info.name}(${argString}): ${info.returnType} `;
 }
 
+/**
+ * infos of all built-in functions
+ */
 export const BuiltInFunctions: Array<BuiltInFunction> = [
 	{
 		class: "Advancement",

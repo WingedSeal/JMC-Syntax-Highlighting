@@ -2,6 +2,11 @@ import * as fs from "fs";
 import { getAllFilesSync } from "get-all-files";
 import { HeaderType, ParsedHeaderData, SEMI_CHECKCHAR } from "../data/common";
 
+/**
+ * get all `.jmc` files in current workspace
+ * @param workspaceFolder 
+ * @returns `string[]` all `.jmc` files full path
+ */
 export function getJMCFile(workspaceFolder: string): string[] {
 	return getAllFilesSync(workspaceFolder)
 		.toArray()
@@ -10,6 +15,11 @@ export function getJMCFile(workspaceFolder: string): string[] {
 		});
 }
 
+/**
+ * get all `.hjmc` files in current workspace
+ * @param workspaceFolder 
+ * @returns `string[]` all `.hjmc` files full path
+ */
 export function getHJMCFile(workspaceFolder: string): string[] {
 	return getAllFilesSync(workspaceFolder)
 		.toArray()
@@ -18,6 +28,11 @@ export function getHJMCFile(workspaceFolder: string): string[] {
 		});
 }
 
+/**
+ * parse header in `.hjmc` file
+ * @param text 
+ * @returns `ParsedHeaderData[]`
+ */
 export function parseHJMCFile(text: string): ParsedHeaderData[] {
 	const data = text.split("\r\n");
 	const hd: ParsedHeaderData[] = [];
@@ -100,15 +115,15 @@ function getHeaderPos(data: string[], pos: number): number {
 	return data.slice(0, pos).join("\n").length + pos + 1;
 }
 
+/**
+ * get text of a file
+ * @param path 
+ * @returns `string` file text
+ */
 export async function getFileText(path: string): Promise<string> {
 	return new Promise((resolve, reject) => {
 		resolve(fs.readFileSync(path, { encoding: "utf-8", flag: "r" }));
 	});
-}
-
-export function getTextByLine(text: string, line: number): string {
-	const t = text.split("\n")[line];
-	return t;
 }
 
 export interface ImportData {
@@ -116,6 +131,11 @@ export interface ImportData {
 	text: string;
 }
 
+/**
+ * get all file text of JMC files
+ * @param root root workspace folder
+ * @returns 
+ */
 export async function getAllJMCFileText(root: string): Promise<ImportData[]> {
 	const datas: ImportData[] = [];
 	const files = getJMCFile(root);
@@ -129,6 +149,12 @@ export async function getAllJMCFileText(root: string): Promise<ImportData[]> {
 	return datas;
 }
 
+/**
+ * get the command of current position
+ * @param text 
+ * @param offset 
+ * @returns 
+ */
 export async function getCurrentCommand(
 	text: string,
 	offset: number
