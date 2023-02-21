@@ -53,7 +53,7 @@ const documents: TextDocuments<TextDocument> = new TextDocuments(TextDocument);
 let hasConfigurationCapability = false;
 let hasWorkspaceFolderCapability = false;
 let hasDiagnosticRelatedInformationCapability = false;
-//TODO: detect spaces
+
 function readHeader(headers: string[]) {
 	for (const i of headers) {
 		const headerData = i.split(" ");

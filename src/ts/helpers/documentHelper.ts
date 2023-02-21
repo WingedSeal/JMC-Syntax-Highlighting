@@ -1,16 +1,8 @@
 import * as fs from "fs";
 import { getAllFilesSync } from "get-all-files";
-import { SEMI_CHECKCHAR } from "../data/common";
+import { HeaderType, ParsedHeaderData, SEMI_CHECKCHAR } from "../data/common";
 
 export function getJMCFile(workspaceFolder: string): string[] {
-	// const importPattern = /@import\s*\"(.+)\"/g;
-	// let m: RegExpExecArray | null;
-	// const files: string[] = [];
-
-	// while ((m = importPattern.exec(text)) !== null) {
-	// 	files.push(`${m[1]}.jmc`);
-	// }
-	// return files;
 	return getAllFilesSync(workspaceFolder)
 		.toArray()
 		.filter((v) => {
@@ -24,6 +16,88 @@ export function getHJMCFile(workspaceFolder: string): string[] {
 		.filter((v) => {
 			return v.endsWith(".hjmc");
 		});
+}
+
+export function parseHJMCFile(text: string): ParsedHeaderData[] {
+	const data = text.split("\r\n");
+	const hd: ParsedHeaderData[] = [];
+
+	for (let i = 0; i < data.length; i++) {
+		const header = data[i];
+		const headerData = header.split(" ");
+		switch (headerData[0]) {
+			case "#define":
+				hd.push({
+					header: HeaderType.DEFINE,
+					value: [headerData[1]].concat(
+						headerData.slice(2).join(" ")
+					),
+					offset: getHeaderPos(data, i),
+					length: header.length,
+				});
+				break;
+			case "#include":
+				hd.push({
+					header: HeaderType.INCLUDE,
+					value: [headerData.slice(1).join(" ").slice(1, -1)],
+					offset: getHeaderPos(data, i),
+					length: header.length,
+				});
+				break;
+			case "#override_minecraft":
+				hd.push({
+					header: HeaderType.OVERRIDE_MINECRAFT,
+					offset: getHeaderPos(data, i),
+					length: header.length,
+				});
+				break;
+			case "#credit":
+				hd.push({
+					header: HeaderType.CREDIT,
+					value: [headerData.slice(1).join(" ").slice(1, -1)],
+					offset: getHeaderPos(data, i),
+					length: header.length,
+				});
+				break;
+			case "#command":
+				hd.push({
+					header: HeaderType.COMMAND,
+					value: headerData.slice(1),
+					offset: getHeaderPos(data, i),
+					length: header.length,
+				});
+				break;
+			case "#delete":
+				hd.push({
+					header: HeaderType.DEL,
+					value: headerData.slice(1),
+					offset: getHeaderPos(data, i),
+					length: header.length,
+				});
+				break;
+			case "#uninstall":
+				hd.push({
+					header: HeaderType.UNINSTALL,
+					offset: getHeaderPos(data, i),
+					length: header.length,
+				});
+				break;
+			case "#static":
+				hd.push({
+					header: HeaderType.STATIC,
+					value: [headerData.slice(1).join(" ").slice(1, -1)],
+					offset: getHeaderPos(data, i),
+					length: header.length,
+				});
+				break;
+		}
+	}
+	return hd;
+}
+
+function getHeaderPos(data: string[], pos: number): number {
+	if (pos === 0) return data.slice(0, pos).join("\n").length + pos;
+	return data.slice(0, pos).join("\n").length + pos + 1;
 }
 
 export async function getFileText(path: string): Promise<string> {

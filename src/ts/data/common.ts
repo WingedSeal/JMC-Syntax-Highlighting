@@ -27,6 +27,13 @@ export enum HeaderType {
 	COMMAND,
 }
 
+export interface ParsedHeaderData {
+	header: HeaderType;
+	value?: string[];
+	offset: number;
+	length: number;
+}
+
 export interface HeaderData {
 	header: HeaderType;
 	value?: string[];
