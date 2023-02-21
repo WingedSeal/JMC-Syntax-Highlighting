@@ -141,6 +141,9 @@ export class Language {
 			offset += rawText.length;
 			offset -= text.length;
 		}
+		else {
+			offset += empty;
+		}
 
 		this.tokens.push({
 			type: TokenType.MACRO,
