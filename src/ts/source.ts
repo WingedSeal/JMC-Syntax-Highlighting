@@ -383,7 +383,7 @@ export async function activate(context: ExtensionContext) {
 										return;
 
 									break;
-								case ValueType.TARGET:
+								case ValueType.SELECTOR:
 									if (
 										!SELECTORS.includes(
 											currentData.slice(0, 1)
@@ -466,7 +466,7 @@ export async function activate(context: ExtensionContext) {
 						case ValueType.ATTRIBUTE:
 							attr = true;
 							break;
-						case ValueType.TARGET:
+						case ValueType.SELECTOR:
 							selector = true;
 							break;
 						case ValueType.NUMBER:
@@ -570,7 +570,9 @@ export async function activate(context: ExtensionContext) {
 				);
 				const text = document.getText();
 				const language = new Language(text, mainHeader);
-				console.log(language.tokens.filter((v) => v.type === TokenType.MACRO));
+				console.log(
+					language.tokens.filter((v) => v.type === TokenType.MACRO)
+				);
 				for (const _var of language.tokens) {
 					// const startPos = document.positionAt(_var.offset);
 					// const endPos = document.positionAt(_var.offset + _var.length);

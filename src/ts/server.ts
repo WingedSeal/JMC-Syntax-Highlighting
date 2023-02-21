@@ -418,7 +418,7 @@ connection.onCompletion(
 				label: i.macro,
 				kind: CompletionItemKind.Snippet,
 				data: num,
-				detail: i.value
+				detail: i.value,
 			});
 			num++;
 		}

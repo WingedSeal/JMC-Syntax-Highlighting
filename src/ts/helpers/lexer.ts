@@ -38,7 +38,7 @@ export enum TokenType {
 	CALL_FUNCTION,
 	USE_VARIABLE,
 	COMMAND,
-	MACRO
+	MACRO,
 }
 
 export enum ErrorType {
@@ -74,7 +74,9 @@ export class Language {
 
 	constructor(text: string, header: HeaderData[]) {
 		this.headerData = header;
-		this.macros = this.headerData.filter((v) => v.header === HeaderType.DEFINE).map((v) => v.value![0]);
+		this.macros = this.headerData
+			.filter((v) => v.header === HeaderType.DEFINE)
+			.map((v) => v.value![0]);
 		this.raw = text.split(/(;|\{|\}|\(|\)|\,|\[|\]|\/\/.*)/g);
 		this.rtrim = this.raw.map((v) => v.trim());
 		for (
@@ -105,7 +107,7 @@ export class Language {
 		if (current.startsWith("//")) return;
 		else if (this.macros.includes(current)) {
 			this.parseMacro(current);
-		}else if (current.startsWith("function")) {
+		} else if (current.startsWith("function")) {
 			this.parseDefineFunction(current);
 		} else if (current.startsWith("class")) {
 			this.parseClass(current);
@@ -133,22 +135,20 @@ export class Language {
 		const rawText = this.raw[this.currentIndex];
 
 		const emptyLength = rawText.match(/^(\s+)/g || []);
-		const empty = emptyLength !== null ? emptyLength[0].length : 0;		
+		const empty = emptyLength !== null ? emptyLength[0].length : 0;
 
 		if (rawText.trim().startsWith("$")) {
 			offset += rawText.length;
 			offset -= text.length;
 		}
 
-		this.tokens.push(
-			{
-				type: TokenType.MACRO,
-				offset: offset,
-				length: text.length,
-				raw: rawText,
-				trim: text,
-			}
-		);
+		this.tokens.push({
+			type: TokenType.MACRO,
+			offset: offset,
+			length: text.length,
+			raw: rawText,
+			trim: text,
+		});
 	}
 
 	private parseSwitch(text: string) {

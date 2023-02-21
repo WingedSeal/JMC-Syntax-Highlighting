@@ -3,7 +3,7 @@ import { BLOCKS_ID, ITEMS_ID } from "./staticData";
 export enum ValueType {
 	KEYWORD,
 	ENUM,
-	TARGET,
+	SELECTOR,
 	NUMBER,
 	ADVANCEMENT,
 	CRITERION,
@@ -17,6 +17,8 @@ export enum ValueType {
 	VECTOR,
 	BLOCK,
 	DIMENSION,
+	PATH,
+	NBT,
 }
 
 export interface CommandArg {
@@ -39,7 +41,7 @@ export const COMMANDS: Command[] = [
 				value: ["grant", "revoke"],
 			},
 			{
-				type: ValueType.TARGET,
+				type: ValueType.SELECTOR,
 			},
 			{
 				type: ValueType.KEYWORD,
@@ -55,7 +57,7 @@ export const COMMANDS: Command[] = [
 				value: ["grant", "revoke"],
 			},
 			{
-				type: ValueType.TARGET,
+				type: ValueType.SELECTOR,
 			},
 			{
 				type: ValueType.KEYWORD,
@@ -78,7 +80,7 @@ export const COMMANDS: Command[] = [
 				value: ["grant", "revoke"],
 			},
 			{
-				type: ValueType.TARGET,
+				type: ValueType.SELECTOR,
 			},
 			{
 				type: ValueType.KEYWORD,
@@ -93,7 +95,7 @@ export const COMMANDS: Command[] = [
 		command: "attribute",
 		args: [
 			{
-				type: ValueType.TARGET,
+				type: ValueType.SELECTOR,
 			},
 			{
 				type: ValueType.ATTRIBUTE,
@@ -112,7 +114,7 @@ export const COMMANDS: Command[] = [
 		command: "attribute",
 		args: [
 			{
-				type: ValueType.TARGET,
+				type: ValueType.SELECTOR,
 			},
 			{
 				type: ValueType.ATTRIBUTE,
@@ -135,7 +137,7 @@ export const COMMANDS: Command[] = [
 		command: "attribute",
 		args: [
 			{
-				type: ValueType.TARGET,
+				type: ValueType.SELECTOR,
 			},
 			{
 				type: ValueType.ATTRIBUTE,
@@ -157,7 +159,7 @@ export const COMMANDS: Command[] = [
 		command: "attribute",
 		args: [
 			{
-				type: ValueType.TARGET,
+				type: ValueType.SELECTOR,
 			},
 			{
 				type: ValueType.ATTRIBUTE,
@@ -189,7 +191,7 @@ export const COMMANDS: Command[] = [
 		command: "attribute",
 		args: [
 			{
-				type: ValueType.TARGET,
+				type: ValueType.SELECTOR,
 			},
 			{
 				type: ValueType.ATTRIBUTE,
@@ -211,7 +213,7 @@ export const COMMANDS: Command[] = [
 		command: "attribute",
 		args: [
 			{
-				type: ValueType.TARGET,
+				type: ValueType.SELECTOR,
 			},
 			{
 				type: ValueType.ATTRIBUTE,
@@ -358,7 +360,7 @@ export const COMMANDS: Command[] = [
 				value: ["players"],
 			},
 			{
-				type: ValueType.TARGET,
+				type: ValueType.SELECTOR,
 			},
 		],
 	},
@@ -431,7 +433,7 @@ export const COMMANDS: Command[] = [
 		command: "clear",
 		args: [
 			{
-				type: ValueType.TARGET,
+				type: ValueType.SELECTOR,
 			},
 			{
 				type: ValueType.ITEM,
@@ -589,10 +591,157 @@ export const COMMANDS: Command[] = [
 			},
 		],
 	},
+
+	//*DATA GET*//
+	{
+		command: "data",
+		args: [
+			{
+				type: ValueType.KEYWORD,
+				value: ["get"],
+			},
+			{
+				type: ValueType.KEYWORD,
+				value: ["block"],
+			},
+			{
+				type: ValueType.VECTOR,
+			},
+			{
+				type: ValueType.VECTOR,
+			},
+			{
+				type: ValueType.VECTOR,
+			},
+			{
+				type: ValueType.PATH,
+				optional: true,
+			},
+			{
+				type: ValueType.NUMBER,
+				optional: true,
+			},
+		],
+	},
+	{
+		command: "data",
+		args: [
+			{
+				type: ValueType.KEYWORD,
+				value: ["get"],
+			},
+			{
+				type: ValueType.KEYWORD,
+				value: ["entity"],
+			},
+			{
+				type: ValueType.SELECTOR,
+			},
+			{
+				type: ValueType.PATH,
+				optional: true,
+			},
+			{
+				type: ValueType.NUMBER,
+				optional: true,
+			},
+		],
+	},
+	{
+		command: "data",
+		args: [
+			{
+				type: ValueType.KEYWORD,
+				value: ["get"],
+			},
+			{
+				type: ValueType.KEYWORD,
+				value: ["storage"],
+			},
+			{
+				type: ValueType.NAME,
+			},
+			{
+				type: ValueType.PATH,
+				optional: true,
+			},
+			{
+				type: ValueType.NUMBER,
+				optional: true,
+			},
+		],
+	},
+
+	//*DATA MERGE*//
+	{
+		command: "data",
+		args: [
+			{
+				type: ValueType.KEYWORD,
+				value: ["merge"],
+			},
+			{
+				type: ValueType.KEYWORD,
+				value: ["block"],
+			},
+			{
+				type: ValueType.VECTOR,
+			},
+			{
+				type: ValueType.VECTOR,
+			},
+			{
+				type: ValueType.VECTOR,
+			},
+			{
+				type: ValueType.NBT,
+				optional: true,
+			},
+		],
+	},
+	{
+		command: "data",
+		args: [
+			{
+				type: ValueType.KEYWORD,
+				value: ["merge"],
+			},
+			{
+				type: ValueType.KEYWORD,
+				value: ["entity"],
+			},
+			{
+				type: ValueType.SELECTOR,
+			},
+			{
+				type: ValueType.NBT,
+				optional: true,
+			},
+		],
+	},
+	{
+		command: "data",
+		args: [
+			{
+				type: ValueType.KEYWORD,
+				value: ["merge"],
+			},
+			{
+				type: ValueType.KEYWORD,
+				value: ["storage"],
+			},
+			{
+				type: ValueType.NAME,
+			},
+			{
+				type: ValueType.NBT,
+				optional: true,
+			},
+		],
+	},
 ];
 
 //const valuePattern = /[\w.]+/g;
-
 
 // export function getCommand(text: string): RegExp[] {
 // 	const results: RegExp[] = [];

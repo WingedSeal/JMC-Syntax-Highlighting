@@ -16,15 +16,20 @@ export interface MacroData {
 	value: string;
 }
 
-
 export enum HeaderType {
-	DEFINE, OVERRIDE_MINECRAFT, CREDIT, DEL, INCLUDE, UNINSTALL, STATIC,
-	COMMAND
+	DEFINE,
+	OVERRIDE_MINECRAFT,
+	CREDIT,
+	DEL,
+	INCLUDE,
+	UNINSTALL,
+	STATIC,
+	COMMAND,
 }
 
 export interface HeaderData {
-	header: HeaderType,
-	value?: string[]
+	header: HeaderType;
+	value?: string[];
 }
 
 export const KEYWORDS: Array<string> = [
