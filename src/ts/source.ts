@@ -561,8 +561,13 @@ export async function activate(context: ExtensionContext) {
 						});
 					}
 				}
-
-				return items;
+				const r: vscode.CompletionItem[] = [];
+				items.forEach((v) => {
+					if (!r.map((v) => v.label).includes(v.label)) {
+						r.push(v);
+					}
+				});
+				return r;
 			},
 		},
 		" "
@@ -577,9 +582,6 @@ export async function activate(context: ExtensionContext) {
 				);
 				const text = document.getText();
 				const language = new Language(text, mainHeader);
-				console.log(
-					language.tokens.filter((v) => v.type === TokenType.MACRO)
-				);
 				for (const _var of language.tokens) {
 					// const startPos = document.positionAt(_var.offset);
 					// const endPos = document.positionAt(_var.offset + _var.length);
@@ -690,6 +692,15 @@ export async function activate(context: ExtensionContext) {
 							const range2 = new vscode.Range(startPos2, endPos2);
 							builder.push(range2, "function", ["declaration"]);
 						}
+					} else if (_var.type === TokenType.COMMAND) {
+						//console.log(_var);
+					} else if (_var.type === TokenType.NEW) {
+						const startPos = document.positionAt(_var.offset + 4);
+						const endPos = document.positionAt(
+							_var.offset + _var.length
+						);
+						const range = new vscode.Range(startPos, endPos);
+						builder.push(range, "class", ["declaration"]);
 					}
 				}
 				return builder.build();
@@ -721,17 +732,23 @@ export async function activate(context: ExtensionContext) {
 						currentPos > include.offset + 8 &&
 						currentPos < include.offset + 8 + include.length
 					) {
-						const p = url.pathToFileURL(
-							path.resolve(
-								`${workspace.workspaceFolders![0].uri.fsPath}/${
-									include.value![0]
-								}`
+						const p = url
+							.pathToFileURL(
+								path.resolve(
+									`${
+										workspace.workspaceFolders![0].uri
+											.fsPath
+									}/${include.value![0]}`
+								)
 							)
-						).toString();
+							.toString();
 						const range = new vscode.Range(
 							document.positionAt(include.offset + 9),
 							document.positionAt(
-								include.offset + 9 + include.value![0].length + 3
+								include.offset +
+									9 +
+									include.value![0].length +
+									3
 							)
 						);
 						// return {
@@ -742,8 +759,11 @@ export async function activate(context: ExtensionContext) {
 							{
 								originSelectionRange: range,
 								uri: vscode.Uri.parse(p),
-								range: new vscode.Range(new vscode.Position(0,0), new vscode.Position(0,0))
-							}
+								range: new vscode.Range(
+									new vscode.Position(0, 0),
+									new vscode.Position(0, 0)
+								),
+							},
 						];
 					}
 				}

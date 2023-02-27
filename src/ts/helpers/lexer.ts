@@ -5,9 +5,7 @@ import { HeaderData, HeaderType, VANILLA_COMMANDS } from "../data/common";
 // 	length: number;
 // 	value: string[];
 // }
-
 // const StopChar: string[] = [";", "{", "}", "/"];
-
 // export function tokenizeCommand(text: string): CommandToken[] {
 // 	const values: CommandToken[] = [];
 // 	let parse = "";
@@ -39,6 +37,7 @@ export enum TokenType {
 	USE_VARIABLE,
 	COMMAND,
 	MACRO,
+	NEW
 }
 
 export enum ErrorType {
@@ -107,6 +106,8 @@ export class Language {
 		if (current.startsWith("//")) return;
 		else if (this.macros.includes(current)) {
 			this.parseMacro(current);
+		} else if (current.startsWith("new")) {
+			this.parseNew(current);
 		} else if (current.startsWith("function")) {
 			this.parseDefineFunction(current);
 		} else if (current.startsWith("class")) {
@@ -130,6 +131,23 @@ export class Language {
 		}
 	}
 
+	private parseNew(text: string) {
+		let offset = this.getOffset();
+		const rawText = this.raw[this.currentIndex];
+
+		const emptyLength = rawText.match(/^(\s+)/g || []);
+		const empty = emptyLength !== null ? emptyLength[0].length : 0;
+		offset += empty;
+
+		this.tokens.push({
+			type: TokenType.NEW,
+			offset: offset,
+			length: text.length,
+			raw: rawText,
+			trim: text,
+		});
+	}
+
 	private parseMacro(text: string) {
 		let offset = this.getOffset();
 		const rawText = this.raw[this.currentIndex];
@@ -140,8 +158,7 @@ export class Language {
 		if (rawText.trim().startsWith("$")) {
 			offset += rawText.length;
 			offset -= text.length;
-		}
-		else {
+		} else {
 			offset += empty;
 		}
 
@@ -266,61 +283,63 @@ export class Language {
 				this.currentIndex++;
 			}
 		}
+		//TODO:
+		console.log(startRaw.trim());
 
-		// if (
-		// 	text
-		// 		.split(" ")
-		// 		.map((v) => v.trim())
-		// 		.filter((v) => (v! += ""))[0] === "execute"
-		// ) {
-		// 	let bracketCount = 1;
-		// 	text += " ";
+		// // if (
+		// // 	text
+		// // 		.split(" ")
+		// // 		.map((v) => v.trim())
+		// // 		.filter((v) => (v! += ""))[0] === "execute"
+		// // ) {
+		// // 	let bracketCount = 1;
+		// // 	text += " ";
 
-		// 	while (
-		// 		bracketCount !== 0 &&
-		// 		this.currentIndex < this.raw.length - 1
-		// 	) {
-		// 		const currentText = this.rtrim[this.currentIndex];
-		// 		if (currentText === "{") bracketCount++;
-		// 		else if (currentText === "}") bracketCount--;
-		// 		else if (currentText === ";") break;
-		// 		if (bracketCount === 1) {
-		// 			text += currentText;
-		// 			length += this.raw[this.currentIndex].length;
-		// 		}
-		// 		this.currentIndex++;
-		// 	}
-		// } else {
-		// 	this.currentIndex++;
-		// 	text += " ";
-		// 	let currentText = this.rtrim[this.currentIndex];
-		// 	while (
-		// 		currentText !== ";" &&
-		// 		this.currentIndex < this.raw.length - 1
-		// 	) {
-		// 		currentText = this.rtrim[this.currentIndex];
-		// 		text += currentText;
-		// 		length += this.raw[this.currentIndex].length;
-		// 		if (this.rtrim[this.currentIndex] === ")") text += " ";
-		// 		this.currentIndex++;
-		// 	}
-		// }
+		// // 	while (
+		// // 		bracketCount !== 0 &&
+		// // 		this.currentIndex < this.raw.length - 1
+		// // 	) {
+		// // 		const currentText = this.rtrim[this.currentIndex];
+		// // 		if (currentText === "{") bracketCount++;
+		// // 		else if (currentText === "}") bracketCount--;
+		// // 		else if (currentText === ";") break;
+		// // 		if (bracketCount === 1) {
+		// // 			text += currentText;
+		// // 			length += this.raw[this.currentIndex].length;
+		// // 		}
+		// // 		this.currentIndex++;
+		// // 	}
+		// // } else {
+		// // 	this.currentIndex++;
+		// // 	text += " ";
+		// // 	let currentText = this.rtrim[this.currentIndex];
+		// // 	while (
+		// // 		currentText !== ";" &&
+		// // 		this.currentIndex < this.raw.length - 1
+		// // 	) {
+		// // 		currentText = this.rtrim[this.currentIndex];
+		// // 		text += currentText;
+		// // 		length += this.raw[this.currentIndex].length;
+		// // 		if (this.rtrim[this.currentIndex] === ")") text += " ";
+		// // 		this.currentIndex++;
+		// // 	}
+		// // }
 
-		const digest = text
-			.split(" ")
-			.map((v) => v.trim())
-			.filter((v) => (v! += ""));
-		const emptyLength = startRaw.match(/^(\s+)/g || []);
-		const empty = emptyLength !== null ? emptyLength[0].length : 0;
+		// const digest = text
+		// 	.split(" ")
+		// 	.map((v) => v.trim())
+		// 	.filter((v) => (v! += ""));
+		// const emptyLength = startRaw.match(/^(\s+)/g || []);
+		// const empty = emptyLength !== null ? emptyLength[0].length : 0;
 
-		this.tokens.push({
-			raw: startRaw,
-			trim: text,
-			type: TokenType.COMMAND,
-			offset: index + empty,
-			length: startRaw.length - empty,
-			value: digest,
-		});
+		// this.tokens.push({
+		// 	raw: startRaw,
+		// 	trim: text,
+		// 	type: TokenType.COMMAND,
+		// 	offset: index + empty,
+		// 	length: startRaw.length - empty,
+		// 	value: digest,
+		// });
 	}
 
 	/**
