@@ -4,7 +4,7 @@ import { getCurrentCommand } from "../helpers/documentHelper";
 import { BuiltInFunctions, methodInfoToDoc } from "../data/builtinFunctions";
 
 export function RegisterSignatureSign() {
-    languages.registerSignatureHelpProvider(
+	languages.registerSignatureHelpProvider(
 		SELECTOR,
 		{
 			async provideSignatureHelp(document, position, token, ctx) {
@@ -50,5 +50,5 @@ export function RegisterSignatureSign() {
 		},
 		"(",
 		","
-	);    
+	);
 }

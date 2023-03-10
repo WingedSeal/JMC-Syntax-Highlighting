@@ -1,6 +1,11 @@
 import * as vscode from "vscode";
 import { languages } from "vscode";
-import { HEADERS, HEADER_SELECTOR, JSON_FILE_TYPES, SELECTOR } from "../data/common";
+import {
+	HEADERS,
+	HEADER_SELECTOR,
+	JSON_FILE_TYPES,
+	SELECTOR,
+} from "../data/common";
 import { getCurrentCommand } from "../helpers/documentHelper";
 import { BuiltInFunctions } from "../data/builtinFunctions";
 import { classesMethods } from "./source";
@@ -15,8 +20,8 @@ export class CompletionRegister {
 		this.RegisterHeader();
 		this.RegisterImport();
 		this.RegisterVariableFunction();
-        this.RegisterNewKeyword();
-        this.RegisterVanillaCommand();
+		this.RegisterNewKeyword();
+		this.RegisterVanillaCommand();
 	}
 
 	public static RegisterBuiltinFunction() {
@@ -188,65 +193,75 @@ export class CompletionRegister {
 		);
 	}
 
-    public static RegisterNewKeyword() {
-        languages.registerCompletionItemProvider(
-            SELECTOR,
-            {
-                async provideCompletionItems(document, position, token, context) {
-                    const linePrefix = await getCurrentCommand(
-                        document.getText(),
-                        document.offsetAt(position)
-                    );
-                    if (linePrefix.endsWith("new ")) {
-                        const items: vscode.CompletionItem[] = [];
-                        for (const i of JSON_FILE_TYPES) {
-                            items.push({
-                                label: i,
-                                kind: vscode.CompletionItemKind.Value,
-                            });
-                        }
-                        return items;
-                    }
-                    return undefined;
-                },
-            },
-            " "
-        );        
-    }
+	public static RegisterNewKeyword() {
+		languages.registerCompletionItemProvider(
+			SELECTOR,
+			{
+				async provideCompletionItems(
+					document,
+					position,
+					token,
+					context
+				) {
+					const linePrefix = await getCurrentCommand(
+						document.getText(),
+						document.offsetAt(position)
+					);
+					if (linePrefix.endsWith("new ")) {
+						const items: vscode.CompletionItem[] = [];
+						for (const i of JSON_FILE_TYPES) {
+							items.push({
+								label: i,
+								kind: vscode.CompletionItemKind.Value,
+							});
+						}
+						return items;
+					}
+					return undefined;
+				},
+			},
+			" "
+		);
+	}
 
-    public static RegisterVanillaCommand() {
-        languages.registerCompletionItemProvider(
-            SELECTOR,
-            {
-                async provideCompletionItems(document, position, token, context) {
-                    const text = document.getText().trim();
-                    const linePrefix = await getCurrentCommand(
-                        text,
-                        document.offsetAt(position)
-                    );
-    
-                    const items: vscode.CompletionItem[] = [];
-    
-                    const r = parseCommand(lexCommand(linePrefix));
-                    if (r !== undefined && r.node !== undefined) {
-                        for (const node of r.node) {
-                            switch (node.type) {
-                                case CommandType.LITERAL:
-                                    items.push({
-                                        label: node.name,
-                                        kind: vscode.CompletionItemKind.Keyword,
-                                    });
-                                    break;
-                                case CommandType.ARGUMENT:
-                                    break;
-                            }
-                        }
-                    }
-    
-                    return items.length > 0 ? items : undefined;
-                },
-            },
-            " "
-        );        
-    }
+	public static RegisterVanillaCommand() {
+		languages.registerCompletionItemProvider(
+			SELECTOR,
+			{
+				async provideCompletionItems(
+					document,
+					position,
+					token,
+					context
+				) {
+					const text = document.getText().trim();
+					const linePrefix = await getCurrentCommand(
+						text,
+						document.offsetAt(position)
+					);
+
+					const items: vscode.CompletionItem[] = [];
+
+					const r = parseCommand(lexCommand(linePrefix));
+					if (r !== undefined && r.node !== undefined) {
+						for (const node of r.node) {
+							switch (node.type) {
+								case CommandType.LITERAL:
+									items.push({
+										label: node.name,
+										kind: vscode.CompletionItemKind.Keyword,
+									});
+									break;
+								case CommandType.ARGUMENT:
+									break;
+							}
+						}
+					}
+
+					return items.length > 0 ? items : undefined;
+				},
+			},
+			" "
+		);
+	}
 }

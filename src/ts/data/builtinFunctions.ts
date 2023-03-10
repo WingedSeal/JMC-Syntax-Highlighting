@@ -51,7 +51,6 @@ interface MethodInfo {
 	doc?: string;
 }
 
-
 /**
  * Infomation of the built-in Functions
  * @param class `string`
@@ -64,7 +63,7 @@ interface BuiltInFunction {
 
 /**
  * convert a `MethodInfo` into `string`
- * @param info 
+ * @param info
  * @returns `name`(`args`): `returnType`
  */
 export function methodInfoToDoc(info: MethodInfo): string {

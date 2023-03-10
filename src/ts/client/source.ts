@@ -1,18 +1,13 @@
-import {
-	workspace,
-	ExtensionContext,
-	languages
-} from "vscode";
+import { workspace, ExtensionContext, languages } from "vscode";
 import {
 	LanguageClient,
-	LanguageClientOptions, ServerOptions,
-	TransportKind
+	LanguageClientOptions,
+	ServerOptions,
+	TransportKind,
 } from "vscode-languageclient/node";
 import * as path from "path";
 import * as vscode from "vscode";
-import {
-	HeaderData, SELECTOR
-} from "../data/common";
+import { HeaderData, SELECTOR } from "../data/common";
 import { semanticLegend } from "./semanticHighlight";
 import { Language, TokenType } from "../helpers/lexer";
 import { getLogger, initLogger } from "../helpers/logger";
