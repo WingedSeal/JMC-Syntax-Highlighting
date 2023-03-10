@@ -1,3 +1,5 @@
+import { DocumentSelector } from "vscode";
+
 /**
  * classes methods defined by users
  * @param name `string`
@@ -47,7 +49,7 @@ export enum HeaderType {
 
 /**
  * the parsed data of header
- * @param header `HeaderType`  
+ * @param header `HeaderType`
  * @param value `string[]?` value after header (**splited by space**)
  * @param offset `number`
  * @param length `number`
@@ -61,7 +63,7 @@ export interface ParsedHeaderData {
 
 /**
  * data of header
- * @param header `HeaderType`  
+ * @param header `HeaderType`
  * @param value `string[]?` value after header (**splited by space**)
  */
 export interface HeaderData {
@@ -170,3 +172,13 @@ export const JSON_FILE_TYPES = [
 	"worldgen/processor_list",
 	"worldgen/template_pool",
 ];
+
+export const SELECTOR: DocumentSelector = {
+	language: "jmc",
+	scheme: "file",
+};
+
+export const HEADER_SELECTOR: DocumentSelector = {
+	language: "hjmc",
+	scheme: "file",
+};

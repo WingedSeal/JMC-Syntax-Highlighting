@@ -1,4 +1,5 @@
 import { HeaderData, HeaderType, VANILLA_COMMANDS } from "../data/common";
+import { lexCommand, parseCommand } from "./parseCommand";
 
 // interface CommandToken {
 // 	offset: number;
@@ -89,14 +90,6 @@ export class Language {
 
 	/**
 	 * parse text
-	 * @order EMPTY
-	 * @order COMMENT (//)
-	 * @order FUNCTION (function)
-	 * @order CLASS (class)
-	 * @order VARIABLE ($)
-	 * @order IF-ELSE (if/else)
-	 * @order VANILLA_COMMANDS
-	 * @order FUNCTION_CALL
 	 * @param text
 	 * @returns void
 	 */
@@ -223,123 +216,41 @@ export class Language {
 		const index = this.getOffset();
 		let startRaw = this.raw[this.currentIndex];
 
-		if (this.rtrim[this.currentIndex + 1] === "[") {
-			let bracketCount = 1;
-			this.currentIndex += 2;
-			text += "[";
-			while (
-				bracketCount !== 0 &&
-				this.currentIndex < this.raw.length - 1
-			) {
-				const currentText = this.rtrim[this.currentIndex];
-				const currentRaw = this.raw[this.currentIndex];
-
-				if (currentText === "[") bracketCount++;
-				else if (currentText === "]") bracketCount--;
-				else {
-					text += currentText;
-				}
-				startRaw += currentRaw;
-
+		while (this.currentIndex++ < this.raw.length - 1) {
+			const current = this.raw[this.currentIndex];
+			if (current === "[") {
+				let bCount = 1;
 				this.currentIndex++;
-			}
-			text += "]";
+				startRaw += "[";
+
+				while (bCount !== 0) {
+					const c = this.raw[this.currentIndex];
+					if (c.trim() === "[") bCount++;
+					else if (c.trim() === "]") bCount--;
+					startRaw += c;
+					this.currentIndex++;
+				}
+				startRaw += this.raw[this.currentIndex];
+			} else if (current === ";" || current === "{") break;
+			else startRaw += current;
 		}
 
-		const next = this.rtrim[this.currentIndex + 1];
+		const lexed = lexCommand(startRaw.trim());
+		const r = parseCommand(lexed)!;
 
-		if (!(next === ";" || next === "{")) {
-			this.currentIndex++;
-			let currentText = this.rtrim[this.currentIndex];
+		const emptyLength = startRaw.match(/^(\s+)/g || []);
+		const empty = emptyLength !== null ? emptyLength[0].length : 0;
 
-			while (!(currentText === ";" || currentText === "{")) {
-				currentText = this.rtrim[this.currentIndex];
-				const currentRaw = this.raw[this.currentIndex];
+		const mapped = r.type.map((v) => `${v.type};${v.value};${v.length}${(v.parser !== undefined) ? ";" + v.parser : ""}`);
 
-				if (currentText === ";" || currentText === "{") break;
-				if (currentText !== "(" && currentText !== ")") {
-					text += currentText;
-				}
-				if (currentText === ")") text += " ";
-				startRaw += currentRaw;
-
-				this.currentIndex++;
-			}
-		} else if (text.startsWith("execute")) {
-			let currentText = this.rtrim[this.currentIndex];
-			text += " ";
-
-			while (!(currentText === ";" || currentText === "{")) {
-				currentText = this.rtrim[this.currentIndex];
-				const currentRaw = this.raw[this.currentIndex];
-
-				if (currentText === ";" || currentText === "{") break;
-				if (currentText !== "(" && currentText !== ")") {
-					text += currentText;
-				}
-				if (currentText === ")") text += " ";
-				startRaw += currentRaw;
-
-				this.currentIndex++;
-			}
-		}
-		//TODO:
-		console.log(startRaw.trim());
-
-		// // if (
-		// // 	text
-		// // 		.split(" ")
-		// // 		.map((v) => v.trim())
-		// // 		.filter((v) => (v! += ""))[0] === "execute"
-		// // ) {
-		// // 	let bracketCount = 1;
-		// // 	text += " ";
-
-		// // 	while (
-		// // 		bracketCount !== 0 &&
-		// // 		this.currentIndex < this.raw.length - 1
-		// // 	) {
-		// // 		const currentText = this.rtrim[this.currentIndex];
-		// // 		if (currentText === "{") bracketCount++;
-		// // 		else if (currentText === "}") bracketCount--;
-		// // 		else if (currentText === ";") break;
-		// // 		if (bracketCount === 1) {
-		// // 			text += currentText;
-		// // 			length += this.raw[this.currentIndex].length;
-		// // 		}
-		// // 		this.currentIndex++;
-		// // 	}
-		// // } else {
-		// // 	this.currentIndex++;
-		// // 	text += " ";
-		// // 	let currentText = this.rtrim[this.currentIndex];
-		// // 	while (
-		// // 		currentText !== ";" &&
-		// // 		this.currentIndex < this.raw.length - 1
-		// // 	) {
-		// // 		currentText = this.rtrim[this.currentIndex];
-		// // 		text += currentText;
-		// // 		length += this.raw[this.currentIndex].length;
-		// // 		if (this.rtrim[this.currentIndex] === ")") text += " ";
-		// // 		this.currentIndex++;
-		// // 	}
-		// // }
-
-		// const digest = text
-		// 	.split(" ")
-		// 	.map((v) => v.trim())
-		// 	.filter((v) => (v! += ""));
-		// const emptyLength = startRaw.match(/^(\s+)/g || []);
-		// const empty = emptyLength !== null ? emptyLength[0].length : 0;
-
-		// this.tokens.push({
-		// 	raw: startRaw,
-		// 	trim: text,
-		// 	type: TokenType.COMMAND,
-		// 	offset: index + empty,
-		// 	length: startRaw.length - empty,
-		// 	value: digest,
-		// });
+		this.tokens.push({
+			raw: startRaw,
+			trim: startRaw.trim(),
+			type: TokenType.COMMAND,
+			offset: index + empty,
+			length: startRaw.length - empty,
+			value: mapped,
+		});
 	}
 
 	/**

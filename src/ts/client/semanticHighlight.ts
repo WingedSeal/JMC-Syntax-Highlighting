@@ -16,3 +16,4 @@ export const semanticLegend = new vscode.SemanticTokensLegend(
 	tokenTypes,
 	tokenModifiers
 );
+

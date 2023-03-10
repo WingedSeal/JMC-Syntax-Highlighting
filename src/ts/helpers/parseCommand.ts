@@ -9,19 +9,22 @@ interface CommandNode {
 	parser?: { parser: string; modifier?: { amount: string; type: string } };
 }
 
-class CommandType {
+export class CommandType {
 	public static LITERAL = "literal";
 	public static ARGUMENT = "argument";
 }
 
-class ParserType {
+export class ParserType {
 	public static MC_ENTITY = "minecraft:entity";
 	public static RE_LOCATION = "minecraft:resource_location";
 	public static VALUE_DOUBLE = "brigadier:double";
 	public static BLOCK_POS = "minecraft:block_pos";
+	public static NBT_PATH = "minecraft:nbt_path";
+	public static MOB_EFFECT = "minecraft:mob_effect";
+	public static VALUE_STRING = "brigadier:string";
 }
 
-class CommandData {
+export class CommandData {
 	public static ATTR_LIST: string[] = [
 		"generic.max_health",
 		"generic.follow_range",
@@ -42,7 +45,7 @@ class CommandData {
 export interface ParsedResult {
 	node?: CommandNode[];
 	error?: { pos: number; msg: string };
-	type: { type: string; value?: string }[];
+	type: { type: string; length: number ; value?: string; parser?: string }[];
 }
 
 export function lexCommand(text: string): string[] {
@@ -66,24 +69,25 @@ export function lexCommand(text: string): string[] {
 			}
 			while (lbCount !== 0 || mbCount !== 0) {
 				i++;
-				const current = splited[i];
+				const c = splited[i];
 
-				if (current === "{") {
+				if (c === "{") {
 					lbCount++;
-				} else if (current === "[") {
+				} else if (c === "[") {
 					mbCount++;
-				} else if (current === "}") {
+				} else if (c === "}") {
 					lbCount--;
-				} else if (current === "]") {
+				} else if (c === "]") {
 					mbCount--;
 				}
-				joined += current;
+				joined += c;
 			}
 			data.push(joined);
-		} else {
-			if (current !== " ") {
-				data.push(current);
-			}
+		} else if (/([\w\.]+)\s*\(/g.test(current)) {
+			//TODO: add namespace
+			data.push(current.split("(")[0].split(".").join("/"));
+		} else if (current !== " ") {
+			data.push(current);
 		}
 	}
 	const result: string[] = [];
@@ -116,15 +120,26 @@ export function parseCommand(parsed: string[]): ParsedResult | undefined {
 				v.type !== CommandType.LITERAL
 		);
 
-		result.type.push({
-			type: query!.type,
-			value: query!.name,
-		});
-
 		if (query === undefined) {
-			result.node = currentNode;
-			return result;
-		} else if (query.executable && currentDepth === parsed.length) {
+			return result;		
+		}
+		
+		if (query.parser !== undefined) {
+			result.type.push({
+				type: query.type,
+				value: query.name,
+				length: currentData.length,
+				parser: query.parser.parser
+			});
+		} else {
+			result.type.push({
+				type: query.type,
+				value: query.name,
+				length: currentData.length,
+			});
+		}			
+		
+		if (query.executable && currentDepth === parsed.length) {
 			return result;
 		} else if (query.type === CommandType.ARGUMENT) {
 			const parser = query.parser!.parser;
@@ -151,6 +166,7 @@ export function parseCommand(parsed: string[]): ParsedResult | undefined {
 							return result;
 						}
 					}
+
 					break;
 				case ParserType.RE_LOCATION:
 					if (currentData.startsWith(":")) {
@@ -189,12 +205,28 @@ export function parseCommand(parsed: string[]): ParsedResult | undefined {
 						return result;
 					}
 					break;
-				default:
+				case ParserType.VALUE_STRING:
+				case ParserType.MOB_EFFECT:
+				case ParserType.NBT_PATH:
 					break;
+				default:
+					return result;
 			}
 		}
 		currentNode = query.children;
 		currentData = parsed[currentDepth];
+		//TODO: execute redirect
+		if (query.redirects.length > 0) {
+			const redirect = (commandData.root.children as CommandNode[]).find(
+				(v) => v.name === query.redirects[0]
+			);
+			if (redirect !== undefined) {
+				currentNode = redirect.children;
+			}
+		}
+		if (query.name === "run") {
+			currentNode = (commandData.root.children as CommandNode[]);
+		}
 	}
 	result.node = currentNode;
 	return result;

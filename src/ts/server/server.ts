@@ -1,21 +1,14 @@
 import {
 	createConnection,
-	TextDocuments,
-	Diagnostic,
-	ProposedFeatures,
+	TextDocuments, ProposedFeatures,
 	InitializeParams,
 	DidChangeConfigurationNotification,
 	CompletionItem,
-	CompletionItemKind,
-	TextDocumentPositionParams,
-	TextDocumentSyncKind,
-	InitializeResult,
-	HandlerResult,
-	SignatureHelp,
-	SignatureHelpParams,
+	CompletionItemKind, TextDocumentSyncKind,
+	InitializeResult, SignatureHelpParams
 } from "vscode-languageserver/node";
 import { TextDocument } from "vscode-languageserver-textdocument";
-import { BuiltInFunctions, methodInfoToDoc } from "./data/builtinFunctions";
+import { BuiltInFunctions, methodInfoToDoc } from "../data/builtinFunctions";
 import {
 	ClassesMethods,
 	ConfigData,
@@ -24,17 +17,15 @@ import {
 	KEYWORDS as Keywords,
 	MacroData,
 	VANILLA_COMMANDS,
-} from "./data/common";
+} from "../data/common";
 // import { getDiagnostics } from "./diagnostics";
 import * as url from "url";
 import {
 	getCurrentCommand,
-	getAllJMCFileText,
-	getHJMCFile,
-} from "./helpers/documentHelper";
-import { Language, TokenType } from "./helpers/lexer";
+	getAllJMCFileText
+} from "../helpers/documentHelper";
+import { Language, TokenType } from "../helpers/lexer";
 import fs from "fs";
-import pfs from "fs/promises";
 
 const connection = createConnection(ProposedFeatures.all);
 let text: string;
