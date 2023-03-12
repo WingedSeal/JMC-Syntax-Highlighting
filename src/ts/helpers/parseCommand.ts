@@ -22,6 +22,8 @@ export class ParserType {
 	public static NBT_PATH = "minecraft:nbt_path";
 	public static MOB_EFFECT = "minecraft:mob_effect";
 	public static VALUE_STRING = "brigadier:string";
+	public static TIME = "minecraft:time";
+	public static FUNCTION = "minecraft:function";
 }
 
 export class CommandData {
@@ -45,7 +47,7 @@ export class CommandData {
 export interface ParsedResult {
 	node?: CommandNode[];
 	error?: { pos: number; msg: string };
-	type: { type: string; length: number ; value?: string; parser?: string }[];
+	type: { type: string; length: number; value?: string; parser?: string }[];
 }
 
 export function lexCommand(text: string): string[] {
@@ -85,7 +87,7 @@ export function lexCommand(text: string): string[] {
 			data.push(joined);
 		} else if (/([\w\.]+)\s*\(/g.test(current)) {
 			//TODO: add namespace
-			data.push(current.split("(")[0].split(".").join("/"));
+			data.push(current.split("(")[0].split(".").join("/") + "()");
 		} else if (current !== " ") {
 			data.push(current);
 		}
@@ -121,15 +123,15 @@ export function parseCommand(parsed: string[]): ParsedResult | undefined {
 		);
 
 		if (query === undefined) {
-			return result;		
+			return result;
 		}
-		
+
 		if (query.parser !== undefined) {
 			result.type.push({
 				type: query.type,
 				value: query.name,
 				length: currentData.length,
-				parser: query.parser.parser
+				parser: query.parser.parser,
 			});
 		} else {
 			result.type.push({
@@ -137,8 +139,8 @@ export function parseCommand(parsed: string[]): ParsedResult | undefined {
 				value: query.name,
 				length: currentData.length,
 			});
-		}			
-		
+		}
+
 		if (query.executable && currentDepth === parsed.length) {
 			return result;
 		} else if (query.type === CommandType.ARGUMENT) {
@@ -205,6 +207,8 @@ export function parseCommand(parsed: string[]): ParsedResult | undefined {
 						return result;
 					}
 					break;
+				case ParserType.TIME:
+				case ParserType.FUNCTION:
 				case ParserType.VALUE_STRING:
 				case ParserType.MOB_EFFECT:
 				case ParserType.NBT_PATH:
@@ -225,7 +229,7 @@ export function parseCommand(parsed: string[]): ParsedResult | undefined {
 			}
 		}
 		if (query.name === "run") {
-			currentNode = (commandData.root.children as CommandNode[]);
+			currentNode = commandData.root.children as CommandNode[];
 		}
 	}
 	result.node = currentNode;

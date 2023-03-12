@@ -1,5 +1,12 @@
 import { DocumentSelector } from "vscode";
 
+export interface DefinedFunction {
+	pos: number;
+	length: number;
+	file: string;
+	name: string;
+}
+
 /**
  * classes methods defined by users
  * @param name `string`
@@ -182,3 +189,9 @@ export const HEADER_SELECTOR: DocumentSelector = {
 	language: "hjmc",
 	scheme: "file",
 };
+
+export interface NotificationData {
+	headers: HeaderData[];
+	classesMethods: ClassesMethods[];
+	funcs: DefinedFunction[];
+}

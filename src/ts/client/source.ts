@@ -7,13 +7,14 @@ import {
 } from "vscode-languageclient/node";
 import * as path from "path";
 import * as vscode from "vscode";
-import { HeaderData, SELECTOR } from "../data/common";
+import { DefinedFunction, HeaderData, NotificationData, SELECTOR } from "../data/common";
 import { semanticLegend } from "./semanticHighlight";
 import { Language, TokenType } from "../helpers/lexer";
 import { getLogger, initLogger } from "../helpers/logger";
 import { CompletionRegister } from "./completion";
 import { RegisterSignatureSign } from "./signature";
 import { DefinationRegister } from "./defination";
+import { CommandType, ParserType } from "../helpers/parseCommand";
 
 interface ClassesMethods {
 	name: string;
@@ -23,6 +24,7 @@ interface ClassesMethods {
 let client: LanguageClient;
 export let classesMethods: ClassesMethods[] | undefined;
 export let mainHeader: HeaderData[] = [];
+export let definedFuncs: DefinedFunction[] | undefined;
 
 export async function activate(context: ExtensionContext) {
 	await initLogger(context);
@@ -70,12 +72,6 @@ export async function activate(context: ExtensionContext) {
 				const text = document.getText();
 				const language = new Language(text, mainHeader);
 				for (const _var of language.tokens) {
-					// const startPos = document.positionAt(_var.offset);
-					// const endPos = document.positionAt(_var.offset + _var.length);
-					// const range = new vscode.Range(startPos, endPos);
-					// builder.push(
-					// 	range, "variable", ["declaration"]
-					// );
 					if (_var.type === TokenType.USE_VARIABLE) {
 						const startPos = document.positionAt(_var.offset);
 						const endPos = document.positionAt(
@@ -183,42 +179,40 @@ export async function activate(context: ExtensionContext) {
 						_var.type === TokenType.COMMAND &&
 						_var.value !== undefined
 					) {
-						//TODO:
-						// let currentOffset = _var.offset;
-						// console.log(_var.offset);
-						// for (const value of _var.value) {
-						// 	const splited = value.split(";");
-						// 	const type = splited[0];
-						// 	const name = splited[1];
-						// 	const length = Number.parseInt(splited[2]);
-						// 	if (type === "literal") {
-						// 		const startPos =
-						// 			document.positionAt(currentOffset);
-						// 		const endPos = document.positionAt(
-						// 			currentOffset + name.length
-						// 		);
-						// 		const range = new vscode.Range(
-						// 			startPos,
-						// 			endPos
-						// 		);
-						// 		currentOffset += name.length + 1;
-						// 		builder.push(range, "keyword", ["declaration"]);
-						// 	} else {
-						// 		const startPos =
-						// 			document.positionAt(currentOffset);
-						// 		const endPos = document.positionAt(
-						// 			currentOffset + length
-						// 		);
-						// 		const range = new vscode.Range(
-						// 			startPos,
-						// 			endPos
-						// 		);
-						// 		currentOffset += length + 1;
-						// 		builder.push(range, "variable", [
-						// 			"declaration",
-						// 		]);
-						// 	}
-						// }
+						let pos = _var.offset;
+						const spaces = [0].concat(
+							_var.trim
+								.split(/(\s+)/g)
+								.filter((v) => v.startsWith(" "))
+								.map((v) => v.length)
+						);
+
+						for (let i = 0; i < _var.value.length; i++) {
+							const value = _var.value[i].split(";");
+
+							const varType = value[0];
+							const name = value[1];
+							const length = Number.parseInt(value[2]);
+							const parser: string | undefined = value[3];
+
+							if (varType === CommandType.LITERAL) {
+								const start = document.positionAt(pos);
+								const end = document.positionAt(pos + length + 1);
+								const range = new vscode.Range(start, end);
+								builder.push(range, "keyword", ["declaration"]);
+							}
+							else if (varType === CommandType.ARGUMENT && parser !== undefined) {
+								const start = document.positionAt(pos);
+								const end = document.positionAt(pos + length + 1);
+								const range = new vscode.Range(start, end);
+								if (parser === ParserType.FUNCTION) {
+									builder.push(range, "function", ["declaration"]);
+								}
+								//TODO:
+							}
+
+							pos += length + spaces[i];
+						}
 					} else if (_var.type === TokenType.NEW) {
 						const startPos = document.positionAt(_var.offset + 4);
 						const endPos = document.positionAt(
@@ -235,13 +229,11 @@ export async function activate(context: ExtensionContext) {
 	);
 
 	client.start();
-
-	client.onNotification("data/classesData", (datas: ClassesMethods[]) => {
-		classesMethods = datas;
-	});
-
-	client.onNotification("data/mainHeader", (data: HeaderData[]) => {
-		mainHeader = data;
+	
+	client.onNotification("data/receieve", (data: NotificationData) => {
+		classesMethods = data.classesMethods;
+		mainHeader = data.headers;
+		definedFuncs = data.funcs;
 	});
 }
 

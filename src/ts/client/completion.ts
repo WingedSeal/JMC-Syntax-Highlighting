@@ -24,7 +24,7 @@ export class CompletionRegister {
 		this.RegisterVanillaCommand();
 	}
 
-	public static RegisterBuiltinFunction() {
+	static RegisterBuiltinFunction() {
 		languages.registerCompletionItemProvider(
 			SELECTOR,
 			{
@@ -57,7 +57,7 @@ export class CompletionRegister {
 		);
 	}
 
-	public static RegisterClassMethods() {
+	static RegisterClassMethods() {
 		languages.registerCompletionItemProvider(
 			SELECTOR,
 			{
@@ -91,7 +91,7 @@ export class CompletionRegister {
 		);
 	}
 
-	public static RegisterVariableFunction() {
+	static RegisterVariableFunction() {
 		languages.registerCompletionItemProvider(
 			SELECTOR,
 			{
@@ -120,7 +120,7 @@ export class CompletionRegister {
 		);
 	}
 
-	public static RegisterHeader() {
+	static RegisterHeader() {
 		languages.registerCompletionItemProvider(
 			HEADER_SELECTOR,
 			{
@@ -139,7 +139,7 @@ export class CompletionRegister {
 		);
 	}
 
-	public static RegisterImport() {
+	static RegisterImport() {
 		languages.registerCompletionItemProvider(
 			SELECTOR,
 			{
@@ -156,7 +156,7 @@ export class CompletionRegister {
 		);
 	}
 
-	public static RegisterFileImport() {
+	static RegisterFileImport() {
 		languages.registerCompletionItemProvider(
 			SELECTOR,
 			{
@@ -193,7 +193,7 @@ export class CompletionRegister {
 		);
 	}
 
-	public static RegisterNewKeyword() {
+	static RegisterNewKeyword() {
 		languages.registerCompletionItemProvider(
 			SELECTOR,
 			{
@@ -224,7 +224,7 @@ export class CompletionRegister {
 		);
 	}
 
-	public static RegisterVanillaCommand() {
+	static RegisterVanillaCommand() {
 		languages.registerCompletionItemProvider(
 			SELECTOR,
 			{

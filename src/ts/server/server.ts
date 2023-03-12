@@ -1,31 +1,44 @@
 import {
 	createConnection,
-	TextDocuments, ProposedFeatures,
+	TextDocuments,
+	ProposedFeatures,
 	InitializeParams,
 	DidChangeConfigurationNotification,
 	CompletionItem,
-	CompletionItemKind, TextDocumentSyncKind,
-	InitializeResult, SignatureHelpParams
+	CompletionItemKind,
+	TextDocumentSyncKind,
+	InitializeResult,
+	SignatureHelpParams,
+	DefinitionParams,
+	LocationLink,
+	Definition,
+	TextDocumentIdentifier,
+	Range,
+	Position,
+	DocumentUri,
 } from "vscode-languageserver/node";
 import { TextDocument } from "vscode-languageserver-textdocument";
 import { BuiltInFunctions, methodInfoToDoc } from "../data/builtinFunctions";
 import {
 	ClassesMethods,
 	ConfigData,
+	DefinedFunction,
 	HeaderData,
 	HeaderType,
 	KEYWORDS as Keywords,
 	MacroData,
+	NotificationData,
 	VANILLA_COMMANDS,
 } from "../data/common";
 // import { getDiagnostics } from "./diagnostics";
 import * as url from "url";
 import {
 	getCurrentCommand,
-	getAllJMCFileText
+	getAllJMCFileText,
 } from "../helpers/documentHelper";
 import { Language, TokenType } from "../helpers/lexer";
 import fs from "fs";
+import { Location, languages } from "vscode";
 
 const connection = createConnection(ProposedFeatures.all);
 let text: string;
@@ -38,6 +51,7 @@ let userClasses: CompletionItem[] = [];
 let userClassesMethods: ClassesMethods[] = [];
 let marcros: MacroData[] = [];
 let mainHeader: HeaderData[] = [];
+let definedFuncs: DefinedFunction[] = [];
 
 const documents: TextDocuments<TextDocument> = new TextDocuments(TextDocument);
 
@@ -108,10 +122,6 @@ function readHeader(headers: string[]) {
 		}
 	}
 }
-
-connection.onNotification("getData/mainHeader", () => {
-	return 5;
-});
 
 connection.onInitialize((params: InitializeParams) => {
 	const capabilities = params.capabilities;
@@ -221,6 +231,7 @@ interface ValidateData {
 	variables: CompletionItem[];
 	functions: CompletionItem[];
 	classes: CompletionItem[];
+	language: Language;
 }
 
 async function validateText(fileText: string): Promise<ValidateData> {
@@ -263,6 +274,7 @@ async function validateText(fileText: string): Promise<ValidateData> {
 		variables: variables,
 		functions: functions,
 		classes: classes,
+		language: language,
 	};
 }
 
@@ -290,6 +302,23 @@ async function validateHeader() {
 		});
 }
 
+function getDefinedFuncsData(
+	language: Language,
+	filePath: string
+): DefinedFunction[] {
+	return language.tokens
+		.filter((v) => v.type === TokenType.FUNCTION)
+		.map((v): DefinedFunction => {
+			const name = v.trim.split(" ").filter((v) => v !== "")[1];
+			return {
+				pos: v.offset,
+				length: name.length,
+				file: filePath,
+				name: name,
+			};
+		});
+}
+
 async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 	const settings = await getDocumentSettings(textDocument.uri);
 
@@ -298,34 +327,32 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 		validateHeader();
 		return;
 	}
-	connection.sendNotification("data/mainHeader", mainHeader);
 
-	// const data = await validateText(text, url.fileURLToPath(textDocument.uri));
-	// userVariables = data.variables;
-	// userFunctions = data.functions;
-	// userClasses = data.classes;
-
-	// const diagnostics: Diagnostic[] = await getDiagnostics(
-	// 	text,
-	// 	url.fileURLToPath(textDocument.uri),
-	// 	workspaceFolder
-	// );
-	// await connection.sendDiagnostics({ uri: textDocument.uri, diagnostics });
 	const datas = await getAllJMCFileText(workspaceFolder);
-
 	userVariables = [];
 	userClasses = [];
 	userFunctions = [];
 	userClassesMethods = [];
+	definedFuncs = [];
 
 	for (const data of datas) {
 		const fileData = await validateText(data.text);
 		userVariables = userVariables.concat(fileData.variables);
 		userFunctions = userFunctions.concat(fileData.functions);
 		userClasses = userClasses.concat(fileData.classes);
+
+		// definedFuncs = definedFuncs.concat(
+		// 	getDefinedFuncsData(fileData.language, data.filename)
+		// );
 	}
 
-	connection.sendNotification("data/classesData", userClassesMethods);
+	const nData: NotificationData = {
+		headers: mainHeader,
+		classesMethods: userClassesMethods,
+		funcs: definedFuncs
+	};
+
+	connection.sendNotification("data/receieve", nData);
 
 	// const diagnostics: Diagnostic[] = await getDiagnostics(
 	// 	text,

@@ -1,5 +1,5 @@
 import { languages, workspace } from "vscode";
-import { HEADER_SELECTOR, HeaderType } from "../data/common";
+import { HEADER_SELECTOR, HeaderType, SELECTOR } from "../data/common";
 import { parseHJMCFile } from "../helpers/documentHelper";
 import * as url from "url";
 import path from "path";
@@ -8,11 +8,24 @@ import * as vscode from "vscode";
 export class DefinationRegister {
 	public static RegisterAll() {
 		this.RegisterHeaderInclude();
+		// this.RegisterJMCFile();
 	}
 
-	public static RegisterHeaderInclude() {
+	static RegisterJMCFile() {
+		languages.registerDefinitionProvider(SELECTOR, {
+			async provideDefinition(document, position, token) {
+				const offset = document.offsetAt(position);
+				return {
+					uri: document.uri,
+					range: new vscode.Range(document.positionAt(offset), document.positionAt(offset + 1))
+				};
+			},
+		});
+	}
+
+	static RegisterHeaderInclude() {
 		languages.registerDefinitionProvider(HEADER_SELECTOR, {
-			provideDefinition(document, position, token) {
+			async provideDefinition(document, position, token) {
 				// return {
 				// 	range: new vscode.Range(
 				// 		document.positionAt(0),
