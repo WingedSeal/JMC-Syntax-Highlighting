@@ -310,6 +310,7 @@ function getDefinedFuncsData(
 				length: name.length,
 				file: filePath,
 				name: name,
+				className: (v.value !== undefined && v.value[1] !== "") ? v.value[1] : undefined
 			};
 		});
 }
@@ -364,6 +365,10 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 	// 	await connection.sendDiagnostics({ uri: doc.uri, diagnostics });
 	// }
 }
+
+connection.onDefinition((v) => {
+	return [];
+});
 
 connection.onDidChangeWatchedFiles((_change) => {
 	connection.console.log("We received a file change event");

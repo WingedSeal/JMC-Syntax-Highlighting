@@ -350,7 +350,7 @@ export class Language {
 		const empty = emptyLength !== null ? emptyLength[0].length : 0;
 
 		const funcs: string[] = [];
-		let startIndex = this.currentIndex;
+		let startIndex = this.currentIndex - 1;
 		let bracketCount = 0;
 		while (startIndex++ !== this.rtrim.length - 1) {
 			const currentText = this.rtrim[startIndex];

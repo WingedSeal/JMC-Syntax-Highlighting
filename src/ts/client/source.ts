@@ -244,7 +244,7 @@ export async function activate(context: ExtensionContext) {
 			classesMethods = data.classesMethods;
 			mainHeader = data.headers;
 			definedFuncs = data.funcs;
-			console.log(data);
+			console.log(definedFuncs);
 		});
 		console.log("Client Started");
 	});

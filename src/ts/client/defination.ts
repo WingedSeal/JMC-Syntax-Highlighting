@@ -1,29 +1,66 @@
 import { languages, workspace } from "vscode";
 import { HEADER_SELECTOR, HeaderType, SELECTOR } from "../data/common";
-import { parseHJMCFile } from "../helpers/documentHelper";
+import { getCurrentCommand, parseHJMCFile } from "../helpers/documentHelper";
 import * as url from "url";
-import path from "path";
+import path, { sep } from "path";
 import * as vscode from "vscode";
-import { definedFuncs } from "./source";
+import { classesMethods, definedFuncs } from "./source";
 
 export class DefinationRegister {
 	public static RegisterAll() {
 		this.RegisterHeaderInclude();
-		// this.RegisterJMCFile();
+		this.RegisterJMCFile();
 	}
 
-	static RegisterJMCFile() {
+	static async RegisterJMCFile() {
 		languages.registerDefinitionProvider(SELECTOR, {
 			async provideDefinition(document, position, token) {
-				const offset = document.offsetAt(position);
-				if (definedFuncs !== undefined) {
-					for (const func of definedFuncs) {
+				const wordRange = document.getWordRangeAtPosition(
+					position,
+					/[\w\.]+/g
+				);
+				const linePrefix = document.getText(wordRange);
+				const seperated = linePrefix.split(".");
+				if (seperated.length > 1 && definedFuncs !== undefined) {
+					const _class = seperated[0];
+					const func = seperated[1];
+
+					const result = definedFuncs.find(
+						(v) => v.className === _class && v.name === func
+					);
+
+					if (result !== undefined) {
+						const doc = await vscode.workspace.openTextDocument(
+							vscode.Uri.file(result.file)
+						);
+						const start = doc.positionAt(result.pos + 10);
+						const end = doc.positionAt(
+							result.pos + 10 + result.name.length
+						);
+						const range = new vscode.Range(start, end);
+
 						return {
-							uri: document.uri,
-							range: new vscode.Range(
-								document.positionAt(offset),
-								document.positionAt(offset + 1)
-							),
+							uri: vscode.Uri.file(result.file),
+							range: range,
+						};
+					}
+				}
+				else if (definedFuncs !== undefined) {
+					const result = definedFuncs.find((v) => v.name === seperated[0]);
+
+					if (result !== undefined) {
+						const doc = await vscode.workspace.openTextDocument(
+							vscode.Uri.file(result.file)
+						);
+						const start = doc.positionAt(result.pos + 10);
+						const end = doc.positionAt(
+							result.pos + 10 + result.name.length
+						);
+						const range = new vscode.Range(start, end);
+
+						return {
+							uri: vscode.Uri.file(result.file),
+							range: range,
 						};
 					}
 				}

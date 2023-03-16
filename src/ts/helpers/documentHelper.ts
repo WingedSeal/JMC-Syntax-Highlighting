@@ -168,5 +168,15 @@ export async function getCurrentCommand(
 		}
 		currentText += current;
 	}
+
+	index = offset;
+	while (index++ !== text.length - 1) {
+		const current = text[index];
+		if (SEMI_CHECKCHAR.includes(current)) {
+			return currentText.split("").reverse().join("").trim();
+		}
+		currentText += current;
+	}
+
 	return currentText;
 }

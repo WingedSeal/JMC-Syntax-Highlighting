@@ -5,6 +5,7 @@ export interface DefinedFunction {
 	length: number;
 	file: string;
 	name: string;
+	className?: string;
 }
 
 /**
