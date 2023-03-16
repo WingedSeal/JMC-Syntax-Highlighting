@@ -1,6 +1,6 @@
 {
     "compilerOptions": {
-        "target": "es5",
+        "target": "ES2015",
         "module": "commonjs",
         "strict": true,
         "esModuleInterop": true,
@@ -9,5 +9,8 @@
         "resolveJsonModule": true,
         "outDir": "./src/js",
         "lib": ["ES2015"]
-    }
+    },
+    "exclude": [
+        "./old"
+    ]
 }

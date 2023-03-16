@@ -9,13 +9,8 @@ import {
 	TextDocumentSyncKind,
 	InitializeResult,
 	SignatureHelpParams,
-	DefinitionParams,
-	LocationLink,
-	Definition,
-	TextDocumentIdentifier,
-	Range,
-	Position,
-	DocumentUri,
+	NotificationType,
+	ProtocolNotificationType,
 } from "vscode-languageserver/node";
 import { TextDocument } from "vscode-languageserver-textdocument";
 import { BuiltInFunctions, methodInfoToDoc } from "../data/builtinFunctions";
@@ -38,9 +33,9 @@ import {
 } from "../helpers/documentHelper";
 import { Language, TokenType } from "../helpers/lexer";
 import fs from "fs";
-import { Location, languages } from "vscode";
 
 const connection = createConnection(ProposedFeatures.all);
+
 let text: string;
 let workspaceFolder: string;
 let config: ConfigData;
@@ -341,18 +336,17 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 		userFunctions = userFunctions.concat(fileData.functions);
 		userClasses = userClasses.concat(fileData.classes);
 
-		// definedFuncs = definedFuncs.concat(
-		// 	getDefinedFuncsData(fileData.language, data.filename)
-		// );
+		definedFuncs = definedFuncs.concat(
+			getDefinedFuncsData(fileData.language, data.filename)
+		);
 	}
 
 	const nData: NotificationData = {
 		headers: mainHeader,
 		classesMethods: userClassesMethods,
-		funcs: definedFuncs
+		funcs: definedFuncs,
 	};
-
-	connection.sendNotification("data/receieve", nData);
+	connection.sendNotification("data/lang", nData);
 
 	// const diagnostics: Diagnostic[] = await getDiagnostics(
 	// 	text,

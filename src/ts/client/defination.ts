@@ -4,6 +4,7 @@ import { parseHJMCFile } from "../helpers/documentHelper";
 import * as url from "url";
 import path from "path";
 import * as vscode from "vscode";
+import { definedFuncs } from "./source";
 
 export class DefinationRegister {
 	public static RegisterAll() {
@@ -15,10 +16,18 @@ export class DefinationRegister {
 		languages.registerDefinitionProvider(SELECTOR, {
 			async provideDefinition(document, position, token) {
 				const offset = document.offsetAt(position);
-				return {
-					uri: document.uri,
-					range: new vscode.Range(document.positionAt(offset), document.positionAt(offset + 1))
-				};
+				if (definedFuncs !== undefined) {
+					for (const func of definedFuncs) {
+						return {
+							uri: document.uri,
+							range: new vscode.Range(
+								document.positionAt(offset),
+								document.positionAt(offset + 1)
+							),
+						};
+					}
+				}
+				return undefined;
 			},
 		});
 	}

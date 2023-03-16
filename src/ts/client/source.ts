@@ -2,15 +2,20 @@ import { workspace, ExtensionContext, languages } from "vscode";
 import {
 	LanguageClient,
 	LanguageClientOptions,
+	NotificationType,
 	ServerOptions,
 	TransportKind,
 } from "vscode-languageclient/node";
 import * as path from "path";
 import * as vscode from "vscode";
-import { DefinedFunction, HeaderData, NotificationData, SELECTOR } from "../data/common";
+import {
+	DefinedFunction,
+	HeaderData,
+	NotificationData,
+	SELECTOR,
+} from "../data/common";
 import { semanticLegend } from "./semanticHighlight";
 import { Language, TokenType } from "../helpers/lexer";
-import { getLogger, initLogger } from "../helpers/logger";
 import { CompletionRegister } from "./completion";
 import { RegisterSignatureSign } from "./signature";
 import { DefinationRegister } from "./defination";
@@ -27,8 +32,6 @@ export let mainHeader: HeaderData[] = [];
 export let definedFuncs: DefinedFunction[] | undefined;
 
 export async function activate(context: ExtensionContext) {
-	await initLogger(context);
-	getLogger().info("setup done");
 	//setup client
 	const clientOptions: LanguageClientOptions = {
 		documentSelector: [
@@ -42,7 +45,7 @@ export async function activate(context: ExtensionContext) {
 
 	//setup server
 	const serverModule = context.asAbsolutePath(
-		path.join("src", "js", "server.js")
+		path.join("src", "js", "server" ,"server.js")
 	);
 	const debugOptions = { execArgv: ["--nolazy", "--inspect=6009"] };
 
@@ -197,16 +200,24 @@ export async function activate(context: ExtensionContext) {
 
 							if (varType === CommandType.LITERAL) {
 								const start = document.positionAt(pos);
-								const end = document.positionAt(pos + length + 1);
+								const end = document.positionAt(
+									pos + length + 1
+								);
 								const range = new vscode.Range(start, end);
 								builder.push(range, "keyword", ["declaration"]);
-							}
-							else if (varType === CommandType.ARGUMENT && parser !== undefined) {
+							} else if (
+								varType === CommandType.ARGUMENT &&
+								parser !== undefined
+							) {
 								const start = document.positionAt(pos);
-								const end = document.positionAt(pos + length + 1);
+								const end = document.positionAt(
+									pos + length + 1
+								);
 								const range = new vscode.Range(start, end);
 								if (parser === ParserType.FUNCTION) {
-									builder.push(range, "function", ["declaration"]);
+									builder.push(range, "function", [
+										"declaration",
+									]);
 								}
 								//TODO:
 							}
@@ -228,12 +239,14 @@ export async function activate(context: ExtensionContext) {
 		semanticLegend
 	);
 
-	client.start();
-	
-	client.onNotification("data/receieve", (data: NotificationData) => {
-		classesMethods = data.classesMethods;
-		mainHeader = data.headers;
-		definedFuncs = data.funcs;
+	client.start().then(() => {
+		client.onNotification("data/lang", (data: NotificationData) => {
+			classesMethods = data.classesMethods;
+			mainHeader = data.headers;
+			definedFuncs = data.funcs;
+			console.log(data);
+		});
+		console.log("Client Started");
 	});
 }
 
