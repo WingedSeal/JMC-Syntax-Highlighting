@@ -74,7 +74,7 @@ export async function activate(context: ExtensionContext) {
 				);
 				const text = document.getText();
 				const language = new Language(text, mainHeader);
-				for (const _var of language.tokens) {
+				for (const _var of language.tokens.sort()) {
 					if (_var.type === TokenType.USE_VARIABLE) {
 						const startPos = document.positionAt(_var.offset);
 						const endPos = document.positionAt(
@@ -201,7 +201,7 @@ export async function activate(context: ExtensionContext) {
 							if (varType === CommandType.LITERAL) {
 								const start = document.positionAt(pos);
 								const end = document.positionAt(
-									pos + length + 1
+									pos + length
 								);
 								const range = new vscode.Range(start, end);
 								builder.push(range, "keyword", ["declaration"]);
@@ -211,7 +211,7 @@ export async function activate(context: ExtensionContext) {
 							) {
 								const start = document.positionAt(pos);
 								const end = document.positionAt(
-									pos + length + 1
+									pos + length
 								);
 								const range = new vscode.Range(start, end);
 								if (parser === ParserType.FUNCTION) {
@@ -222,7 +222,7 @@ export async function activate(context: ExtensionContext) {
 								//TODO:
 							}
 
-							pos += length + spaces[i];
+							pos += length + spaces[i + 1];
 						}
 					} else if (_var.type === TokenType.NEW) {
 						const startPos = document.positionAt(_var.offset + 4);
@@ -244,7 +244,6 @@ export async function activate(context: ExtensionContext) {
 			classesMethods = data.classesMethods;
 			mainHeader = data.headers;
 			definedFuncs = data.funcs;
-			console.log(definedFuncs);
 		});
 		console.log("Client Started");
 	});
