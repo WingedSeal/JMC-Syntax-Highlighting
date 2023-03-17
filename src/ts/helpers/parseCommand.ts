@@ -101,7 +101,7 @@ export function lexCommand(text: string): string[] {
 					text += currentData;
 					continue;
 				}
-				
+
 				if (!/(?:\^|~)(?:\d*(?:\.\d+))?/g.test(currentData)) {
 					i = startIndex;
 					break;
@@ -175,7 +175,8 @@ export function parseCommand(parsed: string[]): ParsedResult | undefined {
 
 		if (query.executable && currentDepth === parsed.length) {
 			const arr: CommandNode[] = [];
-			for (const row of currentNode.map((v) => v.children)) for (const e of row) arr.push(e);
+			for (const row of currentNode.map((v) => v.children))
+				for (const e of row) arr.push(e);
 			result.node = arr;
 			return result;
 		} else if (query.type === CommandType.ARGUMENT) {
@@ -233,7 +234,11 @@ export function parseCommand(parsed: string[]): ParsedResult | undefined {
 					}
 					break;
 				case ParserType.BLOCK_POS:
-					if (!/(?:(?:\^|~)(?:\d*(?:\.\d+))?\s*){3}/g.test(currentData)) {
+					if (
+						!/(?:(?:\^|~)(?:\d*(?:\.\d+))?\s*){3}/g.test(
+							currentData
+						)
+					) {
 						result.error = {
 							pos: currentDepth - 1,
 							msg: "invalid pos",

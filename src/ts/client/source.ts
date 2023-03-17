@@ -45,7 +45,7 @@ export async function activate(context: ExtensionContext) {
 
 	//setup server
 	const serverModule = context.asAbsolutePath(
-		path.join("src", "js", "server" ,"server.js")
+		path.join("src", "js", "server", "server.js")
 	);
 	const debugOptions = { execArgv: ["--nolazy", "--inspect=6009"] };
 
@@ -200,9 +200,7 @@ export async function activate(context: ExtensionContext) {
 
 							if (varType === CommandType.LITERAL) {
 								const start = document.positionAt(pos);
-								const end = document.positionAt(
-									pos + length
-								);
+								const end = document.positionAt(pos + length);
 								const range = new vscode.Range(start, end);
 								builder.push(range, "keyword", ["declaration"]);
 							} else if (
@@ -210,9 +208,7 @@ export async function activate(context: ExtensionContext) {
 								parser !== undefined
 							) {
 								const start = document.positionAt(pos);
-								const end = document.positionAt(
-									pos + length
-								);
+								const end = document.positionAt(pos + length);
 								const range = new vscode.Range(start, end);
 								if (parser === ParserType.FUNCTION) {
 									builder.push(range, "function", [

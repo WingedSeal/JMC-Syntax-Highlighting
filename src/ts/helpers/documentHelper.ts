@@ -4,7 +4,7 @@ import { HeaderType, ParsedHeaderData, SEMI_CHECKCHAR } from "../data/common";
 
 /**
  * get all `.jmc` files in current workspace
- * @param workspaceFolder 
+ * @param workspaceFolder
  * @returns `string[]` all `.jmc` files full path
  */
 export function getJMCFile(workspaceFolder: string): string[] {
@@ -17,7 +17,7 @@ export function getJMCFile(workspaceFolder: string): string[] {
 
 /**
  * get all `.hjmc` files in current workspace
- * @param workspaceFolder 
+ * @param workspaceFolder
  * @returns `string[]` all `.hjmc` files full path
  */
 export function getHJMCFile(workspaceFolder: string): string[] {
@@ -30,7 +30,7 @@ export function getHJMCFile(workspaceFolder: string): string[] {
 
 /**
  * parse header in `.hjmc` file
- * @param text 
+ * @param text
  * @returns `ParsedHeaderData[]`
  */
 export function parseHJMCFile(text: string): ParsedHeaderData[] {
@@ -117,7 +117,7 @@ function getHeaderPos(data: string[], pos: number): number {
 
 /**
  * get text of a file
- * @param path 
+ * @param path
  * @returns `string` file text
  */
 export async function getFileText(path: string): Promise<string> {
@@ -134,7 +134,7 @@ export interface ImportData {
 /**
  * get all file text of JMC files
  * @param root root workspace folder
- * @returns 
+ * @returns
  */
 export async function getAllJMCFileText(root: string): Promise<ImportData[]> {
 	const datas: ImportData[] = [];
@@ -151,9 +151,9 @@ export async function getAllJMCFileText(root: string): Promise<ImportData[]> {
 
 /**
  * get the command of current position
- * @param text 
- * @param offset 
- * @returns 
+ * @param text
+ * @param offset
+ * @returns
  */
 export async function getCurrentCommand(
 	text: string,

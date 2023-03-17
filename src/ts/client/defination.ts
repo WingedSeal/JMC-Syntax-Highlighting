@@ -44,9 +44,10 @@ export class DefinationRegister {
 							range: range,
 						};
 					}
-				}
-				else if (definedFuncs !== undefined) {
-					const result = definedFuncs.find((v) => v.name === seperated[0]);
+				} else if (definedFuncs !== undefined) {
+					const result = definedFuncs.find(
+						(v) => v.name === seperated[0]
+					);
 
 					if (result !== undefined) {
 						const doc = await vscode.workspace.openTextDocument(

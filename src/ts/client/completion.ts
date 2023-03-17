@@ -313,21 +313,32 @@ export class CompletionRegister {
 											});
 										}
 										MC_ENTITY = true;
-									} else if (node.parser.parser === ParserType.FUNCTION && !FUNCTION) {
+									} else if (
+										node.parser.parser ===
+											ParserType.FUNCTION &&
+										!FUNCTION
+									) {
 										if (definedFuncs !== undefined) {
 											for (const func of definedFuncs) {
 												items.push({
 													label: func.name,
-													kind: vscode.CompletionItemKind.Function
+													kind: vscode
+														.CompletionItemKind
+														.Function,
 												});
-											}											
+											}
 										}
 										FUNCTION = true;
-									} else if (node.parser.parser === ParserType.BLOCK && !BLOCK) {
+									} else if (
+										node.parser.parser ===
+											ParserType.BLOCK &&
+										!BLOCK
+									) {
 										for (const block of BLOCKS_ID) {
 											items.push({
 												label: block,
-												kind: vscode.CompletionItemKind.Enum
+												kind: vscode.CompletionItemKind
+													.Enum,
 											});
 										}
 										BLOCK = true;
