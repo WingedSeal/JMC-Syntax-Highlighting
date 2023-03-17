@@ -24,6 +24,7 @@ export class ParserType {
 	public static VALUE_STRING = "brigadier:string";
 	public static TIME = "minecraft:time";
 	public static FUNCTION = "minecraft:function";
+	public static BLOCK = "minecraft:block_predicate";
 }
 
 export class CommandData {
@@ -50,6 +51,11 @@ export interface ParsedResult {
 	type: { type: string; length: number; value?: string; parser?: string }[];
 }
 
+/**
+ * tokenize command
+ * @param text command
+ * @returns
+ */
 export function lexCommand(text: string): string[] {
 	const splited = text
 		.split(/( |\{|\}|\[|\])/g)
@@ -85,6 +91,27 @@ export function lexCommand(text: string): string[] {
 				joined += c;
 			}
 			data.push(joined);
+		} else if (/(?:\^|~)(?:\d*(?:\.\d+))?/g.test(current)) {
+			let startIndex = i - 1;
+			let text = "";
+			let count = 1;
+			while (startIndex++ !== splited.length - 1 && count < 4) {
+				const currentData = splited[startIndex];
+				if (currentData.trim() === "") {
+					text += currentData;
+					continue;
+				}
+				
+				if (!/(?:\^|~)(?:\d*(?:\.\d+))?/g.test(currentData)) {
+					i = startIndex;
+					break;
+				} else {
+					text += currentData;
+					i = startIndex;
+					count++;
+				}
+			}
+			data.push(text);
 		} else if (/([\w\.]+)\s*\(/g.test(current)) {
 			//TODO: add namespace
 			data.push(current.split("(")[0].split(".").join("/") + "()");
@@ -108,6 +135,11 @@ export function lexCommand(text: string): string[] {
 	return result;
 }
 
+/**
+ * parse lexed commands
+ * @param parsed result of {@link lexCommand}
+ * @returns
+ */
 export function parseCommand(parsed: string[]): ParsedResult | undefined {
 	let currentData = parsed[0];
 	let currentDepth = 0;
@@ -142,6 +174,9 @@ export function parseCommand(parsed: string[]): ParsedResult | undefined {
 		}
 
 		if (query.executable && currentDepth === parsed.length) {
+			const arr: CommandNode[] = [];
+			for (const row of currentNode.map((v) => v.children)) for (const e of row) arr.push(e);
+			result.node = arr;
 			return result;
 		} else if (query.type === CommandType.ARGUMENT) {
 			const parser = query.parser!.parser;
@@ -168,7 +203,6 @@ export function parseCommand(parsed: string[]): ParsedResult | undefined {
 							return result;
 						}
 					}
-
 					break;
 				case ParserType.RE_LOCATION:
 					if (currentData.startsWith(":")) {
@@ -199,7 +233,7 @@ export function parseCommand(parsed: string[]): ParsedResult | undefined {
 					}
 					break;
 				case ParserType.BLOCK_POS:
-					if (!/(?:\^|~)(?:\d*(?:\.\d+))?/g.test(currentData)) {
+					if (!/(?:(?:\^|~)(?:\d*(?:\.\d+))?\s*){3}/g.test(currentData)) {
 						result.error = {
 							pos: currentDepth - 1,
 							msg: "invalid pos",
@@ -212,14 +246,15 @@ export function parseCommand(parsed: string[]): ParsedResult | undefined {
 				case ParserType.VALUE_STRING:
 				case ParserType.MOB_EFFECT:
 				case ParserType.NBT_PATH:
+				case ParserType.BLOCK:
 					break;
 				default:
+					result.node = currentNode;
 					return result;
 			}
 		}
 		currentNode = query.children;
 		currentData = parsed[currentDepth];
-		//TODO: execute redirect
 		if (query.redirects.length > 0) {
 			const redirect = (commandData.root.children as CommandNode[]).find(
 				(v) => v.name === query.redirects[0]

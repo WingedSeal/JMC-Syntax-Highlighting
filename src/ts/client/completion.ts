@@ -8,9 +8,15 @@ import {
 } from "../data/common";
 import { getCurrentCommand } from "../helpers/documentHelper";
 import { BuiltInFunctions } from "../data/builtinFunctions";
-import { classesMethods } from "./source";
+import { classesMethods, definedFuncs } from "./source";
 import { getAllFiles } from "get-all-files";
-import { CommandType, lexCommand, parseCommand } from "../helpers/parseCommand";
+import {
+	CommandType,
+	ParserType,
+	lexCommand,
+	parseCommand,
+} from "../helpers/parseCommand";
+import { BLOCKS_ID, SELECTORS } from "../data/staticData";
 
 export class CompletionRegister {
 	public static RegisterAll() {
@@ -243,17 +249,95 @@ export class CompletionRegister {
 					const items: vscode.CompletionItem[] = [];
 
 					const r = parseCommand(lexCommand(linePrefix));
+					console.log(r);
 					if (r !== undefined && r.node !== undefined) {
 						for (const node of r.node) {
-							switch (node.type) {
-								case CommandType.LITERAL:
-									items.push({
-										label: node.name,
-										kind: vscode.CompletionItemKind.Keyword,
-									});
-									break;
-								case CommandType.ARGUMENT:
-									break;
+							let BLOCK_POS = false;
+							let MC_ENTITY = false;
+							let FUNCTION = false;
+							let BLOCK = false;
+							if (node.type === CommandType.ARGUMENT) {
+								if (node.parser !== undefined) {
+									if (
+										node.parser.parser ===
+											ParserType.BLOCK_POS &&
+										!BLOCK_POS
+									) {
+										items.push({
+											label: "^",
+											kind: vscode.CompletionItemKind
+												.Struct,
+											insertText:
+												new vscode.SnippetString(
+													"^${1}"
+												),
+										});
+										items.push({
+											label: "~",
+											kind: vscode.CompletionItemKind
+												.Struct,
+											insertText:
+												new vscode.SnippetString(
+													"~${1}"
+												),
+										});
+										items.push({
+											label: "^ ^ ^",
+											kind: vscode.CompletionItemKind
+												.Snippet,
+											insertText:
+												new vscode.SnippetString(
+													"^${1} ^${2} ^${3}"
+												),
+										});
+										items.push({
+											label: "~ ~ ~",
+											kind: vscode.CompletionItemKind
+												.Snippet,
+											insertText:
+												new vscode.SnippetString(
+													"~${1} ~${2} ~${3}"
+												),
+										});
+										BLOCK_POS = true;
+									} else if (
+										node.parser.parser ===
+											ParserType.MC_ENTITY &&
+										!MC_ENTITY
+									) {
+										for (const selector of SELECTORS) {
+											items.push({
+												label: selector,
+												kind: vscode.CompletionItemKind
+													.Enum,
+											});
+										}
+										MC_ENTITY = true;
+									} else if (node.parser.parser === ParserType.FUNCTION && !FUNCTION) {
+										if (definedFuncs !== undefined) {
+											for (const func of definedFuncs) {
+												items.push({
+													label: func.name,
+													kind: vscode.CompletionItemKind.Function
+												});
+											}											
+										}
+										FUNCTION = true;
+									} else if (node.parser.parser === ParserType.BLOCK && !BLOCK) {
+										for (const block of BLOCKS_ID) {
+											items.push({
+												label: block,
+												kind: vscode.CompletionItemKind.Enum
+											});
+										}
+										BLOCK = true;
+									}
+								}
+							} else {
+								items.push({
+									label: node.name,
+									kind: vscode.CompletionItemKind.Keyword,
+								});
 							}
 						}
 					}

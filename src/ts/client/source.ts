@@ -219,7 +219,7 @@ export async function activate(context: ExtensionContext) {
 										"declaration",
 									]);
 								}
-								//TODO:
+								//TODO: add support for all parsertype
 							}
 
 							pos += length + spaces[i + 1];
