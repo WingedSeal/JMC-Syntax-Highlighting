@@ -320,12 +320,25 @@ export class CompletionRegister {
 									) {
 										if (definedFuncs !== undefined) {
 											for (const func of definedFuncs) {
-												items.push({
-													label: func.name,
-													kind: vscode
-														.CompletionItemKind
-														.Function,
-												});
+												if (
+													func.className === undefined
+												) {
+													items.push({
+														label: func.name,
+														kind: vscode
+															.CompletionItemKind
+															.Function,
+														insertText: `${func.name}()`
+													});
+												} else {
+													items.push({
+														label: func.className + "." + func.name,
+														kind: vscode
+															.CompletionItemKind
+															.Function,
+														insertText: `${func.className}.${func.name}()`
+													});
+												}
 											}
 										}
 										FUNCTION = true;

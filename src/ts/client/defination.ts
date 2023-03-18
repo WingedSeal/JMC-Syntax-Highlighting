@@ -1,10 +1,10 @@
 import { languages, workspace } from "vscode";
 import { HEADER_SELECTOR, HeaderType, SELECTOR } from "../data/common";
-import { getCurrentCommand, parseHJMCFile } from "../helpers/documentHelper";
+import { parseHJMCFile } from "../helpers/documentHelper";
 import * as url from "url";
-import path, { sep } from "path";
+import path from "path";
 import * as vscode from "vscode";
-import { classesMethods, definedFuncs } from "./source";
+import { definedFuncs } from "./source";
 
 export class DefinationRegister {
 	public static RegisterAll() {

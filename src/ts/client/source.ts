@@ -1,10 +1,8 @@
 import { workspace, ExtensionContext, languages } from "vscode";
 import {
 	LanguageClient,
-	LanguageClientOptions,
-	NotificationType,
-	ServerOptions,
-	TransportKind,
+	LanguageClientOptions, ServerOptions,
+	TransportKind
 } from "vscode-languageclient/node";
 import * as path from "path";
 import * as vscode from "vscode";

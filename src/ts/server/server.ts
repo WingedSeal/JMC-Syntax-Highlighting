@@ -9,8 +9,6 @@ import {
 	TextDocumentSyncKind,
 	InitializeResult,
 	SignatureHelpParams,
-	NotificationType,
-	ProtocolNotificationType,
 } from "vscode-languageserver/node";
 import { TextDocument } from "vscode-languageserver-textdocument";
 import { BuiltInFunctions, methodInfoToDoc } from "../data/builtinFunctions";
@@ -310,7 +308,10 @@ function getDefinedFuncsData(
 				length: name.length,
 				file: filePath,
 				name: name,
-				className: (v.value !== undefined && v.value[1] !== "") ? v.value[1] : undefined
+				className:
+					v.value !== undefined && v.value[1] !== ""
+						? v.value[1]
+						: undefined,
 			};
 		});
 }

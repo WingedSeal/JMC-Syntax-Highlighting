@@ -38,7 +38,7 @@ export enum TokenType {
 	USE_VARIABLE,
 	COMMAND,
 	MACRO,
-	NEW
+	NEW,
 }
 
 export enum ErrorType {
@@ -241,7 +241,12 @@ export class Language {
 		const emptyLength = startRaw.match(/^(\s+)/g || []);
 		const empty = emptyLength !== null ? emptyLength[0].length : 0;
 
-		const mapped = r.type.map((v) => `${v.type};${v.value};${v.length}${(v.parser !== undefined) ? ";" + v.parser : ""}`);
+		const mapped = r.type.map(
+			(v) =>
+				`${v.type};${v.value};${v.length}${
+					v.parser !== undefined ? ";" + v.parser : ""
+				}`
+		);
 
 		this.tokens.push({
 			raw: startRaw,
@@ -288,16 +293,40 @@ export class Language {
 				else if (currentText === "{") break;
 				else {
 					const condition = currentText
-						.split(/(\|\||&&|==|!=)/g)
+						.split(/(\|\||&&)/g)
 						.map((v) => v.trim())
 						.filter((v) => v !== "");
+					
 					if (condition.length === 1 && lastTextIndex !== undefined) {
 						const lastElem = args[lastTextIndex];
 						const lastText = lastElem.slice(-1)[0];
 						args[lastTextIndex][lastElem.length - 1] =
 							lastText.concat(condition[0]);
 					} else if (condition[0] !== undefined) {
-						this.parseText(condition[0]);
+						//this.parseText(condition[0]);
+						for (const con of condition) {
+							if (con.startsWith("!")) {
+								this.parseVariable(con);
+							} else if (con.startsWith("$")) {
+								this.parseVariable(con);
+							} else if (
+								["!=", "=="].includes(con.split(" ")[1])
+							) {
+								const splitedData = con
+									.split(" ")
+									.filter((v) => !["!=", "=="].includes(v));
+								for (const d of splitedData) {
+									if (d.startsWith("$")) {
+										const pos = RegExp(`\\${d}`,"g").exec(con)?.index;
+										if (pos !== undefined) {
+											this.parseVariable(d, undefined, pos);
+										}
+									} else this.parseText(d);
+								}
+							} else {
+								this.parseText(con);
+							}
+						}
 						lastTextIndex = args.length;
 						args.push(condition);
 					}
@@ -447,9 +476,9 @@ export class Language {
 	 * @param text
 	 * @returns
 	 */
-	private parseVariable(text: string) {
-		const index = this.getOffset();
-		const rawText = this.raw[this.currentIndex];
+	private parseVariable(text: string, rt?: string, ofs = 0) {
+		const index = this.getOffset() + ofs;
+		const rawText = rt ?? this.raw[this.currentIndex];
 
 		const data = text.split(" ").filter((v) => v !== "");
 		data[1] = data.slice(1).join("");
@@ -464,7 +493,7 @@ export class Language {
 				trim: text,
 				type: TokenType.USE_VARIABLE,
 				length: data[0].length,
-				offset: index + empty,
+				offset: index + empty + (text.startsWith("!") ? 1 : 0),
 				value: [data[0]],
 			});
 			return;
@@ -556,6 +585,7 @@ export class Language {
 		}
 		return joined.length - this.raw[this.currentIndex].length;
 	}
+
 	/**
 	 *
 	 */
