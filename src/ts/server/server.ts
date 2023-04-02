@@ -32,6 +32,11 @@ import {
 import { Language, TokenType } from "../helpers/lexer";
 import fs from "fs";
 
+let path;
+(async () => {
+  path = await import("path");
+})();
+
 const connection = createConnection(ProposedFeatures.all);
 
 let text: string;
@@ -121,7 +126,7 @@ connection.onInitialize((params: InitializeParams) => {
 	workspaceFolder = url.fileURLToPath(params.workspaceFolders![0].uri);
 	if (fs.existsSync("jmc_config.json")) {
 		config = JSON.parse(
-			fs.readFileSync(`${workspaceFolder}\\jmc_config.json`, "utf-8")
+			fs.readFileSync(path.join(workspaceFolder, "jmc_config.json"), "utf-8")
 		);
 
 		validateHeader();
@@ -274,7 +279,7 @@ async function validateText(fileText: string): Promise<ValidateData> {
 async function validateHeader() {
 	mainHeader = [];
 	config = JSON.parse(
-		fs.readFileSync(`${workspaceFolder}\\jmc_config.json`, "utf-8")
+		fs.readFileSync(path.join(workspaceFolder, "jmc_config.json"), "utf-8")
 	);
 
 	const mainhf =
