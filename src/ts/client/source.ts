@@ -6,12 +6,10 @@ import {
 	TransportKind,
 } from "vscode-languageclient/node";
 import * as path from "path";
-import { Lexer } from "../lexer";
 import { JMC_SELECTOR } from "../data/selectors";
 import { semanticProvider, semanticLegend } from "./semanticHighlight";
 
 let client: LanguageClient;
-export let currentFileLexer: Lexer | undefined;
 
 export async function activate(context: ExtensionContext) {
 	//setup client
@@ -50,10 +48,6 @@ export async function activate(context: ExtensionContext) {
 	client = new LanguageClient("jmc", "JMC", serverOptions, clientOptions);
 
 	client.start().then(() => {
-		client.onNotification("data/currentFile", (v: Lexer) => {
-			currentFileLexer = v;
-		});
-
 		console.log("Client Started");
 	});
 }

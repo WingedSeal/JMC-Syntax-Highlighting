@@ -1,7 +1,14 @@
 import * as vscode from "vscode";
 import { Lexer, TokenType } from "../lexer";
 
-const tokenTypes = ["class", "interface", "enum", "function", "variable"];
+const tokenTypes = [
+	"class",
+	"interface",
+	"enum",
+	"function",
+	"variable",
+	"string",
+];
 const tokenModifiers = ["declaration", "documentation"];
 export const semanticLegend = new vscode.SemanticTokensLegend(
 	tokenTypes,
@@ -52,7 +59,7 @@ export const semanticProvider: vscode.DocumentSemanticTokensProvider = {
 							token.pos + token.value.length
 						);
 						const range = new vscode.Range(startPos, endPos);
-						builder.push(range, "class", ["declaration"]);
+						builder.push(range, "string", ["declaration"]);
 					}
 
 					break;

@@ -1,3 +1,10 @@
+interface ParserModifier {
+	amount?: string;
+	type?: string;
+	min?: number;
+	max?: number;
+}
+
 export enum TokenType {
 	COMMENT,
 	FUNCTION,
@@ -29,7 +36,12 @@ export enum TokenType {
 	OR,
 	NOT,
 	DOT,
-	COMMA
+	COMMA,
+	ERROR_MISMATCH,
+	ERROR_EXTRA,
+	COMMAND_LITERAL,
+	ERROR,
+	COMMAND,
 }
 
 interface Token {
@@ -81,7 +93,7 @@ const Tokens: Token[] = [
 		token: TokenType.IMPORT,
 	},
 	{
-		regex: /;/,
+		regex: /^;$/,
 		token: TokenType.SEMI,
 	},
 	{
@@ -169,11 +181,22 @@ const Tokens: Token[] = [
 		token: TokenType.LITERAL,
 	},
 ];
+interface CommandData {
+	type: string;
+	name: string;
+	executable: boolean;
+	redirects: string[];
+	childrens: CommandData[];
+	parser: {
+		parser: string;
+		modifier?: ParserModifier;
+	};
+}
 
 export class Lexer {
 	public tokens: TokenData[];
 	private raw: string[];
-	private splited: string[];
+	private trimmed: string[];
 	private currentIndex: number;
 
 	/**
@@ -185,7 +208,7 @@ export class Lexer {
 		this.raw = text
 			.split(/(^\/\/.*$)|(\s|\;|\{|\}|\(|\)|\|\||&&|==|!=|!|,|\.)/m)
 			.filter((v) => v != undefined);
-		this.splited = this.raw.map((v) => v.trim());
+		this.trimmed = this.raw.map((v) => v.trim());
 		this.tokens = this.Tokenize();
 	}
 
@@ -196,15 +219,15 @@ export class Lexer {
 	private Tokenize(): TokenData[] {
 		const datas: TokenData[] = [];
 
-		for (let i = 0; i < this.splited.length; i++) {
-			const current = this.splited[i];
+		for (let i = 0; i < this.trimmed.length; i++) {
+			const current = this.trimmed[i];
 			const result = Tokens.find((v) => v.regex.test(current));
 			const pos = this.GetPosition();
 			if (result != undefined) {
 				datas.push({
 					type: result.token,
 					pos: pos,
-					value: this.splited[this.currentIndex],
+					value: this.trimmed[this.currentIndex],
 				});
 			}
 			this.currentIndex++;

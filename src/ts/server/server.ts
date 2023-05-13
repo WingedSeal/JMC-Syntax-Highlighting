@@ -4,15 +4,36 @@ import {
 	ProposedFeatures,
 	InitializeParams,
 	DidChangeConfigurationNotification,
-	CompletionItem, TextDocumentSyncKind,
-	InitializeResult
+	CompletionItem,
+	TextDocumentSyncKind,
+	InitializeResult,
+	CompletionItemKind,
 } from "vscode-languageserver/node";
 import { TextDocument } from "vscode-languageserver-textdocument";
 import * as get_files from "get-all-files";
 import * as url from "url";
 import { Lexer } from "../lexer";
+import * as fs from "fs/promises";
+import {
+	ExtractedTokens,
+	JMCFile,
+	getClassRange,
+	getFunctions,
+	getVariables,
+} from "../helpers/general";
+import {
+	concatFuncsTokens,
+	concatVariableTokens,
+	getTokens,
+} from "./serverHelper";
 
 let jmcConfigs: string[] = [];
+let jmcFiles: JMCFile[] = [];
+let extracted: ExtractedTokens = {
+	variables: [],
+	funcs: [],
+};
+export let currnetFile: string | undefined;
 
 //#region default
 const connection = createConnection(ProposedFeatures.all);
@@ -22,7 +43,7 @@ let hasConfigurationCapability = false;
 let hasWorkspaceFolderCapability = false;
 let hasDiagnosticRelatedInformationCapability = false;
 //#endregion
-connection.onInitialize((params: InitializeParams) => {
+connection.onInitialize(async (params: InitializeParams) => {
 	if (params.workspaceFolders) {
 		for (const folder of params.workspaceFolders) {
 			const files = get_files
@@ -31,9 +52,21 @@ connection.onInitialize((params: InitializeParams) => {
 			jmcConfigs = jmcConfigs.concat(
 				files.filter((v) => v.endsWith("jmc_config.json"))
 			);
+			const jfiles = files.filter(
+				(v) => v.endsWith(".jmc") || v.endsWith(".hjmc")
+			);
+			for (const f of jfiles) {
+				const text = await fs.readFile(f, "utf-8");
+				jmcFiles.push({
+					path: f,
+					lexer: new Lexer(text),
+				});
+			}
+
+			extracted = await getTokens(jmcFiles);
 		}
 	}
-	
+
 	//#region default
 	const capabilities = params.capabilities;
 
@@ -130,15 +163,34 @@ documents.onDidClose((e) => {
 documents.onDidChangeContent((change) => {
 	validateTextDocument(change.document);
 });
-async function validateText(fileText: string) {
-	const lexer = new Lexer(fileText);
 
-	connection.sendNotification("data/currentFile", lexer);
+async function validateText(fileText: string, path: string): Promise<Lexer> {
+	const lexer = new Lexer(fileText);
+	currnetFile = path;
+	jmcFiles = jmcFiles.map((v) => {
+		if (v.path == path) v.lexer = lexer;
+		return v;
+	});
+	return lexer;
 }
 
 async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 	const settings = await getDocumentSettings(textDocument.uri);
-	await validateText(textDocument.getText());
+
+	const path = url.fileURLToPath(textDocument.uri);
+	const lexer = await validateText(textDocument.getText(), path);
+
+	const funcs = await getFunctions(lexer);
+	const vars = await getVariables(lexer);
+	
+	extracted.variables = extracted.variables.map((v) => {
+		if (v.path == path) v.tokens = vars;
+		return v;
+	});
+	extracted.funcs = extracted.funcs.map((v) => {
+		if (v.path == path) v.tokens = funcs;
+		return v;
+	});
 }
 
 connection.onDefinition((v) => {
@@ -151,7 +203,25 @@ connection.onDidChangeWatchedFiles((_change) => {
 
 connection.onCompletion(
 	async (arg, token, progress, result): Promise<CompletionItem[]> => {
-		return [];
+		const vars: CompletionItem[] = concatVariableTokens(extracted).map(
+			(v) => {
+				return {
+					label: v.value.slice(1),
+					insertText: v.value,
+					kind: CompletionItemKind.Variable,
+				};
+			}
+		);
+		const funcs: CompletionItem[] = concatFuncsTokens(extracted).map(
+			(v) => {
+				return {
+					label: v.value,
+					insertText: v.value + "()",
+					kind: CompletionItemKind.Function,
+				};
+			}
+		);
+		return vars.concat(funcs);
 	}
 );
 
