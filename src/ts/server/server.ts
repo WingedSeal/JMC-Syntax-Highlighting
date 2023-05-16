@@ -17,7 +17,6 @@ import * as fs from "fs/promises";
 import {
 	ExtractedTokens,
 	JMCFile,
-	getClassRange,
 	getFunctions,
 	getVariables,
 } from "../helpers/general";
@@ -182,7 +181,7 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 
 	const funcs = await getFunctions(lexer);
 	const vars = await getVariables(lexer);
-	
+
 	extracted.variables = extracted.variables.map((v) => {
 		if (v.path == path) v.tokens = vars;
 		return v;
@@ -194,6 +193,18 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 }
 
 connection.onDefinition((v) => {
+	// const document = documents.get(v.textDocument.uri);
+	// if (document) {
+	// 	const file = jmcFiles.find(
+	// 		(val) => val.path == url.fileURLToPath(v.textDocument.uri)
+	// 	);
+	// 	if (file) {
+	// 		const index = file.lexer.tokens.findIndex((val) => {
+	// 			return val.pos < document.offsetAt(v.position);
+	// 		});
+	// 		console.log(file.lexer.tokens[index]);
+	// 	}
+	// }
 	return [];
 });
 
@@ -231,6 +242,16 @@ connection.onCompletionResolve((item: CompletionItem): CompletionItem => {
 
 connection.onSignatureHelp((handler) => {
 	return handler.context?.activeSignatureHelp;
+});
+
+connection.onRequest("data/getFile", (path: string): JMCFile | undefined => {
+	return jmcFiles.find((v) => v.path == path);
+});
+connection.onRequest("data/getFiles", (path: string): JMCFile[] => {
+	return jmcFiles;
+});
+connection.onRequest("data/getExtracted", (): ExtractedTokens => {
+	return extracted;
 });
 
 documents.listen(connection);

@@ -8,8 +8,9 @@ import {
 import * as path from "path";
 import { JMC_SELECTOR } from "../data/selectors";
 import { semanticProvider, semanticLegend } from "./semanticHighlight";
+import { definationProvider } from "./defination";
 
-let client: LanguageClient;
+export let client: LanguageClient;
 
 export async function activate(context: ExtensionContext) {
 	//setup client
@@ -42,6 +43,11 @@ export async function activate(context: ExtensionContext) {
 		JMC_SELECTOR,
 		semanticProvider,
 		semanticLegend
+	);
+
+	languages.registerDefinitionProvider(
+		JMC_SELECTOR,
+		new definationProvider()
 	);
 
 	//define client
