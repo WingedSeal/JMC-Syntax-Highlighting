@@ -18,7 +18,7 @@ import {
 	ExtractedTokens,
 	JMCFile,
 	getFunctions,
-	getVariables,
+	getVariablesDeclare,
 } from "../helpers/general";
 import {
 	concatFuncsTokens,
@@ -180,7 +180,7 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 	const lexer = await validateText(textDocument.getText(), path);
 
 	const funcs = await getFunctions(lexer);
-	const vars = await getVariables(lexer);
+	const vars = await getVariablesDeclare(lexer);
 
 	extracted.variables = extracted.variables.map((v) => {
 		if (v.path == path) v.tokens = vars;

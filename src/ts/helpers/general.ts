@@ -32,7 +32,7 @@ export function getIndexByOffset(lexer: Lexer, offset: number): number {
 	});
 }
 
-export async function getVariables(lexer: Lexer): Promise<TokenData[]> {
+export async function getVariablesDeclare(lexer: Lexer): Promise<TokenData[]> {
 	const variablesID = lexer.tokens
 		.filter((v) => v.type == TokenType.VARIABLE)
 		.map((v) => lexer.tokens.indexOf(v));
@@ -49,6 +49,10 @@ export async function getVariables(lexer: Lexer): Promise<TokenData[]> {
 			].includes(lexer.tokens[v + 1].type);
 		})
 		.map((v) => lexer.tokens[v]);
+}
+
+export async function getVariables(lexer: Lexer) {
+	return lexer.tokens.filter((v) => v.type == TokenType.VARIABLE);
 }
 
 export async function getFunctions(lexer: Lexer): Promise<TokenData[]> {

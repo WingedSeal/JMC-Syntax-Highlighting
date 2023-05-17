@@ -16,6 +16,8 @@ import {
 	getClassRange,
 	getFunctions,
 	getIndexByOffset,
+	getVariables,
+	getVariablesDeclare,
 } from "../helpers/general";
 import { client } from "./source";
 import { TokenType } from "../lexer";
@@ -37,6 +39,10 @@ export class definationProvider implements DefinitionProvider {
 			);
 			const tokens = currFile.lexer.tokens;
 			const currentToken = tokens[index - 1];
+			const word = document.getText(
+				document.getWordRangeAtPosition(position, /\$?[\w\.]+/g)
+			);
+			console.log(word);
 
 			if (tokens[index - 2].type == TokenType.FUNCTION) {
 				const datas: LocationLink[] = [];
@@ -69,16 +75,12 @@ export class definationProvider implements DefinitionProvider {
 					}
 				}
 				return datas;
-			} else {
-				const word = document.getText(
-					document.getWordRangeAtPosition(position, /[\w\.]+/g)
-				);
+			} else if (!word.startsWith("$")) {
 				for (const file of files) {
 					const func = await getFunctions(file.lexer);
 					const doc = await vscode.workspace.openTextDocument(
 						file.path
 					);
-					console.log(func);
 					const query = func.find((v) => v.value == word);
 
 					if (query) {
@@ -89,6 +91,29 @@ export class definationProvider implements DefinitionProvider {
 						return new Location(doc.uri, range);
 					}
 				}
+			} else if (word.startsWith("$")) {
+				const datas: LocationLink[] = [];
+				for (const file of files) {
+					const variables = await getVariables(file.lexer);
+					const doc = await vscode.workspace.openTextDocument(
+						file.path
+					);
+					const query = variables.find((v) => v.value == word);
+					console.log(variables);
+
+					if (query) {
+						const start = doc.positionAt(query.pos + 1);
+						const end = doc.positionAt(
+							query.pos + query.value.length
+						);
+						const range = new Range(start, end);
+						datas.push({
+							targetUri: doc.uri,
+							targetRange: range,
+						});
+					}
+				}
+				return datas;
 			}
 		}
 

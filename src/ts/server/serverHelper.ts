@@ -2,7 +2,7 @@ import {
 	ExtractedTokens,
 	JMCFile,
 	getFunctions,
-	getVariables,
+	getVariablesDeclare,
 	removeDuplicate,
 } from "../helpers/general";
 import { TokenData } from "../lexer";
@@ -36,7 +36,7 @@ export async function getTokens(files: JMCFile[]): Promise<ExtractedTokens> {
 	for (const f of files) {
 		tokens.variables.push({
 			path: f.path,
-			tokens: await getVariables(f.lexer),
+			tokens: await getVariablesDeclare(f.lexer),
 		});
 		tokens.funcs.push({
 			path: f.path,
