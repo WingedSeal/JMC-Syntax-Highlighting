@@ -1,5 +1,7 @@
 import * as vscode from "vscode";
-import { Lexer, TokenType } from "../lexer";
+import { Lexer, TokenData, TokenType } from "../lexer";
+import { client } from "./source";
+import { JMCFile } from "../helpers/general";
 
 const tokenTypes = [
 	"class",
@@ -18,7 +20,12 @@ export const semanticLegend = new vscode.SemanticTokensLegend(
 export const semanticProvider: vscode.DocumentSemanticTokensProvider = {
 	async provideDocumentSemanticTokens(document, token) {
 		const builder = new vscode.SemanticTokensBuilder(semanticLegend);
-		const tokens = new Lexer(document.getText()).tokens;
+		const tokens: TokenData[] = (
+			(await client.sendRequest(
+				"data/getFile",
+				document.uri.fsPath
+			)) as JMCFile
+		).lexer.tokens;
 		for (let i = 0; i < tokens.length; i++) {
 			const token = tokens[i];
 			switch (token.type) {

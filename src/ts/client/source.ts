@@ -13,6 +13,7 @@ import * as vscode from "vscode";
 import { HJMCFile, JMCFile } from "../helpers/general";
 import { Lexer } from "../lexer";
 import { HeaderParser } from "../parseHeader";
+import { variableCompletion } from "./completion";
 
 export let client: LanguageClient;
 
@@ -81,6 +82,11 @@ export async function activate(context: ExtensionContext) {
 	languages.registerDefinitionProvider(
 		JMC_SELECTOR,
 		new definationProvider()
+	);
+	languages.registerCompletionItemProvider(
+		JMC_SELECTOR,
+		new variableCompletion(),
+		"."
 	);
 
 	//define client
