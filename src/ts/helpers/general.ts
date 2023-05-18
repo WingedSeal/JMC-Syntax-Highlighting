@@ -1,8 +1,14 @@
 import { Lexer, TokenData, TokenType } from "../lexer";
+import { HeaderParser } from "../parseHeader";
 
 export interface JMCFile {
 	path: string;
 	lexer: Lexer;
+}
+
+export interface HJMCFile {
+	path: string;
+	parser: HeaderParser;
 }
 
 export interface ExtractedTokens {
