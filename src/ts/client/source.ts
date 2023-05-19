@@ -7,15 +7,14 @@ import {
 } from "vscode-languageclient/node";
 import * as path from "path";
 import { JMC_SELECTOR } from "../data/selectors";
-import { semanticProvider, semanticLegend } from "./semanticHighlight";
-import { definationProvider } from "./defination";
 import * as vscode from "vscode";
 import { HJMCFile, JMCFile } from "../helpers/general";
 import { Lexer } from "../lexer";
 import { HeaderParser } from "../parseHeader";
-import { variableCompletion } from "./completion";
+import { definationProvider } from "./defination";
 
 export let client: LanguageClient;
+export let files: JMCFile[] = [];
 
 export async function activate(context: ExtensionContext) {
 	//setup client
@@ -34,7 +33,6 @@ export async function activate(context: ExtensionContext) {
 		path.join("src", "js", "server", "server.js")
 	);
 	const debugOptions = { execArgv: ["--nolazy", "--inspect=6009"] };
-
 	const serverOptions: ServerOptions = {
 		run: { module: serverModule, transport: TransportKind.ipc },
 		debug: {
@@ -72,28 +70,34 @@ export async function activate(context: ExtensionContext) {
 	jmcfsProvider.onDidDelete(async (v) => {
 		await client.sendRequest("file/remove", v.fsPath);
 	});
-
-	//languages settings
-	languages.registerDocumentSemanticTokensProvider(
-		JMC_SELECTOR,
-		semanticProvider,
-		semanticLegend
-	);
 	languages.registerDefinitionProvider(
 		JMC_SELECTOR,
 		new definationProvider()
 	);
-	languages.registerCompletionItemProvider(
-		JMC_SELECTOR,
-		new variableCompletion(),
-		"."
-	);
+	// languages.registerCompletionItemProvider(
+	// 	JMC_SELECTOR,
+	// 	{
+	// 		provideCompletionItems(document, position, token, context) {
+	// 			return [
+	// 				{
+	// 					label: "get",
+	// 					kind: vscode.CompletionItemKind.Function,
+	// 					insertText: "get()",
+	// 				},
+	// 			];
+	// 		},
+	// 	},
+	// 	"."
+	// );
+	//register features
+	//client.registerFeature(new SemanticHighlightFeature());
 
 	//define client
 	client = new LanguageClient("jmc", "JMC", serverOptions, clientOptions);
 
-	client.start().then(() => {
+	client.start().then(async () => {
 		console.log("Client Started");
+		files = await client.sendRequest("data/getFiles");
 	});
 }
 

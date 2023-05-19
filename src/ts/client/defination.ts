@@ -10,14 +10,12 @@ import {
 	Uri,
 } from "vscode";
 import {
-	ExtractedTokens,
 	JMCFile,
 	getAllFunctionsCall,
 	getClassRange,
 	getFunctions,
 	getIndexByOffset,
 	getVariables,
-	getVariablesDeclare,
 } from "../helpers/general";
 import { client } from "./source";
 import { TokenType } from "../lexer";
@@ -42,7 +40,6 @@ export class definationProvider implements DefinitionProvider {
 			const word = document.getText(
 				document.getWordRangeAtPosition(position, /\$?[\w\.]+/g)
 			);
-			console.log(word);
 
 			if (tokens[index - 2].type == TokenType.FUNCTION) {
 				const datas: LocationLink[] = [];

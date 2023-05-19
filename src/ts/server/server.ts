@@ -8,18 +8,19 @@ import {
 	TextDocumentSyncKind,
 	InitializeResult,
 	CompletionItemKind,
-	FileChangeType,
+	SemanticTokens,
 } from "vscode-languageserver/node";
 import { TextDocument } from "vscode-languageserver-textdocument";
 import * as get_files from "get-all-files";
 import * as url from "url";
-import { Lexer } from "../lexer";
+import { Lexer, TokenType } from "../lexer";
 import * as fs from "fs/promises";
 import {
 	ExtractedTokens,
 	HJMCFile,
 	JMCFile,
 	getFunctions,
+	getIndexByOffset,
 	getVariablesDeclare,
 } from "../helpers/general";
 import {
@@ -28,6 +29,11 @@ import {
 	getTokens,
 } from "./serverHelper";
 import { HeaderParser } from "../parseHeader";
+import * as vscode from "vscode-languageserver";
+import {
+	SemanticTokenModifiers,
+	SemanticTokenTypes,
+} from "../helpers/semanticHelper";
 
 let jmcConfigs: string[] = [];
 let jmcFiles: JMCFile[] = [];
@@ -76,7 +82,6 @@ connection.onInitialize(async (params: InitializeParams) => {
 			extracted = await getTokens(jmcFiles);
 		}
 	}
-
 	//#region default
 	const capabilities = params.capabilities;
 
@@ -92,16 +97,27 @@ connection.onInitialize(async (params: InitializeParams) => {
 		capabilities.textDocument.publishDiagnostics.relatedInformation
 	);
 
+	const SemanticTokensOptions: vscode.SemanticTokensOptions = {
+		legend: {
+			tokenTypes: SemanticTokenTypes,
+			tokenModifiers: SemanticTokenModifiers,
+		},
+		full: true,
+	};
+
 	const result: InitializeResult = {
 		capabilities: {
 			textDocumentSync: TextDocumentSyncKind.Incremental,
 			// Tell the client that this server supports code completion.
 			completionProvider: {
 				resolveProvider: true,
+				triggerCharacters: ["."],
 			},
 			signatureHelpProvider: {
 				triggerCharacters: ["("],
 			},
+			semanticTokensProvider: SemanticTokensOptions,
+			definitionProvider: {},
 		},
 	};
 	if (hasWorkspaceFolderCapability) {
@@ -220,24 +236,33 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 	}
 }
 
-connection.onDefinition((v) => {
-	// const document = documents.get(v.textDocument.uri);
-	// if (document) {
-	// 	const file = jmcFiles.find(
-	// 		(val) => val.path == url.fileURLToPath(v.textDocument.uri)
-	// 	);
-	// 	if (file) {
-	// 		const index = file.lexer.tokens.findIndex((val) => {
-	// 			return val.pos < document.offsetAt(v.position);
-	// 		});
-	// 		console.log(file.lexer.tokens[index]);
-	// 	}
-	// }
+connection.onDefinition(async (params) => {
 	return [];
 });
 
 connection.onCompletion(
 	async (arg, token, progress, result): Promise<CompletionItem[]> => {
+		//check if `$VARIABLE.get()`
+		if (arg.context?.triggerCharacter == ".") {
+			const doc = documents.get(arg.textDocument.uri);
+			const path = url.fileURLToPath(arg.textDocument.uri);
+			const file = jmcFiles.find((v) => v.path == path);
+			if (doc && file) {
+				const offset = doc?.offsetAt(arg.position);
+				const index = getIndexByOffset(file.lexer, offset - 1);
+				const token = file.lexer.tokens[index - 2];
+				if (token.type == TokenType.VARIABLE) {
+					return [
+						{
+							label: "get",
+							kind: CompletionItemKind.Function,
+							insertText: "get()",
+						},
+					];
+				}
+			}
+		}
+
 		const vars: CompletionItem[] = concatVariableTokens(extracted).map(
 			(v) => {
 				return {
@@ -268,6 +293,147 @@ connection.onSignatureHelp((handler) => {
 	return handler.context?.activeSignatureHelp;
 });
 
+//semantic highlight
+connection.onRequest(
+	"textDocument/semanticTokens/full",
+	(params: vscode.SemanticTokensParams): SemanticTokens => {
+		const doc = documents.get(params.textDocument.uri);
+		const builder = new vscode.SemanticTokensBuilder();
+		if (doc) {
+			const file = jmcFiles.find(
+				(v) => v.path == url.fileURLToPath(doc.uri)
+			);
+			if (file) {
+				const tokens = file.lexer.tokens;
+				for (let i = 0; i < tokens.length; i++) {
+					const token = tokens[i];
+					switch (token.type) {
+						case TokenType.CLASS:
+							if (
+								tokens[i + 1] !== undefined &&
+								tokens[i + 1].type === TokenType.LITERAL
+							) {
+								const current = tokens[i + 1];
+								const pos = doc.positionAt(current.pos);
+								builder.push(
+									pos.line,
+									pos.character,
+									current.value.length,
+									0,
+									0
+								);
+							}
+							break;
+						case TokenType.VARIABLE: {
+							const pos = doc.positionAt(token.pos);
+							builder.push(
+								pos.line,
+								pos.character,
+								token.value.length,
+								4,
+								0
+							);
+							break;
+						}
+						case TokenType.LITERAL: {
+							if (tokens[i + 1].type == TokenType.LPAREN) {
+								const pos = doc.positionAt(token.pos);
+								builder.push(
+									pos.line,
+									pos.character,
+									token.value.length,
+									3,
+									0
+								);
+							} else if (tokens[i + 1].type == TokenType.DOT) {
+								const pos = doc.positionAt(token.pos);
+								builder.push(
+									pos.line,
+									pos.character,
+									token.value.length,
+									5,
+									0
+								);
+							}
+
+							break;
+						}
+					}
+				}
+			}
+		}
+		return builder.build();
+	}
+);
+
+// 	const document = documents.get(v.textDocument.uri);
+// 	const builder = new SemanticTokensBuilder();
+// 	if (document) {
+// 		const tokens = jmcFiles.find(
+// 			(v) => v.path == url.fileURLToPath(document?.uri)
+// 		)?.lexer.tokens;
+// 		if (tokens) {
+// 			for (let i = 0; i < tokens.length; i++) {
+// 				const token = tokens[i];
+// 				switch (token.type) {
+// 					case TokenType.CLASS:
+// 						if (
+// 							tokens[i + 1] !== undefined &&
+// 							tokens[i + 1].type === TokenType.LITERAL
+// 						) {
+// 							const current = tokens[i + 1];
+// 							const startPos = document.positionAt(current.pos);
+// 							builder.push(
+// 								startPos.line,
+// 								startPos.character,
+// 								current.value.length,
+// 								0,
+// 								0
+// 							);
+// 						}
+// 						break;
+// 					case TokenType.VARIABLE: {
+// 						const startPos = document.positionAt(token.pos);
+// 						builder.push(
+// 							startPos.line,
+// 							startPos.character,
+// 							token.value.length,
+// 							4,
+// 							0
+// 						);
+// 						break;
+// 					}
+// 					case TokenType.LITERAL: {
+// 						if (tokens[i + 1].type == TokenType.LPAREN) {
+// 							const startPos = document.positionAt(token.pos);
+// 							builder.push(
+// 								startPos.line,
+// 								startPos.character,
+// 								token.value.length,
+// 								3,
+// 								0
+// 							);
+// 						} else if (tokens[i + 1].type == TokenType.DOT) {
+// 							const startPos = document.positionAt(token.pos);
+// 							builder.push(
+// 								startPos.line,
+// 								startPos.character,
+// 								token.value.length,
+// 								5,
+// 								0
+// 							);
+// 						}
+
+// 						break;
+// 					}
+// 				}
+// 			}
+// 		} else return builder.build();
+// 	}
+// 	connection.languages.semanticTokens.refresh();
+// 	return builder.build();
+// });
+
 //data methods
 connection.onRequest("data/getFile", (path: string): JMCFile | undefined => {
 	return jmcFiles.find((v) => v.path == path);
@@ -278,7 +444,6 @@ connection.onRequest("data/getFiles", (path: string): JMCFile[] => {
 connection.onRequest("data/getExtracted", (): ExtractedTokens => {
 	return extracted;
 });
-
 //file operation
 connection.onRequest(
 	"file/update",
