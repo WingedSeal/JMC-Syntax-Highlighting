@@ -27,7 +27,7 @@ export class HeaderParser {
 		this.value = "";
 		for (const line of text.split(/\r?\n/g)) {
 			this.header = line.split(" ")[0];
-			this.value = line.split(" ").slice(1).join("");
+			this.value = line.split(" ").slice(1).join(" ");
 			const headerData: HeaderData = {
 				type: this.getHeaderType(),
 				values: this.getValues(),

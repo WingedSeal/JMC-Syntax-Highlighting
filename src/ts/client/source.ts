@@ -52,7 +52,7 @@ export async function activate(context: ExtensionContext) {
 	jmcfsProvider.onDidCreate(async (v) => {
 		if (v.fsPath.endsWith(".jmc")) {
 			const file: JMCFile = {
-				lexer: new Lexer(""),
+				lexer: new Lexer("", []),
 				path: v.fsPath,
 			};
 			await client.sendRequest("file/add", file);

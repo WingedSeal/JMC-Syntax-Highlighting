@@ -7,3 +7,4 @@ temp
 old
 TODO.todo
 *.deprecated.ts
+*.deprecated

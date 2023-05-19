@@ -19,6 +19,7 @@ import {
 	ExtractedTokens,
 	HJMCFile,
 	JMCFile,
+	MacrosData,
 	getFunctions,
 	getIndexByOffset,
 	getVariablesDeclare,
@@ -28,7 +29,7 @@ import {
 	concatVariableTokens,
 	getTokens,
 } from "./serverHelper";
-import { HeaderParser } from "../parseHeader";
+import { HeaderParser, HeaderType } from "../parseHeader";
 import * as vscode from "vscode-languageserver";
 import {
 	SemanticTokenModifiers,
@@ -42,6 +43,7 @@ let extracted: ExtractedTokens = {
 	variables: [],
 	funcs: [],
 };
+let macros: MacrosData[] = [];
 export let currentFile: string | undefined;
 
 //#region default
@@ -64,19 +66,29 @@ connection.onInitialize(async (params: InitializeParams) => {
 			const jfiles = files.filter(
 				(v) => v.endsWith(".jmc") || v.endsWith(".hjmc")
 			);
-			for (const f of jfiles) {
+			for (const f of jfiles.filter((v) => v.endsWith(".hjmc"))) {
 				const text = await fs.readFile(f, "utf-8");
-				if (f.endsWith(".jmc")) {
-					jmcFiles.push({
-						path: f,
-						lexer: new Lexer(text),
-					});
-				} else if (f.endsWith(".hjmc")) {
-					hjmcFiles.push({
-						path: f,
-						parser: new HeaderParser(text),
-					});
+				const parser = new HeaderParser(text);
+				hjmcFiles.push({
+					path: f,
+					parser: parser,
+				});
+				for (const header of parser.data) {
+					if (header.type == HeaderType.DEFINE) {
+						macros.push({
+							path: f,
+							target: header.values[0],
+							values: header.values.slice(1),
+						});
+					}
 				}
+			}
+			for (const f of jfiles.filter((v) => v.endsWith(".jmc"))) {
+				const text = await fs.readFile(f, "utf-8");
+				jmcFiles.push({
+					path: f,
+					lexer: new Lexer(text, macros),
+				});
 			}
 
 			extracted = await getTokens(jmcFiles);
@@ -191,7 +203,7 @@ documents.onDidChangeContent((change) => {
 });
 
 async function validateJMC(fileText: string, path: string): Promise<Lexer> {
-	const lexer = new Lexer(fileText);
+	const lexer = new Lexer(fileText, macros);
 	currentFile = path;
 	jmcFiles = jmcFiles.map((v) => {
 		if (v.path == path) v.lexer = lexer;
@@ -206,6 +218,16 @@ async function validateHJMC(
 ): Promise<HeaderParser> {
 	const parser = new HeaderParser(fileText);
 	currentFile = path;
+	macros = macros.filter((macro) => macro.path !== path);
+	parser.data
+		.filter((header) => header.type === HeaderType.DEFINE)
+		.forEach((header) => {
+			macros.push({
+				path,
+				target: header.values[0],
+				values: header.values.slice(1),
+			});
+		});
 	hjmcFiles = hjmcFiles.map((v) => {
 		if (v.path == path) v.parser == parser;
 		return v;
@@ -281,7 +303,14 @@ connection.onCompletion(
 				};
 			}
 		);
-		return vars.concat(funcs);
+		const mos: CompletionItem[] = macros.map((v) => {
+			return {
+				label: v.target,
+				kind: CompletionItemKind.Snippet,
+				detail: v.values.join(" "),
+			};
+		});
+		return vars.concat(funcs).concat(mos);
 	}
 );
 
@@ -310,7 +339,7 @@ connection.onRequest(
 					switch (token.type) {
 						case TokenType.CLASS:
 							if (
-								tokens[i + 1] !== undefined &&
+								tokens[i + 1] &&
 								tokens[i + 1].type === TokenType.LITERAL
 							) {
 								const current = tokens[i + 1];
@@ -358,6 +387,19 @@ connection.onRequest(
 
 							break;
 						}
+						case TokenType.MACROS: {
+							const pos = doc.positionAt(token.pos);
+							builder.push(
+								pos.line,
+								pos.character,
+								token.value.length,
+								5,
+								0
+							);
+							break;
+						}
+						default:
+							break;
 					}
 				}
 			}

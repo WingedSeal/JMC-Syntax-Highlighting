@@ -11,6 +11,12 @@ export interface HJMCFile {
 	parser: HeaderParser;
 }
 
+export interface MacrosData {
+	path: string;
+	target: string;
+	values: string[];
+}
+
 export interface ExtractedTokens {
 	variables: FileTokens[];
 	funcs: FileTokens[];

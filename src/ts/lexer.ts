@@ -1,3 +1,5 @@
+import { MacrosData } from "./helpers/general";
+
 interface ParserModifier {
 	amount?: string;
 	type?: string;
@@ -42,6 +44,7 @@ export enum TokenType {
 	COMMAND_LITERAL,
 	ERROR,
 	COMMAND,
+	MACROS,
 }
 
 interface Token {
@@ -198,17 +201,19 @@ export class Lexer {
 	private raw: string[];
 	private trimmed: string[];
 	private currentIndex: number;
+	private macros: string[];
 
 	/**
 	 *
 	 * @param text
 	 */
-	constructor(text: string) {
+	constructor(text: string, macros: MacrosData[]) {
 		this.currentIndex = 0;
 		this.raw = text
 			.split(/(^\/\/.*$)|(\s|\;|\{|\}|\(|\)|\|\||&&|==|!=|!|,|\.)/m)
 			.filter((v) => v != undefined);
 		this.trimmed = this.raw.map((v) => v.trim());
+		this.macros = macros.map((v) => v.target);
 		this.tokens = this.Tokenize();
 	}
 
@@ -223,7 +228,13 @@ export class Lexer {
 			const current = this.trimmed[i];
 			const result = Tokens.find((v) => v.regex.test(current));
 			const pos = this.GetPosition();
-			if (result != undefined) {
+			if (this.macros.includes(current)) {
+				datas.push({
+					type: TokenType.MACROS,
+					pos: pos,
+					value: this.trimmed[this.currentIndex],
+				});
+			} else if (result != undefined) {
 				datas.push({
 					type: result.token,
 					pos: pos,
