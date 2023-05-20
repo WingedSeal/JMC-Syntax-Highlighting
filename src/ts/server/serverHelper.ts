@@ -1,31 +1,13 @@
 import {
 	ExtractedTokens,
+	FileTokens,
 	JMCFile,
 	getFunctions,
+	getVariables,
 	getVariablesDeclare,
 	removeDuplicate,
 } from "../helpers/general";
 import { TokenData } from "../lexer";
-
-// export async function getAllVariables(files: JMCFile[]): Promise<TokenData[]> {
-// 	let datas: TokenData[] = [];
-
-// 	for (const f of files) {
-// 		datas = datas.concat(await getVariables(f.lexer));
-// 	}
-
-// 	return removeDuplicate(datas, (a, b) => a.value === b.value);
-// }
-
-// export async function getAllFuncs(files: JMCFile[]): Promise<TokenData[]> {
-// 	let datas: TokenData[] = [];
-
-// 	for (const f of files) {
-// 		datas = datas.concat(await getFunctions(f.lexer));
-// 	}
-
-// 	return removeDuplicate(datas, (a, b) => a.value === b.value);
-// }
 
 export async function getTokens(files: JMCFile[]): Promise<ExtractedTokens> {
 	const tokens: ExtractedTokens = {
@@ -55,6 +37,19 @@ export function concatVariableTokens(ext: ExtractedTokens): TokenData[] {
 	}
 
 	return removeDuplicate(datas, (a, b) => a.value === b.value);
+}
+
+export async function getAllVariables(files: JMCFile[]): Promise<FileTokens[]> {
+	const datas: FileTokens[] = [];
+
+	for (const file of files) {
+		datas.push({
+			path: file.path,
+			tokens: await getVariables(file.lexer),
+		});
+	}
+
+	return datas;
 }
 
 export function concatFuncsTokens(ext: ExtractedTokens): TokenData[] {

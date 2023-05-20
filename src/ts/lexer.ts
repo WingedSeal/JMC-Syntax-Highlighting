@@ -1,10 +1,26 @@
-import { MacrosData, splitTokenArray } from "./helpers/general";
+import {
+	MacrosData,
+	splitTokenArray,
+	splitTokenArraySync,
+} from "./helpers/general";
 
 interface ParserModifier {
 	amount?: string;
 	type?: string;
 	min?: number;
 	max?: number;
+}
+
+interface CommandData {
+	type: string;
+	name: string;
+	executable: boolean;
+	redirects: string[];
+	childrens: CommandData[];
+	parser: {
+		parser: string;
+		modifier?: ParserModifier;
+	};
 }
 
 export enum ErrorType {
@@ -32,6 +48,7 @@ export enum TokenType {
 	SEMI,
 	LITERAL,
 	INT,
+	BOOL,
 	STRING,
 	VARIABLE,
 	LPAREN,
@@ -56,6 +73,8 @@ export enum TokenType {
 	DOT,
 	COMMA,
 	MACROS,
+	OPERATION,
+	COMPARASION,
 }
 
 interface Token {
@@ -117,6 +136,10 @@ const Tokens: Token[] = [
 	{
 		regex: /^\d+$/,
 		token: TokenType.INT,
+	},
+	{
+		regex: /^true|false$/,
+		token: TokenType.BOOL,
 	},
 	{
 		regex: /^\$[a-zA-Z0-9_]+$/,
@@ -212,21 +235,28 @@ const Tokens: Token[] = [
 	},
 ];
 
-const StatementPatterns: TokenType[][] = [
-	[TokenType.FUNCTION, TokenType.LITERAL, TokenType.LPAREN, TokenType.RPAREN],
+export const TOKEN_OPERATION: TokenType[] = [
+	TokenType.OP_DIVIDEEQ,
+	TokenType.OP_EQ,
+	TokenType.OP_MINUSEQ,
+	TokenType.OP_MULTIPLYEQ,
+	TokenType.OP_PLUSEQ,
+	TokenType.OP_REMAINDEREQ,
 ];
 
-interface CommandData {
-	type: string;
-	name: string;
-	executable: boolean;
-	redirects: string[];
-	childrens: CommandData[];
-	parser: {
-		parser: string;
-		modifier?: ParserModifier;
-	};
-}
+//TODO: add all pattern
+const TokenPatterns: TokenType[][] = [
+	//Function pattern
+	[
+		TokenType.FUNCTION,
+		TokenType.LITERAL,
+		TokenType.LPAREN,
+		TokenType.RPAREN,
+		TokenType.LCP,
+	],
+	[TokenType.VARIABLE, TokenType.OPERATION, TokenType.INT],
+	[TokenType.VARIABLE, TokenType.OPERATION, TokenType.BOOL],
+];
 
 export class Lexer {
 	public tokens: TokenData[];
@@ -297,19 +327,45 @@ export class ErrorLexer {
 
 	constructor(lexer: Lexer) {
 		this.lexer = lexer;
-		this.tokens = [];
-		splitTokenArray(this.lexer.tokens).then((v: TokenData[][]) => {
-			this.tokens = v.map((v) =>
-				v.filter((e) => e.type != TokenType.COMMENT)
-			);
-		});
+		this.tokens = splitTokenArraySync(this.lexer.tokens);
 		this.index = 0;
 	}
 
 	getErrors(): ErrorData[] {
 		const datas: ErrorData[] = [];
 		for (; this.index < this.tokens.length; this.index++) {
-			const tokenType = this.tokens[this.index].map((v) => v.type);
+			const token = this.tokens[this.index];
+			const firstType = token[0].type;
+			const query = TokenPatterns.filter((v) => v[0] == firstType);
+			if (query.length > 0) {
+				for (const q of query) {
+					switch (firstType) {
+						default: {
+							for (let i = 0; i < token.length; i++) {
+								const cToken = token[i].type;
+								const rToken = q[i];
+								if (cToken != rToken) {
+									datas.push({
+										type: ErrorType.INVALID,
+										message: `Expected ${TokenType[rToken]}, but got ${TokenType[cToken]}`,
+									});
+								}
+							}
+							if (q.length > token.length) {
+								const expect = q
+									.slice(token.length - 1)
+									.map((v) => TokenType[v])
+									.join(",");
+								datas.push({
+									type: ErrorType.MISSING,
+									message: `Missing values: ${expect}`,
+								});
+							}
+							break;
+						}
+					}
+				}
+			}
 		}
 		return datas;
 	}

@@ -23,10 +23,12 @@ import {
 	getFunctions,
 	getIndexByOffset,
 	getVariablesDeclare,
+	offsetToPosition,
 } from "../helpers/general";
 import {
 	concatFuncsTokens,
 	concatVariableTokens,
+	getAllVariables,
 	getTokens,
 } from "./serverHelper";
 import { HeaderParser, HeaderType } from "../parseHeader";
@@ -35,6 +37,7 @@ import {
 	SemanticTokenModifiers,
 	SemanticTokenTypes,
 } from "../helpers/semanticHelper";
+import { URI } from "vscode-uri";
 
 let jmcConfigs: string[] = [];
 let jmcFiles: JMCFile[] = [];
@@ -129,7 +132,7 @@ connection.onInitialize(async (params: InitializeParams) => {
 				triggerCharacters: ["("],
 			},
 			semanticTokensProvider: SemanticTokensOptions,
-			definitionProvider: {},
+			definitionProvider: true,
 		},
 	};
 	if (hasWorkspaceFolderCapability) {
@@ -258,10 +261,6 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 	}
 }
 
-connection.onDefinition(async (params) => {
-	return [];
-});
-
 connection.onCompletion(
 	async (arg, token, progress, result): Promise<CompletionItem[]> => {
 		//check if `$VARIABLE.get()`
@@ -320,6 +319,59 @@ connection.onCompletionResolve((item: CompletionItem): CompletionItem => {
 
 connection.onSignatureHelp((handler) => {
 	return handler.context?.activeSignatureHelp;
+});
+
+connection.onDefinition(async (params) => {
+	const currFile = jmcFiles.find(
+		(v) => v.path == url.fileURLToPath(params.textDocument.uri)
+	);
+	const rDoc = documents.get(params.textDocument.uri);
+
+	if (currFile && rDoc) {
+		const index = getIndexByOffset(
+			currFile.lexer,
+			rDoc.offsetAt(params.position)
+		);
+
+		const tokens = currFile.lexer.tokens;
+		const currentToken = tokens[index - 1];
+		const datas: vscode.Location[] = [];
+		if (currentToken.type == TokenType.VARIABLE) {
+			for (const ev of await getAllVariables(jmcFiles)) {
+				const vTokens = ev.tokens.filter(
+					(v) => v.value == currentToken.value
+				);
+				if (vTokens.length == 0) {
+					continue;
+				}
+				const docText = await fs.readFile(ev.path, "utf-8");
+				for (const v of vTokens) {
+					const start = await offsetToPosition(v.pos, docText);
+					const startPos = vscode.Position.create(
+						start.line,
+						start.character
+					);
+
+					const end = await offsetToPosition(
+						v.pos + v.value.length,
+						docText
+					);
+					const endPos = vscode.Position.create(
+						end.line,
+						end.character
+					);
+
+					const range = vscode.Range.create(startPos, endPos);
+					datas.push({
+						uri: URI.file(ev.path).toString(),
+						range: range,
+					});
+				}
+			}
+		}
+		return datas;
+	}
+	return null;
 });
 
 //semantic highlight

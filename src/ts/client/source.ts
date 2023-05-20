@@ -2,6 +2,7 @@ import { workspace, ExtensionContext, languages } from "vscode";
 import {
 	LanguageClient,
 	LanguageClientOptions,
+	Range,
 	ServerOptions,
 	TransportKind,
 } from "vscode-languageclient/node";
@@ -9,12 +10,10 @@ import * as path from "path";
 import { JMC_SELECTOR } from "../data/selectors";
 import * as vscode from "vscode";
 import { HJMCFile, JMCFile } from "../helpers/general";
-import { Lexer } from "../lexer";
+import { Lexer, TokenData } from "../lexer";
 import { HeaderParser } from "../parseHeader";
-import { definationProvider } from "./defination";
 
 export let client: LanguageClient;
-export let files: JMCFile[] = [];
 
 export async function activate(context: ExtensionContext) {
 	//setup client
@@ -70,10 +69,10 @@ export async function activate(context: ExtensionContext) {
 	jmcfsProvider.onDidDelete(async (v) => {
 		await client.sendRequest("file/remove", v.fsPath);
 	});
-	languages.registerDefinitionProvider(
-		JMC_SELECTOR,
-		new definationProvider()
-	);
+	// languages.registerDefinitionProvider(
+	// 	JMC_SELECTOR,
+	// 	new definationProvider()
+	// );
 	// languages.registerCompletionItemProvider(
 	// 	JMC_SELECTOR,
 	// 	{
@@ -97,7 +96,6 @@ export async function activate(context: ExtensionContext) {
 
 	client.start().then(async () => {
 		console.log("Client Started");
-		files = await client.sendRequest("data/getFiles");
 	});
 }
 

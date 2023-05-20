@@ -6,6 +6,11 @@ export interface JMCFile {
 	lexer: Lexer;
 }
 
+interface Position {
+	line: number;
+	character: number;
+}
+
 export interface HJMCFile {
 	path: string;
 	parser: HeaderParser;
@@ -22,7 +27,7 @@ export interface ExtractedTokens {
 	funcs: FileTokens[];
 }
 
-interface FileTokens {
+export interface FileTokens {
 	path: string;
 	tokens: TokenData[];
 }
@@ -63,7 +68,7 @@ export async function getVariablesDeclare(lexer: Lexer): Promise<TokenData[]> {
 		.map((v) => lexer.tokens[v]);
 }
 
-export async function getVariables(lexer: Lexer) {
+export async function getVariables(lexer: Lexer): Promise<TokenData[]> {
 	return lexer.tokens.filter((v) => v.type == TokenType.VARIABLE);
 }
 
@@ -178,6 +183,24 @@ export async function splitTokenArray(
 	return result;
 }
 
+export function splitTokenArraySync(arr: TokenData[]): TokenData[][] {
+	const result: TokenData[][] = [];
+	let temp: TokenData[] = [];
+	for (const data of arr) {
+		temp.push(data);
+
+		if (
+			[TokenType.SEMI, TokenType.LCP, TokenType.RCP].includes(data.type)
+		) {
+			result.push(temp);
+			temp = [];
+			continue;
+		}
+	}
+
+	return result;
+}
+
 export async function getAllFunctionsCall(
 	files: JMCFile[]
 ): Promise<{ path: string; tokens: TokenData[] }[]> {
@@ -226,4 +249,35 @@ export async function getClassRange(
 	}
 
 	return datas;
+}
+
+export async function offsetToPosition(
+	offset: number,
+	text: string
+): Promise<Position> {
+	let line = 0;
+	let character = 0;
+
+	for (let i = 0; i < offset; i++) {
+		if (text[i] === "\n") {
+			line++;
+			character = 0;
+		} else {
+			character++;
+		}
+	}
+
+	return { line, character };
+}
+
+export async function getCurrentStatement(
+	lexer: Lexer,
+	token: TokenData
+): Promise<TokenData[] | undefined> {
+	const splited = await splitTokenArray(lexer.tokens);
+	for (const arr of splited) {
+		for (const tarr of arr) {
+			if (tarr.pos == token.pos) return arr;
+		}
+	}
 }
