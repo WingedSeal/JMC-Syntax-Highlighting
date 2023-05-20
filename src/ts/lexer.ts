@@ -1,10 +1,22 @@
-import { MacrosData } from "./helpers/general";
+import { MacrosData, splitTokenArray } from "./helpers/general";
 
 interface ParserModifier {
 	amount?: string;
 	type?: string;
 	min?: number;
 	max?: number;
+}
+
+export enum ErrorType {
+	INVALID,
+	UNKNWON_TOKEN,
+	MISSING,
+}
+
+export interface ErrorData {
+	type: ErrorType;
+	message: string;
+	token?: TokenData;
 }
 
 export enum TokenType {
@@ -37,13 +49,12 @@ export enum TokenType {
 	AND,
 	OR,
 	NOT,
+	GREATER_THEN,
+	LESS_THEN,
+	GREATER_OR_EQ_THEN,
+	LESS_OR_EQ_THEN,
 	DOT,
 	COMMA,
-	ERROR_MISMATCH,
-	ERROR_EXTRA,
-	COMMAND_LITERAL,
-	ERROR,
-	COMMAND,
 	MACROS,
 }
 
@@ -168,6 +179,22 @@ const Tokens: Token[] = [
 		token: TokenType.OR,
 	},
 	{
+		regex: /^>$/,
+		token: TokenType.GREATER_THEN,
+	},
+	{
+		regex: /^>=$/,
+		token: TokenType.GREATER_OR_EQ_THEN,
+	},
+	{
+		regex: /^<$/,
+		token: TokenType.LESS_THEN,
+	},
+	{
+		regex: /^<=$/,
+		token: TokenType.LESS_OR_EQ_THEN,
+	},
+	{
 		regex: /^!$/,
 		token: TokenType.NOT,
 	},
@@ -184,6 +211,11 @@ const Tokens: Token[] = [
 		token: TokenType.LITERAL,
 	},
 ];
+
+const StatementPatterns: TokenType[][] = [
+	[TokenType.FUNCTION, TokenType.LITERAL, TokenType.LPAREN, TokenType.RPAREN],
+];
+
 interface CommandData {
 	type: string;
 	name: string;
@@ -210,7 +242,7 @@ export class Lexer {
 	constructor(text: string, macros: MacrosData[]) {
 		this.currentIndex = 0;
 		this.raw = text
-			.split(/(^\/\/.*$)|(\s|\;|\{|\}|\(|\)|\|\||&&|==|!=|!|,|\.)/m)
+			.split(/(\/\/.*)|(\s|\;|\{|\}|\(|\)|\|\||&&|==|!=|!|,|\.)/m)
 			.filter((v) => v != undefined);
 		this.trimmed = this.raw.map((v) => v.trim());
 		this.macros = macros.map((v) => v.target);
@@ -255,5 +287,30 @@ export class Lexer {
 		const t = this.raw.slice(0, this.currentIndex).join("");
 
 		return t.length;
+	}
+}
+
+export class ErrorLexer {
+	private lexer: Lexer;
+	private index: number;
+	private tokens: TokenData[][];
+
+	constructor(lexer: Lexer) {
+		this.lexer = lexer;
+		this.tokens = [];
+		splitTokenArray(this.lexer.tokens).then((v: TokenData[][]) => {
+			this.tokens = v.map((v) =>
+				v.filter((e) => e.type != TokenType.COMMENT)
+			);
+		});
+		this.index = 0;
+	}
+
+	getErrors(): ErrorData[] {
+		const datas: ErrorData[] = [];
+		for (; this.index < this.tokens.length; this.index++) {
+			const tokenType = this.tokens[this.index].map((v) => v.type);
+		}
+		return datas;
 	}
 }
