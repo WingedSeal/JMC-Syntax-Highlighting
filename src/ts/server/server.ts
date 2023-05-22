@@ -20,9 +20,13 @@ import {
 	HJMCFile,
 	JMCFile,
 	MacrosData,
+	getAllFunctionsCall,
+	getClassRange,
 	getCurrentStatement,
 	getFunctions,
+	getFunctionsCall,
 	getIndexByOffset,
+	getLiteralWithDot,
 	getVariablesDeclare,
 	offsetToPosition,
 } from "../helpers/general";
@@ -59,6 +63,7 @@ let hasWorkspaceFolderCapability = false;
 let hasDiagnosticRelatedInformationCapability = false;
 //#endregion
 connection.onInitialize(async (params: InitializeParams) => {
+	//initialze the JMCFiles & HJMC Files
 	if (params.workspaceFolders) {
 		for (const folder of params.workspaceFolders) {
 			const files = get_files
@@ -206,6 +211,12 @@ documents.onDidChangeContent((change) => {
 	validateTextDocument(change.document);
 });
 
+/**
+ * validate .jmc
+ * @param fileText the file text
+ * @param path fsPath of the file
+ * @returns the changed lexer - {@link Lexer}
+ */
 async function validateJMC(fileText: string, path: string): Promise<Lexer> {
 	const lexer = new Lexer(fileText, macros);
 	currentFile = path;
@@ -216,6 +227,12 @@ async function validateJMC(fileText: string, path: string): Promise<Lexer> {
 	return lexer;
 }
 
+/**
+ * validate .hjmc
+ * @param fileText the file text
+ * @param path fsPath of the file
+ * @returns the changed parser - {@link HeaderParser}
+ */
 async function validateHJMC(
 	fileText: string,
 	path: string
@@ -337,6 +354,11 @@ connection.onDefinition(async (params) => {
 		const tokens = currFile.lexer.tokens;
 		const currentToken = tokens[index - 1];
 		const datas: vscode.Location[] = [];
+		const currentStatement = await getCurrentStatement(
+			currFile.lexer,
+			currentToken
+		);
+
 		if (currentToken.type == TokenType.VARIABLE) {
 			for (const ev of await getAllVariables(jmcFiles)) {
 				const vTokens = ev.tokens.filter(
@@ -369,12 +391,54 @@ connection.onDefinition(async (params) => {
 					});
 				}
 			}
-		}
-		//TODO: finish it
-		else if (currentToken.type == TokenType.LITERAL && tokens[index - 2].type == TokenType.FUNCTION) {
-			const currentStatement = await getCurrentStatement(currFile.lexer, currentToken);
+		} else if (
+			currentStatement &&
+			currentStatement[0].type == TokenType.FUNCTION
+		) {
+			const classRanges = await getClassRange(currFile.lexer);
+			let literal = await getLiteralWithDot(currentStatement.slice(1));
+			const startToken = currentStatement[0];
+			for (const range of classRanges) {
+				if (
+					range.range[0] < startToken.pos &&
+					range.range[1] > startToken.pos
+				) {
+					literal = range.name + "." + literal;
+				}
+			}
+			const funcCalls = await getAllFunctionsCall(jmcFiles);
+			for (const funcCall of funcCalls) {
+				for (const t of funcCall.tokens) {
+					if (t.value == literal) {
+						const docText = await fs.readFile(
+							funcCall.path,
+							"utf-8"
+						);
+						const startPos = await offsetToPosition(t.pos, docText);
+						const start = vscode.Position.create(
+							startPos.line,
+							startPos.character
+						);
 
+						const endPos = await offsetToPosition(
+							t.pos + t.value.length,
+							docText
+						);
+						const end = vscode.Position.create(
+							endPos.line,
+							endPos.character
+						);
+
+						const range = vscode.Range.create(start, end);
+						datas.push({
+							uri: URI.file(funcCall.path).toString(),
+							range: range,
+						});
+					}
+				}
+			}
 		}
+		//TODO: add support for function call
 		return datas;
 	}
 	return null;

@@ -1,7 +1,6 @@
 import { Lexer, TokenData, TokenType } from "../lexer";
 import { HeaderParser } from "../parseHeader";
 
-
 export interface JMCFile {
 	path: string;
 	lexer: Lexer;
@@ -65,7 +64,7 @@ export function getIndexByOffset(lexer: Lexer, offset: number): number {
 /**
  * get all variables declare tokens
  * @example $bar = 3;
- * @param lexer 
+ * @param lexer
  * @returns the tokens of the variables - {@link TokenData}
  */
 export async function getVariablesDeclare(lexer: Lexer): Promise<TokenData[]> {
@@ -135,7 +134,7 @@ export async function getFunctions(lexer: Lexer): Promise<TokenData[]> {
  * get all function calls
  * @example bar();
  * @param lexer {@link Lexer}
- * @returns 
+ * @returns all function calls of the tokens
  */
 export async function getFunctionsCall(lexer: Lexer): Promise<TokenData[]> {
 	const datas: TokenData[] = [];
@@ -293,7 +292,7 @@ export async function getClassRange(
 		const currentIndex = lexer.tokens.indexOf(cls);
 		let index = currentIndex + 2;
 
-		const start = lexer.tokens[currentIndex];
+		//const start = lexer.tokens[currentIndex];
 
 		let parenCount = 0;
 		for (; index < lexer.tokens.length; index++) {
@@ -339,7 +338,10 @@ export async function offsetToPosition(
 }
 
 /**
- * 
+ * get current statement
+ * @example function foo() {
+ * @example $bar = 3;
+ * @example foo.bar();
  * @param lexer {@link Lexer}
  * @param token the currentToken - {@link TokenData}
  * @returns `undefined` or the statement - {@link TokenData}
@@ -354,4 +356,44 @@ export async function getCurrentStatement(
 			if (tarr.pos == token.pos) return arr;
 		}
 	}
+}
+
+/**
+ * get the literal with string init
+ * @example foo.bar();
+ * @param statement see {@link getCurrentStatement}
+ * @returns string of the literal with dot or `undefined`
+ */
+export async function getLiteralWithDot(
+	statement: TokenData[]
+): Promise<string | undefined> {
+	let str = "";
+	let i = 0;
+
+	for (; i < statement.length; i++) {
+		const ct = statement[i];
+		const next = statement[i + 1];
+		if (next && next.type == TokenType.DOT) {
+			i += 1;
+			str += `${ct.value}.`;
+		} else {
+			str += ct.value;
+			break;
+		}
+	}
+
+	let temp = "";
+
+	for (let i = 0; i != -1; i--) {
+		const ct = statement[i];
+		const next = statement[i - 1];
+		if (next && next.type == TokenType.DOT) {
+			i -= 1;
+			temp += `${ct.value}.`;
+		} else {
+			break;
+		}
+	}
+
+	return temp + str;
 }

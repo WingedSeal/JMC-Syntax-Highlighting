@@ -41,34 +41,34 @@ export async function activate(context: ExtensionContext) {
 		},
 	};
 
-	//file system provider
-	const jmcfsProvider = vscode.workspace.createFileSystemWatcher(
-		"**/*.{jmc,hjmc}",
-		false,
-		false,
-		false
-	);
-	jmcfsProvider.onDidCreate(async (v) => {
-		if (v.fsPath.endsWith(".jmc")) {
-			const file: JMCFile = {
-				lexer: new Lexer("", []),
-				path: v.fsPath,
-			};
-			await client.sendRequest("file/add", file);
-		} else if (v.fsPath.endsWith(".hjmc")) {
-			const file: HJMCFile = {
-				parser: new HeaderParser(""),
-				path: v.fsPath,
-			};
-			await client.sendRequest("file/add", file);
-		}
-	});
-	jmcfsProvider.onDidChange(async (v) => {
-		await client.sendRequest("file/update", v.fsPath);
-	});
-	jmcfsProvider.onDidDelete(async (v) => {
-		await client.sendRequest("file/remove", v.fsPath);
-	});
+	// //file system provider
+	// const jmcfsProvider = vscode.workspace.createFileSystemWatcher(
+	// 	"**/*.{jmc,hjmc}",
+	// 	false,
+	// 	false,
+	// 	false
+	// );
+	// jmcfsProvider.onDidCreate(async (v) => {
+	// 	if (v.fsPath.endsWith(".jmc")) {
+	// 		const file: JMCFile = {
+	// 			lexer: new Lexer("", []),
+	// 			path: v.fsPath,
+	// 		};
+	// 		await client.sendRequest("file/add", file);
+	// 	} else if (v.fsPath.endsWith(".hjmc")) {
+	// 		const file: HJMCFile = {
+	// 			parser: new HeaderParser(""),
+	// 			path: v.fsPath,
+	// 		};
+	// 		await client.sendRequest("file/add", file);
+	// 	}
+	// });
+	// jmcfsProvider.onDidChange(async (v) => {
+	// 	await client.sendRequest("file/update", v.fsPath);
+	// });
+	// jmcfsProvider.onDidDelete(async (v) => {
+	// 	await client.sendRequest("file/remove", v.fsPath);
+	// });
 	// languages.registerDefinitionProvider(
 	// 	JMC_SELECTOR,
 	// 	new definationProvider()
