@@ -20,6 +20,7 @@ import {
 	HJMCFile,
 	JMCFile,
 	MacrosData,
+	getCurrentStatement,
 	getFunctions,
 	getIndexByOffset,
 	getVariablesDeclare,
@@ -36,7 +37,7 @@ import * as vscode from "vscode-languageserver";
 import {
 	SemanticTokenModifiers,
 	SemanticTokenTypes,
-} from "../helpers/semanticHelper";
+} from "../data/semanticDatas";
 import { URI } from "vscode-uri";
 
 let jmcConfigs: string[] = [];
@@ -368,6 +369,11 @@ connection.onDefinition(async (params) => {
 					});
 				}
 			}
+		}
+		//TODO: finish it
+		else if (currentToken.type == TokenType.LITERAL && tokens[index - 2].type == TokenType.FUNCTION) {
+			const currentStatement = await getCurrentStatement(currFile.lexer, currentToken);
+
 		}
 		return datas;
 	}

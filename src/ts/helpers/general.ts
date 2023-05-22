@@ -1,6 +1,7 @@
 import { Lexer, TokenData, TokenType } from "../lexer";
 import { HeaderParser } from "../parseHeader";
 
+
 export interface JMCFile {
 	path: string;
 	lexer: Lexer;
@@ -33,6 +34,13 @@ export interface FileTokens {
 }
 
 type IsDuplicate<T> = (a: T, b: T) => boolean;
+
+/**
+ * remove all duplicate value of  in the array
+ * @param collection {@link Array}
+ * @param isDuplicate Arrow function - {@link IsDuplicate}
+ * @returns an array without duplication
+ */
 export const removeDuplicate = <TItems>(
 	collection: TItems[],
 	isDuplicate: IsDuplicate<TItems>
@@ -43,12 +51,23 @@ export const removeDuplicate = <TItems>(
 			index
 	);
 
+/**
+ * get the tokens index of by the offset provided
+ * @param lexer {@link Lexer}
+ * @param offset offset of the text
+ * @returns index of the tokens
+ */
 export function getIndexByOffset(lexer: Lexer, offset: number): number {
 	return lexer.tokens.findIndex((val) => {
 		return val.pos > offset;
 	});
 }
-
+/**
+ * get all variables declare tokens
+ * @example $bar = 3;
+ * @param lexer 
+ * @returns the tokens of the variables - {@link TokenData}
+ */
 export async function getVariablesDeclare(lexer: Lexer): Promise<TokenData[]> {
 	const variablesID = lexer.tokens
 		.filter((v) => v.type == TokenType.VARIABLE)
@@ -68,10 +87,22 @@ export async function getVariablesDeclare(lexer: Lexer): Promise<TokenData[]> {
 		.map((v) => lexer.tokens[v]);
 }
 
+/**
+ * get all variables of the lexer
+ * @example $foo
+ * @param lexer {@link Lexer}
+ * @returns the tokens of the variabales - {@link TokenData}
+ */
 export async function getVariables(lexer: Lexer): Promise<TokenData[]> {
 	return lexer.tokens.filter((v) => v.type == TokenType.VARIABLE);
 }
 
+/**
+ * get all functions declared
+ * @example function bar() {}
+ * @param lexer {@link Lexer}
+ * @returns the tokens of the function name - {@link TokenData}
+ */
 export async function getFunctions(lexer: Lexer): Promise<TokenData[]> {
 	const classRanges = await getClassRange(lexer);
 	const funcID = lexer.tokens
@@ -100,6 +131,12 @@ export async function getFunctions(lexer: Lexer): Promise<TokenData[]> {
 	});
 }
 
+/**
+ * get all function calls
+ * @example bar();
+ * @param lexer {@link Lexer}
+ * @returns 
+ */
 export async function getFunctionsCall(lexer: Lexer): Promise<TokenData[]> {
 	const datas: TokenData[] = [];
 	const tokens = lexer.tokens;
@@ -163,6 +200,11 @@ export async function getFunctionsCall(lexer: Lexer): Promise<TokenData[]> {
 	return datas;
 }
 
+/**
+ * split an 1d token array into 2d token array, split by [",","{","}"]
+ * @param arr 1d array - {@link TokenData}
+ * @returns 2d array - {@link TokenData}
+ */
 export async function splitTokenArray(
 	arr: TokenData[]
 ): Promise<TokenData[][]> {
@@ -183,6 +225,11 @@ export async function splitTokenArray(
 	return result;
 }
 
+/**
+ * split an 1d token array into 2d token array, split by [",","{","}"]
+ * @param arr 1d array - {@link TokenData}
+ * @returns 2d array - {@link TokenData}
+ */
 export function splitTokenArraySync(arr: TokenData[]): TokenData[][] {
 	const result: TokenData[][] = [];
 	let temp: TokenData[] = [];
@@ -201,6 +248,11 @@ export function splitTokenArraySync(arr: TokenData[]): TokenData[][] {
 	return result;
 }
 
+/**
+ * get all functions call, see {@link getFunctionsCall}
+ * @param files all files - {@link JMCFile}
+ * @returns all tokens of function call in the files - {@link TokenData}
+ */
 export async function getAllFunctionsCall(
 	files: JMCFile[]
 ): Promise<{ path: string; tokens: TokenData[] }[]> {
@@ -214,6 +266,11 @@ export async function getAllFunctionsCall(
 	return datas;
 }
 
+/**
+ * get all classes inside the tokens
+ * @param lexer {@link Lexer}
+ * @returns all tokens meet the requirement - {@link TokenData}
+ */
 export async function getClasses(lexer: Lexer): Promise<TokenData[]> {
 	const classID = lexer.tokens
 		.filter((v) => v.type == TokenType.CLASS)
@@ -221,6 +278,11 @@ export async function getClasses(lexer: Lexer): Promise<TokenData[]> {
 	return classID.map((v) => lexer.tokens[v + 1]);
 }
 
+/**
+ * get the range of the class between "{" and "}"
+ * @param lexer {@link Lexer}
+ * @returns return the name of the class, and the start offset and end offset of the class
+ */
 export async function getClassRange(
 	lexer: Lexer
 ): Promise<{ name: string; range: number[] }[]> {
@@ -251,6 +313,12 @@ export async function getClassRange(
 	return datas;
 }
 
+/**
+ * change offset to position data
+ * @param offset offset of the text
+ * @param text the text of the file
+ * @returns line and character pos - {@link Position}
+ */
 export async function offsetToPosition(
 	offset: number,
 	text: string
@@ -270,6 +338,12 @@ export async function offsetToPosition(
 	return { line, character };
 }
 
+/**
+ * 
+ * @param lexer {@link Lexer}
+ * @param token the currentToken - {@link TokenData}
+ * @returns `undefined` or the statement - {@link TokenData}
+ */
 export async function getCurrentStatement(
 	lexer: Lexer,
 	token: TokenData
