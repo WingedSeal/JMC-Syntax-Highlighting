@@ -437,8 +437,43 @@ connection.onDefinition(async (params) => {
 					}
 				}
 			}
+		} else if (currentStatement) {
+			const literal = await getLiteralWithDot(
+				currentStatement,
+				currentToken
+			);
+			for (const file of jmcFiles) {
+				const funcs = await getFunctions(file.lexer);
+				for (const func of funcs) {
+					if (literal == func.value.split("\0")[0]) {
+						const docText = await fs.readFile(file.path, "utf-8");
+
+						const start = await offsetToPosition(func.pos, docText);
+						const startPos = vscode.Position.create(
+							start.line,
+							start.character
+						);
+
+						const end = await offsetToPosition(
+							func.pos + func.value.split("\0")[1].length,
+							docText
+						);
+						const endPos = vscode.Position.create(
+							end.line,
+							end.character
+						);
+
+						const range = vscode.Range.create(startPos, endPos);
+
+						return {
+							uri: URI.file(file.path).toString(),
+							range: range,
+						};
+					}
+				}
+			}
 		}
-		//TODO: add support for function call
+
 		return datas;
 	}
 	return null;

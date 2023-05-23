@@ -101,6 +101,7 @@ export async function getVariables(lexer: Lexer): Promise<TokenData[]> {
  * @example function bar() {}
  * @param lexer {@link Lexer}
  * @returns the tokens of the function name - {@link TokenData}
+ * @returns the modified value and original value is seperated by `\0`
  */
 export async function getFunctions(lexer: Lexer): Promise<TokenData[]> {
 	const classRanges = await getClassRange(lexer);
@@ -125,7 +126,7 @@ export async function getFunctions(lexer: Lexer): Promise<TokenData[]> {
 		return {
 			type: TokenType.LITERAL,
 			pos: token.pos,
-			value: value.join(""),
+			value: value.join("") + "\0" + token.value,
 		};
 	});
 }
@@ -362,38 +363,141 @@ export async function getCurrentStatement(
  * get the literal with string init
  * @example foo.bar();
  * @param statement see {@link getCurrentStatement}
+ * @param start optional, it indicate the start of the searching
  * @returns string of the literal with dot or `undefined`
  */
 export async function getLiteralWithDot(
-	statement: TokenData[]
+	statement: TokenData[],
+	start?: TokenData
 ): Promise<string | undefined> {
 	let str = "";
 	let i = 0;
 
-	for (; i < statement.length; i++) {
-		const ct = statement[i];
-		const next = statement[i + 1];
-		if (next && next.type == TokenType.DOT) {
-			i += 1;
-			str += `${ct.value}.`;
-		} else {
-			str += ct.value;
-			break;
+	if (!start) {
+		for (; i < statement.length; i++) {
+			const ct = statement[i];
+			const next = statement[i + 1];
+			if (next && next.type == TokenType.DOT) {
+				i += 1;
+				str += `${ct.value}.`;
+			} else {
+				str += ct.value;
+				break;
+			}
 		}
-	}
 
-	let temp = "";
+		let temp = "";
 
-	for (let i = 0; i != -1; i--) {
-		const ct = statement[i];
-		const next = statement[i - 1];
-		if (next && next.type == TokenType.DOT) {
-			i -= 1;
-			temp += `${ct.value}.`;
-		} else {
-			break;
+		for (let i = 0; i != -1; i--) {
+			const ct = statement[i];
+			const next = statement[i - 1];
+			if (next && next.type == TokenType.DOT) {
+				i -= 1;
+				temp += `${ct.value}.`;
+			} else {
+				break;
+			}
 		}
-	}
 
-	return temp + str;
+		return temp + str;
+	} else {
+		const index = statement.findIndex((v) => v.pos == start.pos);
+
+		let str = "";
+
+		//loop forward
+		for (let i = index; i < statement.length; i++) {
+			const current = statement[i];
+			const next = statement[i + 1];
+			if (!current) break;
+
+			if (
+				next &&
+				current.type == TokenType.DOT &&
+				next.type != TokenType.LITERAL
+			) {
+				break;
+			} else if (
+				next &&
+				current.type == TokenType.LITERAL &&
+				next.type != TokenType.DOT
+			) {
+				str += current.value;
+				break;
+			}
+
+			str += current.value;
+		}
+
+		const temp: string[] = [];
+
+		for (let i = index - 1; i != -1; i--) {
+			const current = statement[i];
+			const next = statement[i - 1];
+			if (!current) break;
+			if (
+				next &&
+				current.type == TokenType.DOT &&
+				next.type != TokenType.LITERAL
+			) {
+				break;
+			} else if (
+				next &&
+				current.type == TokenType.LITERAL &&
+				next.type != TokenType.DOT
+			) {
+				temp.push(current.value);
+				break;
+			} else if (
+				next &&
+				current.type != TokenType.LITERAL &&
+				next.type != TokenType.DOT &&
+				current.type != TokenType.DOT &&
+				next.type != TokenType.LITERAL
+			) {
+				break;
+			}
+			temp.push(current.value);
+		}
+
+		return temp.reverse().join("") + str;
+
+		// i = index;
+
+		// if (start.type == TokenType.DOT) {
+		// 	str += ".";
+		// 	i++;
+		// }
+
+		// for (; i < statement.length; i++) {
+		// 	const ct = statement[i];
+		// 	const next = statement[i + 1];
+		// 	if (next && next.type == TokenType.DOT) {
+		// 		i++;
+		// 		str += `${ct.value}.`;
+		// 	} else {
+		// 		str += ct.value;
+		// 		break;
+		// 	}
+		// }
+
+		// let temp = "";
+
+		// i = index - 1;
+		// if (statement[i].type == TokenType.DOT) {
+		// 	i--;
+		// }
+
+		// for (; i != -1; i--) {
+		// 	const ct = statement[i];
+		// 	const next = statement[i - 1];
+		// 	console.log(ct, next);
+		// 	if (next && next.type == TokenType.DOT) {
+		// 		i--;
+		// 		temp += `.${ct.value}`;
+		// 	} else break;
+		// }
+
+		// return temp + str;
+	}
 }
