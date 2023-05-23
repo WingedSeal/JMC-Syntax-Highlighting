@@ -24,11 +24,11 @@ import {
 	getClassRange,
 	getCurrentStatement,
 	getFunctions,
-	getFunctionsCall,
 	getIndexByOffset,
 	getLiteralWithDot,
 	getVariablesDeclare,
 	offsetToPosition,
+	removeDuplicate,
 } from "../helpers/general";
 import {
 	concatFuncsTokens,
@@ -43,6 +43,7 @@ import {
 	SemanticTokenTypes,
 } from "../data/semanticDatas";
 import { URI } from "vscode-uri";
+import { BuiltInFunctions, methodInfoToDoc } from "../data/builtinFuncs";
 
 let jmcConfigs: string[] = [];
 let jmcFiles: JMCFile[] = [];
@@ -135,7 +136,7 @@ connection.onInitialize(async (params: InitializeParams) => {
 				triggerCharacters: ["."],
 			},
 			signatureHelpProvider: {
-				triggerCharacters: ["("],
+				triggerCharacters: ["(", ",", " "],
 			},
 			semanticTokensProvider: SemanticTokensOptions,
 			definitionProvider: true,
@@ -298,6 +299,18 @@ connection.onCompletion(
 							insertText: "get()",
 						},
 					];
+				} else if (token.type == TokenType.LITERAL) {
+					const classResult = BuiltInFunctions.find(
+						(v) => v.class == token.value
+					);
+					if (classResult) {
+						return classResult.methods.map((v) => {
+							return {
+								label: v.name,
+								kind: CompletionItemKind.Function,
+							};
+						});
+					}
 				}
 			}
 		}
@@ -313,9 +326,10 @@ connection.onCompletion(
 		);
 		const funcs: CompletionItem[] = concatFuncsTokens(extracted).map(
 			(v) => {
+				const value = v.value.split("\0")[0];
 				return {
-					label: v.value,
-					insertText: v.value + "()",
+					label: value,
+					insertText: value + "()",
 					kind: CompletionItemKind.Function,
 				};
 			}
@@ -327,16 +341,82 @@ connection.onCompletion(
 				detail: v.values.join(" "),
 			};
 		});
-		return vars.concat(funcs).concat(mos);
+		const builtInClasses: CompletionItem[] = BuiltInFunctions.map((v) => {
+			return {
+				label: v.class,
+				kind: CompletionItemKind.Class,
+				detail: "builtin functions provided by JMC",
+			};
+		});
+		return vars.concat(funcs).concat(mos).concat(builtInClasses);
 	}
 );
 
-connection.onCompletionResolve((item: CompletionItem): CompletionItem => {
-	return item;
-});
+connection.onCompletionResolve(
+	async (item: CompletionItem): Promise<CompletionItem> => {
+		return item;
+	}
+);
 
-connection.onSignatureHelp((handler) => {
-	return handler.context?.activeSignatureHelp;
+connection.onSignatureHelp(async (params) => {
+	const context = params.context;
+	const doc = documents.get(params.textDocument.uri);
+	const file = jmcFiles.find(
+		(v) => v.path == url.fileURLToPath(params.textDocument.uri)
+	);
+	if (context && doc && file) {
+		const triggerChar = context.triggerCharacter;
+		const index = getIndexByOffset(
+			file.lexer,
+			doc.offsetAt(params.position)
+		);
+		const tokens = file.lexer.tokens;
+		const currentToken = tokens[index];
+		const statement = await getCurrentStatement(file.lexer, currentToken);
+
+		if (triggerChar == "(" && statement) {
+			const funcName = await getLiteralWithDot(
+				statement,
+				tokens[index - 3]
+			);
+			if (funcName) {
+				const splited = funcName.split(".");
+				if (splited.length == 2) {
+					const _class = splited[0];
+					const method = splited[1];
+					const methods = BuiltInFunctions.find(
+						(v) => v.class == _class
+					)?.methods;
+					if (methods) {
+						const result = methods.find((v) => v.name == method);
+						if (result) {
+							return {
+								signatures: [
+									{
+										label: methodInfoToDoc(result),
+										parameters: result.args.map((v) => {
+											const def =
+												v.default !== undefined
+													? ` = ${v.default}`
+													: "";
+											const arg = `${v.name}: ${v.type}${def}`;
+											return {
+												label: arg,
+											};
+										}),
+										documentation: result.doc,
+									},
+								],
+								activeParameter: 0,
+								activeSignature: 0,
+							};
+						}
+					}
+				}
+			}
+		}
+	}
+	return undefined;
 });
 
 connection.onDefinition(async (params) => {
@@ -482,7 +562,7 @@ connection.onDefinition(async (params) => {
 //semantic highlight
 connection.onRequest(
 	"textDocument/semanticTokens/full",
-	(params: vscode.SemanticTokensParams): SemanticTokens => {
+	async (params: vscode.SemanticTokensParams): Promise<SemanticTokens> => {
 		const doc = documents.get(params.textDocument.uri);
 		const builder = new vscode.SemanticTokensBuilder();
 		if (doc) {
