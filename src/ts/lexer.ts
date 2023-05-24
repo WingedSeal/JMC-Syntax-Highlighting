@@ -47,6 +47,7 @@ export enum TokenType {
 	IMPORT,
 	SEMI,
 	COLON,
+	ARROW_FUNC,
 	LITERAL,
 	INT,
 	BOOL,
@@ -133,6 +134,10 @@ const Tokens: Token[] = [
 	{
 		regex: /^\:$/,
 		token: TokenType.COLON,
+	},
+	{
+		regex: /^\=\>$/,
+		token: TokenType.ARROW_FUNC,
 	},
 	{
 		regex: /(^"([\w' ]|(\\"))*"$)|(^'([\w" ]|(\\'))*'$)/,
@@ -277,7 +282,7 @@ export class Lexer {
 	constructor(text: string, macros: MacrosData[]) {
 		this.currentIndex = 0;
 		this.raw = text
-			.split(/(\/\/.*)|(\s|\;|\{|\}|\(|\)|\|\||&&|==|!=|!|,|\.|\:)/m)
+			.split(/(\/\/.*)|(\s|\;|\{|\}|\(|\)|\|\||&&|==|!=|!|,|\.|\:|\=\>)/m)
 			.filter((v) => v != undefined);
 		this.trimmed = this.raw.map((v) => v.trim());
 		this.macros = macros.map((v) => v.target);

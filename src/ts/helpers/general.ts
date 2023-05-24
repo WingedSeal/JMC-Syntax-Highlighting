@@ -363,7 +363,7 @@ export async function getCurrentStatement(
  * get the literal with string init
  * @example foo.bar();
  * @param statement see {@link getCurrentStatement}
- * @param start optional, it indicate the start of the searching
+ * @param start `optional` it indicate the start of the searching
  * @returns string of the literal with dot or `undefined`
  */
 export async function getLiteralWithDot(
@@ -431,6 +431,7 @@ export async function getLiteralWithDot(
 
 		const temp: string[] = [];
 
+		//loop backward
 		for (let i = index - 1; i != -1; i--) {
 			const current = statement[i];
 			const next = statement[i - 1];
@@ -461,43 +462,5 @@ export async function getLiteralWithDot(
 		}
 
 		return temp.reverse().join("") + str;
-
-		// i = index;
-
-		// if (start.type == TokenType.DOT) {
-		// 	str += ".";
-		// 	i++;
-		// }
-
-		// for (; i < statement.length; i++) {
-		// 	const ct = statement[i];
-		// 	const next = statement[i + 1];
-		// 	if (next && next.type == TokenType.DOT) {
-		// 		i++;
-		// 		str += `${ct.value}.`;
-		// 	} else {
-		// 		str += ct.value;
-		// 		break;
-		// 	}
-		// }
-
-		// let temp = "";
-
-		// i = index - 1;
-		// if (statement[i].type == TokenType.DOT) {
-		// 	i--;
-		// }
-
-		// for (; i != -1; i--) {
-		// 	const ct = statement[i];
-		// 	const next = statement[i - 1];
-		// 	console.log(ct, next);
-		// 	if (next && next.type == TokenType.DOT) {
-		// 		i--;
-		// 		temp += `.${ct.value}`;
-		// 	} else break;
-		// }
-
-		// return temp + str;
 	}
 }

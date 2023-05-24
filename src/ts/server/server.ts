@@ -28,7 +28,6 @@ import {
 	getLiteralWithDot,
 	getVariablesDeclare,
 	offsetToPosition,
-	removeDuplicate,
 } from "../helpers/general";
 import {
 	concatFuncsTokens,
@@ -189,6 +188,11 @@ connection.onDidChangeConfiguration((change) => {
 	documents.all().forEach(validateTextDocument);
 });
 
+/**
+ *
+ * @param resource
+ * @returns
+ */
 function getDocumentSettings(resource: string): Thenable<ServerSettings> {
 	if (!hasConfigurationCapability) {
 		return Promise.resolve(globalSettings);
@@ -412,6 +416,82 @@ connection.onSignatureHelp(async (params) => {
 							};
 						}
 					}
+				}
+			}
+		} else if ((triggerChar == "," || triggerChar == " ") && statement) {
+			const startIndex = getIndexByOffset(
+				file.lexer,
+				doc.offsetAt(params.position) - 2
+			);
+			let commaCount = 0;
+			let pCount = 1;
+			for (let i = startIndex; i != -1; i--) {
+				const current = tokens[i];
+				if (current.type == TokenType.RCP) {
+					let count = 0;
+					for (; i != 0; i--) {
+						const t = tokens[i];
+						if (t.type == TokenType.RCP) count++;
+						else if (t.type == TokenType.LCP) count--;
+						else if (count == 0) break;
+					}
+				} else if (current.type == TokenType.COMMA) commaCount++;
+				else if (current.type == TokenType.RPAREN) pCount++;
+				else if (current.type == TokenType.LPAREN) pCount--;
+				else if (pCount == 0) {
+					const funcStatement = await getCurrentStatement(
+						file.lexer,
+						current
+					);
+					if (funcStatement) {
+						const funcName = await getLiteralWithDot(
+							funcStatement,
+							current
+						);
+						if (funcName) {
+							const splited = funcName.split(".");
+							if (splited.length == 2) {
+								const _class = splited[0];
+								const method = splited[1];
+								const methods = BuiltInFunctions.find(
+									(v) => v.class == _class
+								)?.methods;
+								if (methods) {
+									const result = methods.find(
+										(v) => v.name == method
+									);
+									if (result) {
+										return {
+											signatures: [
+												{
+													label: methodInfoToDoc(
+														result
+													),
+													parameters: result.args.map(
+														(v) => {
+															const def =
+																v.default !==
+																undefined
+																	? ` = ${v.default}`
+																	: "";
+															const arg = `${v.name}: ${v.type}${def}`;
+															return {
+																label: arg,
+															};
+														}
+													),
+													documentation: result.doc,
+												},
+											],
+											activeParameter: commaCount,
+											activeSignature: 0,
+										};
+									}
+								}
+							}
+						}
+					}
+					break;
 				}
 			}
 		}
@@ -644,119 +724,6 @@ connection.onRequest(
 		return builder.build();
 	}
 );
-
-// 	const document = documents.get(v.textDocument.uri);
-// 	const builder = new SemanticTokensBuilder();
-// 	if (document) {
-// 		const tokens = jmcFiles.find(
-// 			(v) => v.path == url.fileURLToPath(document?.uri)
-// 		)?.lexer.tokens;
-// 		if (tokens) {
-// 			for (let i = 0; i < tokens.length; i++) {
-// 				const token = tokens[i];
-// 				switch (token.type) {
-// 					case TokenType.CLASS:
-// 						if (
-// 							tokens[i + 1] !== undefined &&
-// 							tokens[i + 1].type === TokenType.LITERAL
-// 						) {
-// 							const current = tokens[i + 1];
-// 							const startPos = document.positionAt(current.pos);
-// 							builder.push(
-// 								startPos.line,
-// 								startPos.character,
-// 								current.value.length,
-// 								0,
-// 								0
-// 							);
-// 						}
-// 						break;
-// 					case TokenType.VARIABLE: {
-// 						const startPos = document.positionAt(token.pos);
-// 						builder.push(
-// 							startPos.line,
-// 							startPos.character,
-// 							token.value.length,
-// 							4,
-// 							0
-// 						);
-// 						break;
-// 					}
-// 					case TokenType.LITERAL: {
-// 						if (tokens[i + 1].type == TokenType.LPAREN) {
-// 							const startPos = document.positionAt(token.pos);
-// 							builder.push(
-// 								startPos.line,
-// 								startPos.character,
-// 								token.value.length,
-// 								3,
-// 								0
-// 							);
-// 						} else if (tokens[i + 1].type == TokenType.DOT) {
-// 							const startPos = document.positionAt(token.pos);
-// 							builder.push(
-// 								startPos.line,
-// 								startPos.character,
-// 								token.value.length,
-// 								5,
-// 								0
-// 							);
-// 						}
-
-// 						break;
-// 					}
-// 				}
-// 			}
-// 		} else return builder.build();
-// 	}
-// 	connection.languages.semanticTokens.refresh();
-// 	return builder.build();
-// });
-
-//data methods
-connection.onRequest("data/getFile", (path: string): JMCFile | undefined => {
-	return jmcFiles.find((v) => v.path == path);
-});
-connection.onRequest("data/getFiles", (path: string): JMCFile[] => {
-	return jmcFiles;
-});
-connection.onRequest("data/getExtracted", (): ExtractedTokens => {
-	return extracted;
-});
-//file operation
-connection.onRequest(
-	"file/update",
-	async (path: string): Promise<Lexer | HeaderParser | undefined> => {
-		if (path.endsWith(".jmc"))
-			return await validateJMC(await fs.readFile(path, "utf-8"), path);
-		else if (path.endsWith(".hjmc"))
-			return await validateHJMC(await fs.readFile(path, "utf-8"), path);
-		else return undefined;
-	}
-);
-
-connection.onRequest("file/add", (file: JMCFile): number => {
-	return jmcFiles.push(file);
-});
-
-connection.onRequest("file/add", (file: HJMCFile): number => {
-	return hjmcFiles.push(file);
-});
-
-connection.onRequest("file/remove", (path: string): void => {
-	for (let i = 0; i < jmcFiles.length; i++) {
-		if (jmcFiles[i].path == path) {
-			jmcFiles.splice(i, 1);
-			return;
-		}
-	}
-	for (let i = 0; i < hjmcFiles.length; i++) {
-		if (hjmcFiles[i].path == path) {
-			hjmcFiles.splice(i, 1);
-			return;
-		}
-	}
-});
 
 documents.listen(connection);
 connection.listen();
