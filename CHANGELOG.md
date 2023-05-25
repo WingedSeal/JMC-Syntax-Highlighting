@@ -1,5 +1,9 @@
 # Change Log
 
+## [0.3.0]
+### Changed
+- Moved all things into server
+
 ## [0.2.2]
 ### Fixed
 - Using old js files
