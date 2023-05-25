@@ -136,6 +136,7 @@ connection.onInitialize(async (params: InitializeParams) => {
 			},
 			signatureHelpProvider: {
 				triggerCharacters: ["(", ",", " "],
+				retriggerCharacters: [",", " "],
 			},
 			semanticTokensProvider: SemanticTokensOptions,
 			definitionProvider: true,
@@ -370,9 +371,10 @@ connection.onSignatureHelp(async (params) => {
 	);
 	if (context && doc && file) {
 		const triggerChar = context.triggerCharacter;
+
 		const index = getIndexByOffset(
 			file.lexer,
-			doc.offsetAt(params.position)
+			doc.offsetAt(params.position) - 2
 		);
 		const tokens = file.lexer.tokens;
 		const currentToken = tokens[index];
@@ -418,14 +420,10 @@ connection.onSignatureHelp(async (params) => {
 					}
 				}
 			}
-		} else if ((triggerChar == "," || triggerChar == " ") && statement) {
-			const startIndex = getIndexByOffset(
-				file.lexer,
-				doc.offsetAt(params.position) - 2
-			);
+		} else if (triggerChar == "," && statement) {
 			let commaCount = 0;
 			let pCount = 1;
-			for (let i = startIndex; i != -1; i--) {
+			for (let i = index; i != -1; i--) {
 				const current = tokens[i];
 				if (current.type == TokenType.RCP) {
 					let count = 0;
