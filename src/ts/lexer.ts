@@ -306,7 +306,12 @@ export class Lexer {
 					pos: pos,
 					value: this.trimmed[this.currentIndex],
 				});
-			} else if (result != undefined) {
+			} else if (result) {
+				if (result.token == TokenType.SWITCH) {
+					if (datas[datas.length - 1].type == TokenType.DOT) {
+						result.token = TokenType.LITERAL;
+					}
+				}
 				datas.push({
 					type: result.token,
 					pos: pos,
