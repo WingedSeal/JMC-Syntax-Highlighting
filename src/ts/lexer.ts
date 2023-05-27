@@ -1,8 +1,4 @@
-import {
-	MacrosData,
-	splitTokenArray,
-	splitTokenArraySync,
-} from "./helpers/general";
+import { MacrosData, splitTokenArraySync } from "./helpers/general";
 
 interface ParserModifier {
 	amount?: string;
@@ -11,13 +7,13 @@ interface ParserModifier {
 	max?: number;
 }
 
-interface CommandData {
+export interface CommandData {
 	type: string;
 	name: string;
 	executable: boolean;
 	redirects: string[];
 	childrens: CommandData[];
-	parser: {
+	parser?: {
 		parser: string;
 		modifier?: ParserModifier;
 	};
@@ -32,6 +28,8 @@ export enum ErrorType {
 export interface ErrorData {
 	type: ErrorType;
 	message: string;
+	pos: number;
+	length: number;
 	token?: TokenData;
 }
 
@@ -77,6 +75,8 @@ export enum TokenType {
 	MACROS,
 	OPERATION,
 	COMPARASION,
+	COMMAND_LITERAL,
+	UNKNOWN,
 }
 
 interface Token {
@@ -254,7 +254,12 @@ export const TOKEN_OPERATION: TokenType[] = [
 	TokenType.OP_REMAINDEREQ,
 ];
 
-//TODO: add all pattern
+export const END_TOKEN: TokenType[] = [
+	TokenType.SEMI,
+	TokenType.LCP,
+	TokenType.RCP,
+];
+
 const TokenPatterns: TokenType[][] = [
 	//Function pattern
 	[
@@ -286,50 +291,100 @@ export class Lexer {
 			.filter((v) => v != undefined);
 		this.trimmed = this.raw.map((v) => v.trim());
 		this.macros = macros.map((v) => v.target);
-		this.tokens = this.Tokenize();
+		this.tokens = this.init();
+	}
+
+	static getTokenType(text: string): TokenType {
+		return (
+			Tokens.find((v) => v.regex.test(text))?.token ?? TokenType.UNKNOWN
+		);
 	}
 
 	/**
 	 *
 	 * @returns
 	 */
-	private Tokenize(): TokenData[] {
+	private init(): TokenData[] {
 		const datas: TokenData[] = [];
-
-		for (let i = 0; i < this.trimmed.length; i++) {
-			const current = this.trimmed[i];
-			const result = Tokens.find((v) => v.regex.test(current));
-			const pos = this.GetPosition();
-			if (this.macros.includes(current)) {
-				datas.push({
-					type: TokenType.MACROS,
-					pos: pos,
-					value: this.trimmed[this.currentIndex],
-				});
-			} else if (result) {
-				if (result.token == TokenType.SWITCH) {
-					if (datas[datas.length - 1].type == TokenType.DOT) {
-						result.token = TokenType.LITERAL;
-					}
-				}
-				datas.push({
-					type: result.token,
-					pos: pos,
-					value: this.trimmed[this.currentIndex],
-				});
-			}
-			this.currentIndex++;
+		for (; this.currentIndex < this.trimmed.length; this.currentIndex++) {
+			const result = this.tokenize(
+				this.trimmed[this.currentIndex],
+				this.GetPosition(this.currentIndex),
+				datas
+			);
+			if (result) datas.push(result);
 		}
-
 		return datas;
 	}
 
 	/**
+	 * tokenize string
+	 * @param current the text going to tokenize
+	 * @param pos the offset of the text
+	 * @param datas the previous tokenized datas
+	 * @returns tokenzied data
+	 */
+	tokenize(
+		current: string,
+		pos: number,
+		datas: TokenData[]
+	): TokenData | null {
+		const result = Tokens.find((v) => v.regex.test(current));
+		if (this.macros.includes(current)) {
+			return {
+				type: TokenType.MACROS,
+				pos: pos,
+				value: current,
+			};
+		}
+		// else if (startCommand.includes(current)) {
+		// 	datas = datas.concat(this.parseCommand());
+		// }
+		else if (result) {
+			if (result.token == TokenType.SWITCH) {
+				if (datas[datas.length - 1].type == TokenType.DOT) {
+					result.token = TokenType.LITERAL;
+				}
+			}
+			return {
+				type: result.token,
+				pos: pos,
+				value: current,
+			};
+		}
+		return null;
+	}
+
+	//TODO:
+	// private parseCommand(): TokenData[] {
+	// 	const tokens: TokenData[] = [];
+
+	// 	const currentCommand = Commands.find(
+	// 		(v) => v.name == this.trimmed[this.currentIndex]
+	// 	);
+	// 	const start = this.trimmed[this.currentIndex];
+	// 	if (currentCommand) {
+	// 		tokens.push({
+	// 			type: TokenType.COMMAND_LITERAL,
+	// 			pos: this.GetPosition(),
+	// 			value: start,
+	// 		});
+	// 		while (currentCommand != undefined) {
+	// 			const params = currentCommand.childrens;
+	// 			break;
+	// 			this.currentIndex++;
+	// 		}
+	// 	}
+
+	// 	return tokens;
+	// }
+
+	/**
 	 *
 	 * @returns
 	 */
-	private GetPosition(): number {
-		const t = this.raw.slice(0, this.currentIndex).join("");
+	private GetPosition(index: number): number {
+		const t = this.raw.slice(0, index).join("");
 
 		return t.length;
 	}
@@ -348,40 +403,71 @@ export class ErrorLexer {
 
 	getErrors(): ErrorData[] {
 		const datas: ErrorData[] = [];
-		for (; this.index < this.tokens.length; this.index++) {
-			const token = this.tokens[this.index];
-			const firstType = token[0].type;
-			const query = TokenPatterns.filter((v) => v[0] == firstType);
-			if (query.length > 0) {
-				for (const q of query) {
-					switch (firstType) {
-						default: {
-							for (let i = 0; i < token.length; i++) {
-								const cToken = token[i].type;
-								const rToken = q[i];
-								if (cToken != rToken) {
-									datas.push({
-										type: ErrorType.INVALID,
-										message: `Expected ${TokenType[rToken]}, but got ${TokenType[cToken]}`,
-									});
-								}
-							}
-							if (q.length > token.length) {
-								const expect = q
-									.slice(token.length - 1)
-									.map((v) => TokenType[v])
-									.join(",");
-								datas.push({
-									type: ErrorType.MISSING,
-									message: `Missing values: ${expect}`,
-								});
-							}
-							break;
-						}
-					}
-				}
+		const splited = this.tokens.map((v) => {
+			const value = v[v.length - 1];
+			if (
+				v[0].type == TokenType.FUNCTION &&
+				value.type != TokenType.LCP
+			) {
+				datas.push({
+					type: ErrorType.MISSING,
+					message: "Missing Token '{'",
+					pos: value.pos + value.value.length + 1,
+					length: 1,
+					token: value,
+				});
+			} else if (v.length == 1 && END_TOKEN.includes(value.type)) {
+				return v;
+			} else if (value.type != TokenType.SEMI) {
+				datas.push({
+					type: ErrorType.MISSING,
+					message: "Missing Semicolon",
+					pos: value.pos + value.value.length + 1,
+					length: 1,
+					token: value,
+				});
 			}
-		}
+			return v;
+		});
 		return datas;
 	}
+
+	// getErrors(): ErrorData[] {
+	// 	const datas: ErrorData[] = [];
+	// 	for (; this.index < this.tokens.length; this.index++) {
+	// 		const token = this.tokens[this.index];
+	// 		const firstType = token[0].type;
+	// 		const query = TokenPatterns.filter((v) => v[0] == firstType);
+	// 		if (query.length > 0) {
+	// 			for (const q of query) {
+	// 				switch (firstType) {
+	// 					default: {
+	// 						for (let i = 0; i < token.length; i++) {
+	// 							const cToken = token[i].type;
+	// 							const rToken = q[i];
+	// 							if (cToken != rToken) {
+	// 								datas.push({
+	// 									type: ErrorType.INVALID,
+	// 									message: `Expected ${TokenType[rToken]}, but got ${TokenType[cToken]}`,
+	// 								});
+	// 							}
+	// 						}
+	// 						if (q.length > token.length) {
+	// 							const expect = q
+	// 								.slice(token.length - 1)
+	// 								.map((v) => TokenType[v])
+	// 								.join(",");
+	// 							datas.push({
+	// 								type: ErrorType.MISSING,
+	// 								message: `Missing values: ${expect}`,
+	// 							});
+	// 						}
+	// 						break;
+	// 					}
+	// 				}
+	// 			}
+	// 		}
+	// 	}
+	// 	return datas;
+	// }
 }

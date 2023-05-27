@@ -9,17 +9,19 @@ import {
 	InitializeResult,
 	CompletionItemKind,
 	SemanticTokens,
+	Position,
 } from "vscode-languageserver/node";
 import { TextDocument } from "vscode-languageserver-textdocument";
 import * as get_files from "get-all-files";
 import * as url from "url";
-import { Lexer, TokenType } from "../lexer";
+import { Lexer, TokenData, TokenType } from "../lexer";
 import * as fs from "fs/promises";
 import {
 	ExtractedTokens,
 	HJMCFile,
 	JMCFile,
 	MacrosData,
+	findStringDifference,
 	getAllFunctionsCall,
 	getClassRange,
 	getCurrentStatement,
@@ -28,6 +30,7 @@ import {
 	getLiteralWithDot,
 	getVariablesDeclare,
 	offsetToPosition,
+	splitTokenString,
 } from "../helpers/general";
 import {
 	concatFuncsTokens,
@@ -45,7 +48,7 @@ import { URI } from "vscode-uri";
 import { BuiltInFunctions, methodInfoToDoc } from "../data/builtinFuncs";
 
 let jmcConfigs: string[] = [];
-let jmcFiles: JMCFile[] = [];
+const jmcFiles: JMCFile[] = [];
 let hjmcFiles: HJMCFile[] = [];
 let extracted: ExtractedTokens = {
 	variables: [],
@@ -97,6 +100,7 @@ connection.onInitialize(async (params: InitializeParams) => {
 				jmcFiles.push({
 					path: f,
 					lexer: new Lexer(text, macros),
+					text: text,
 				});
 			}
 
@@ -223,14 +227,81 @@ documents.onDidChangeContent((change) => {
  * @param path fsPath of the file
  * @returns the changed lexer - {@link Lexer}
  */
-async function validateJMC(fileText: string, path: string): Promise<Lexer> {
-	const lexer = new Lexer(fileText, macros);
-	currentFile = path;
-	jmcFiles = jmcFiles.map((v) => {
-		if (v.path == path) v.lexer = lexer;
-		return v;
-	});
-	return lexer;
+async function validateJMC(
+	fileText: string,
+	path: string,
+	doc: TextDocument
+): Promise<Lexer | undefined> {
+	// const lexer = new Lexer(fileText, macros);
+	// currentFile = path;
+	// jmcFiles = jmcFiles.map((v) => {
+	// 	if (v.path == path) v.lexer = lexer;
+	// 	return v;
+	// });
+	// return lexer;
+	const file = jmcFiles.find((v) => v.path == path);
+	if (file) {
+		const changedIndex = await findStringDifference(file.text, fileText);
+		const differenceLength = Math.abs(file.text.length - fileText.length);
+		if (changedIndex) {
+			const lexerTokens = file.lexer.tokens;
+
+			const start = doc.positionAt(changedIndex);
+			const startPos = Position.create(start.line, 0);
+			const startOffset = doc.offsetAt(startPos);
+			const startIndex = getIndexByOffset(file.lexer, startOffset);
+
+			const end = doc.positionAt(changedIndex + differenceLength);
+			const endPos = Position.create(end.line + 1, 0);
+			const endIndex =
+				getIndexByOffset(file.lexer, doc.offsetAt(endPos)) - 1;
+
+			const range = vscode.Range.create(startPos, endPos);
+			const text = doc.getText(range);
+
+			let currentIndex = startOffset;
+
+			if (text.trim() != "") {
+				const tokens: TokenData[] = [];
+				const splited = await splitTokenString(text);
+				for (let i = 0; i < splited.length; i++) {
+					const s = splited[i].trim();
+					const t = splited[i];
+					const token = file.lexer.tokenize(
+						s,
+						currentIndex,
+						file.lexer.tokens
+					);
+					if (token) tokens.push(token);
+					currentIndex += t.length;
+				}
+				if (file.text.length > fileText.length) {
+					file.lexer.tokens = lexerTokens
+						.slice(0, startIndex)
+						.concat(tokens)
+						.concat(
+							lexerTokens.slice(endIndex).map((v) => {
+								v.pos -= differenceLength;
+								return v;
+							})
+						);
+				} else {
+					file.lexer.tokens = lexerTokens
+						.slice(0, startIndex)
+						.concat(tokens)
+						.concat(
+							lexerTokens.slice(endIndex).map((v) => {
+								v.pos += differenceLength;
+								return v;
+							})
+						);
+				}
+			}
+		}
+
+		file.text = fileText;
+		return file.lexer;
+	}
 }
 
 /**
@@ -267,19 +338,24 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 
 	const path = url.fileURLToPath(textDocument.uri);
 	if (path.endsWith(".jmc")) {
-		const lexer = await validateJMC(textDocument.getText(), path);
+		const lexer = await validateJMC(
+			textDocument.getText(),
+			path,
+			textDocument
+		);
+		if (lexer) {
+			const funcs = await getFunctions(lexer);
+			const vars = await getVariablesDeclare(lexer);
 
-		const funcs = await getFunctions(lexer);
-		const vars = await getVariablesDeclare(lexer);
-
-		extracted.variables = extracted.variables.map((v) => {
-			if (v.path == path) v.tokens = vars;
-			return v;
-		});
-		extracted.funcs = extracted.funcs.map((v) => {
-			if (v.path == path) v.tokens = funcs;
-			return v;
-		});
+			extracted.variables = extracted.variables.map((v) => {
+				if (v.path == path) v.tokens = vars;
+				return v;
+			});
+			extracted.funcs = extracted.funcs.map((v) => {
+				if (v.path == path) v.tokens = funcs;
+				return v;
+			});
+		}
 	} else if (path.endsWith(".hjmc")) {
 		const parser = await validateHJMC(textDocument.getText(), path);
 	}
@@ -294,7 +370,12 @@ connection.onCompletion(
 			const file = jmcFiles.find((v) => v.path == path);
 			if (doc && file) {
 				const offset = doc?.offsetAt(arg.position);
-				const index = getIndexByOffset(file.lexer, offset - 1);
+				let index = getIndexByOffset(file.lexer, offset - 1);
+				if (
+					file.lexer.tokens[index].type == TokenType.LCP ||
+					file.lexer.tokens[index].type == TokenType.RCP
+				)
+					index--;
 				const token = file.lexer.tokens[index - 2];
 				if (token.type == TokenType.VARIABLE) {
 					return [
@@ -353,6 +434,7 @@ connection.onCompletion(
 				detail: "builtin functions provided by JMC",
 			};
 		});
+
 		return vars.concat(funcs).concat(mos).concat(builtInClasses);
 	}
 );

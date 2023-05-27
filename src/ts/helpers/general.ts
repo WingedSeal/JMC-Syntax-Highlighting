@@ -4,6 +4,7 @@ import { HeaderParser } from "../parseHeader";
 export interface JMCFile {
 	path: string;
 	lexer: Lexer;
+	text: string;
 }
 
 interface Position {
@@ -49,6 +50,44 @@ export const removeDuplicate = <TItems>(
 			items.findIndex((secondItem) => isDuplicate(item, secondItem)) ===
 			index
 	);
+
+export async function findStringDifference(
+	str1: string,
+	str2: string
+): Promise<number | null> {
+	const minLength = Math.min(str1.length, str2.length);
+
+	for (let i = 0; i < minLength; i++) {
+		if (str1[i] !== str2[i]) {
+			return i;
+		}
+	}
+
+	if (str1.length !== str2.length) {
+		return minLength;
+	}
+
+	return null;
+}
+
+export function findStringDifferenceSync(
+	str1: string,
+	str2: string
+): number | null {
+	const minLength = Math.min(str1.length, str2.length);
+
+	for (let i = 0; i < minLength; i++) {
+		if (str1[i] !== str2[i]) {
+			return i;
+		}
+	}
+
+	if (str1.length !== str2.length) {
+		return minLength;
+	}
+
+	return null;
+}
 
 /**
  * get the tokens index of by the offset provided
@@ -226,7 +265,7 @@ export async function splitTokenArray(
 }
 
 /**
- * split an 1d token array into 2d token array, split by [",","{","}"]
+ * split an 1d token array into 2d token array, split by [",",";","{","}"]
  * @param arr 1d array - {@link TokenData}
  * @returns 2d array - {@link TokenData}
  */
@@ -357,6 +396,13 @@ export async function getCurrentStatement(
 			if (tarr.pos == token.pos) return arr;
 		}
 	}
+}
+
+/** */
+export async function splitTokenString(text: string): Promise<string[]> {
+	return text
+		.split(/(\/\/.*)|(\s|\;|\{|\}|\(|\)|\|\||&&|==|!=|!|,|\.|\:|\=\>)/m)
+		.filter((v) => v != undefined);
 }
 
 /**
