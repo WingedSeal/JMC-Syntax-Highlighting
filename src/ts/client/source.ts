@@ -1,21 +1,22 @@
-import { workspace, ExtensionContext, languages } from "vscode";
+import { workspace, ExtensionContext } from "vscode";
 import {
+	ConfigurationItem,
+	ConfigurationParams,
 	LanguageClient,
 	LanguageClientOptions,
-	Range,
 	ServerOptions,
 	TransportKind,
 } from "vscode-languageclient/node";
 import * as path from "path";
-import { JMC_SELECTOR } from "../data/selectors";
 import * as vscode from "vscode";
-import { HJMCFile, JMCFile } from "../helpers/general";
-import { Lexer, TokenData } from "../lexer";
-import { HeaderParser } from "../parseHeader";
+import { Settings } from "../helpers/general";
 
 export let client: LanguageClient;
 
 export async function activate(context: ExtensionContext) {
+	//setup config
+	const config = vscode.workspace.getConfiguration("jmc");
+
 	//setup client
 	const clientOptions: LanguageClientOptions = {
 		documentSelector: [
@@ -41,55 +42,33 @@ export async function activate(context: ExtensionContext) {
 		},
 	};
 
-	// //file system provider
-	// const jmcfsProvider = vscode.workspace.createFileSystemWatcher(
-	// 	"**/*.{jmc,hjmc}",
-	// 	false,
-	// 	false,
-	// 	false
-	// );
-	// jmcfsProvider.onDidCreate(async (v) => {
-	// 	if (v.fsPath.endsWith(".jmc")) {
-	// 		const file: JMCFile = {
-	// 			lexer: new Lexer("", []),
-	// 			path: v.fsPath,
-	// 		};
-	// 		await client.sendRequest("file/add", file);
-	// 	} else if (v.fsPath.endsWith(".hjmc")) {
-	// 		const file: HJMCFile = {
-	// 			parser: new HeaderParser(""),
-	// 			path: v.fsPath,
-	// 		};
-	// 		await client.sendRequest("file/add", file);
-	// 	}
-	// });
-	// jmcfsProvider.onDidChange(async (v) => {
-	// 	await client.sendRequest("file/update", v.fsPath);
-	// });
-	// jmcfsProvider.onDidDelete(async (v) => {
-	// 	await client.sendRequest("file/remove", v.fsPath);
-	// });
-	// languages.registerDefinitionProvider(
-	// 	JMC_SELECTOR,
-	// 	new definationProvider()
-	// );
-	// languages.registerCompletionItemProvider(
-	// 	JMC_SELECTOR,
-	// 	{
-	// 		provideCompletionItems(document, position, token, context) {
-	// 			return [
-	// 				{
-	// 					label: "get",
-	// 					kind: vscode.CompletionItemKind.Function,
-	// 					insertText: "get()",
-	// 				},
-	// 			];
-	// 		},
-	// 	},
-	// 	"."
-	// );
-	//register features
-	//client.registerFeature(new SemanticHighlightFeature());
+	const compileCommand = vscode.commands.registerCommand(
+		"jmc.compileCode",
+		() => {
+			const editor = vscode.window.activeTextEditor;
+			if (editor) {
+				const doc = editor.document;
+				const exePath: string = vscode.workspace
+					.getConfiguration("jmc", doc.uri)
+					.get("executable") as string;
+				if (exePath == "") {
+					vscode.window.showErrorMessage(
+						"Setting up the executable before compile it!"
+					);
+					return;
+				}
+				const terminal = vscode.window.createTerminal(
+					"JMC Compile",
+					undefined
+				);
+				terminal.show();
+				terminal.sendText(`&\"${exePath}\" compile`);
+				terminal.hide();
+			}
+		}
+	);
+
+	context.subscriptions.push(compileCommand);
 
 	//define client
 	client = new LanguageClient("jmc", "JMC", serverOptions, clientOptions);

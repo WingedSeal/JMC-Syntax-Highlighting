@@ -135,7 +135,38 @@
 				"superType": "macro",
 				"description": "NA"
 			}
-		]
+		],
+		"configuration": {
+			"title": "JMC",
+			"properties": {
+				"jmc.executable": {
+					"type": [
+						"string"
+					],
+					"default": "",
+					"description": "Specifies JMC.exe path for debugging",
+					"scope": "resource",
+					"editPresentation": "singlelineText"
+				}
+			}
+		},
+		"commands": [
+			{
+				"command": "jmc.compileCode",
+				"title": "Compile JMC File",
+				"category": "JMC",
+				"icon": "$(play)"
+			}
+		],
+		"menus": {
+			"editor/title": [
+				{
+					"command": "jmc.compileCode",
+					"when": "editorLangId == jmc",
+					"group": "navigation"
+				}
+			]
+		}
 	},
 	"__metadata": {
 		"id": "3cd18b1f-23b1-4732-88ac-214fc84d18ba",

@@ -1,6 +1,10 @@
 import { Lexer, TokenData, TokenType } from "../lexer";
 import { HeaderParser } from "../parseHeader";
 
+export interface Settings {
+	compilerPath: string | null;
+}
+
 export interface JMCFile {
 	path: string;
 	lexer: Lexer;

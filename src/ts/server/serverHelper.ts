@@ -9,6 +9,11 @@ import {
 } from "../helpers/general";
 import { TokenData } from "../lexer";
 
+/**
+ *
+ * @param files
+ * @returns
+ */
 export async function getTokens(files: JMCFile[]): Promise<ExtractedTokens> {
 	const tokens: ExtractedTokens = {
 		variables: [],
