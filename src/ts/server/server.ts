@@ -36,6 +36,8 @@ import {
 	concatFuncsTokens,
 	concatVariableTokens,
 	getAllVariables,
+	getFirstHirarchy,
+	getHirarchy,
 	getTokens,
 } from "./serverHelper";
 import { HeaderParser, HeaderType } from "../parseHeader";
@@ -56,6 +58,7 @@ let extracted: ExtractedTokens = {
 };
 let macros: MacrosData[] = [];
 export let currentFile: string | undefined;
+let lastIndex: number | null;
 
 //#region default
 const connection = createConnection(ProposedFeatures.all);
@@ -232,13 +235,6 @@ async function validateJMC(
 	path: string,
 	doc: TextDocument
 ): Promise<Lexer | undefined> {
-	// const lexer = new Lexer(fileText, macros);
-	// currentFile = path;
-	// jmcFiles = jmcFiles.map((v) => {
-	// 	if (v.path == path) v.lexer = lexer;
-	// 	return v;
-	// });
-	// return lexer;
 	const file = jmcFiles.find((v) => v.path == path);
 	if (file) {
 		const changedIndex = await findStringDifference(file.text, fileText);
@@ -261,41 +257,39 @@ async function validateJMC(
 
 			let currentIndex = startOffset;
 
-			if (text.trim() != "") {
-				const tokens: TokenData[] = [];
-				const splited = await splitTokenString(text);
-				for (let i = 0; i < splited.length; i++) {
-					const s = splited[i].trim();
-					const t = splited[i];
-					const token = file.lexer.tokenize(
-						s,
-						currentIndex,
-						file.lexer.tokens
+			const tokens: TokenData[] = [];
+			const splited = await splitTokenString(text);
+			for (let i = 0; i < splited.length; i++) {
+				const s = splited[i].trim();
+				const t = splited[i];
+				const token = file.lexer.tokenize(
+					s,
+					currentIndex,
+					file.lexer.tokens
+				);
+				if (token) tokens.push(token);
+				currentIndex += t.length;
+			}
+			if (file.text.length > fileText.length) {
+				file.lexer.tokens = lexerTokens
+					.slice(0, startIndex)
+					.concat(tokens)
+					.concat(
+						lexerTokens.slice(endIndex).map((v) => {
+							v.pos -= differenceLength;
+							return v;
+						})
 					);
-					if (token) tokens.push(token);
-					currentIndex += t.length;
-				}
-				if (file.text.length > fileText.length) {
-					file.lexer.tokens = lexerTokens
-						.slice(0, startIndex)
-						.concat(tokens)
-						.concat(
-							lexerTokens.slice(endIndex).map((v) => {
-								v.pos -= differenceLength;
-								return v;
-							})
-						);
-				} else {
-					file.lexer.tokens = lexerTokens
-						.slice(0, startIndex)
-						.concat(tokens)
-						.concat(
-							lexerTokens.slice(endIndex).map((v) => {
-								v.pos += differenceLength;
-								return v;
-							})
-						);
-				}
+			} else {
+				file.lexer.tokens = lexerTokens
+					.slice(0, startIndex)
+					.concat(tokens)
+					.concat(
+						lexerTokens.slice(endIndex).map((v) => {
+							v.pos += differenceLength;
+							return v;
+						})
+					);
 			}
 		}
 
@@ -363,20 +357,27 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 
 connection.onCompletion(
 	async (arg, token, progress, result): Promise<CompletionItem[]> => {
+		const oFuncs = concatFuncsTokens(extracted).map(
+			(v) => v.value.split("\0")[0]
+		);
+		const cfDatas = await getFirstHirarchy(oFuncs);
+
 		//check if `$VARIABLE.get()`
 		if (arg.context?.triggerCharacter == ".") {
 			const doc = documents.get(arg.textDocument.uri);
 			const path = url.fileURLToPath(arg.textDocument.uri);
 			const file = jmcFiles.find((v) => v.path == path);
 			if (doc && file) {
-				const offset = doc?.offsetAt(arg.position);
+				const offset = doc.offsetAt(arg.position);
 				let index = getIndexByOffset(file.lexer, offset - 1);
 				if (
 					file.lexer.tokens[index].type == TokenType.LCP ||
 					file.lexer.tokens[index].type == TokenType.RCP
 				)
 					index--;
-				const token = file.lexer.tokens[index - 2];
+				else if (file.lexer.tokens[index].type == TokenType.SEMI)
+					index++;
+				const token = file.lexer.tokens[index - 3];
 				if (token.type == TokenType.VARIABLE) {
 					return [
 						{
@@ -396,6 +397,44 @@ connection.onCompletion(
 								kind: CompletionItemKind.Function,
 							};
 						});
+					} else {
+						const statement = await getCurrentStatement(
+							file.lexer,
+							token
+						);
+						if (statement) {
+							const literal = await getLiteralWithDot(
+								statement,
+								token
+							);
+							if (literal) {
+								const splited = literal.split(".");
+								const query = await getHirarchy(
+									oFuncs,
+									splited
+								);
+								if (query) {
+									const cls = query.classes.map(
+										(v): CompletionItem => {
+											return {
+												label: v,
+												kind: CompletionItemKind.Class,
+											};
+										}
+									);
+									const funcs = query.funcs.map(
+										(v): CompletionItem => {
+											return {
+												label: v,
+												kind: CompletionItemKind.Function,
+												insertText: `${v}()`,
+											};
+										}
+									);
+									return cls.concat(funcs);
+								}
+							}
+						}
 					}
 				}
 			}
@@ -410,16 +449,27 @@ connection.onCompletion(
 				};
 			}
 		);
-		const funcs: CompletionItem[] = concatFuncsTokens(extracted).map(
-			(v) => {
-				const value = v.value.split("\0")[0];
+
+		//funcs & classes
+		const funcs: CompletionItem[] = cfDatas.funcs.map(
+			(v): CompletionItem => {
 				return {
-					label: value,
-					insertText: value + "()",
+					label: v,
 					kind: CompletionItemKind.Function,
+					insertText: `${v}()`,
 				};
 			}
 		);
+		const classes: CompletionItem[] = cfDatas.classes.map(
+			(v): CompletionItem => {
+				return {
+					label: v,
+					kind: CompletionItemKind.Class,
+				};
+			}
+		);
+
+		//macros
 		const mos: CompletionItem[] = macros.map((v) => {
 			return {
 				label: v.target,
@@ -427,6 +477,8 @@ connection.onCompletion(
 				detail: v.values.join(" "),
 			};
 		});
+
+		//builtin classes
 		const builtInClasses: CompletionItem[] = BuiltInFunctions.map((v) => {
 			return {
 				label: v.class,
@@ -435,7 +487,12 @@ connection.onCompletion(
 			};
 		});
 
-		return vars.concat(funcs).concat(mos).concat(builtInClasses);
+		//return vars.concat(funcs).concat(mos).concat(builtInClasses);
+		return vars
+			.concat(funcs)
+			.concat(classes)
+			.concat(mos)
+			.concat(builtInClasses);
 	}
 );
 

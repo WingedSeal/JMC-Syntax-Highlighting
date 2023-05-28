@@ -9,6 +9,11 @@ import {
 } from "../helpers/general";
 import { TokenData } from "../lexer";
 
+export interface CFData {
+	classes: string[];
+	funcs: string[];
+}
+
 /**
  *
  * @param files
@@ -66,4 +71,51 @@ export function concatFuncsTokens(ext: ExtractedTokens): TokenData[] {
 	}
 
 	return removeDuplicate(datas, (a, b) => a.value === b.value);
+}
+
+/**
+ *
+ * @param funcs
+ * @returns
+ */
+export async function getFirstHirarchy(funcs: string[]): Promise<CFData> {
+	const result: CFData = {
+		classes: [],
+		funcs: [],
+	};
+
+	for (const func of funcs) {
+		const splited = func.split(".");
+		if (splited.length == 1) result.funcs.push(splited[0]);
+		else result.classes.push(splited[0]);
+	}
+	result.funcs = removeDuplicate(result.funcs, (a, b) => a === b);
+	result.classes = removeDuplicate(result.classes, (a, b) => a === b);
+	return result;
+}
+
+export async function getHirarchy(funcs: string[], query: string[]) {
+	const splitedFuncs = funcs.map((v) => v.split("."));
+	const result: CFData = {
+		classes: [],
+		funcs: [],
+	};
+	console.log(query);
+	for (let i = 0; i < query.length; i++) {
+		const current = query[i];
+		const q = splitedFuncs.filter((v) => v[i] == current);
+		if (q.length === 0) break;
+		else if (i === query.length - 1) {
+			for (const r of q) {
+				if (r.length === query.length + 1) {
+					result.funcs.push(r[query.length]);
+				} else if (r.length > query.length) {
+					result.classes.push(r[query.length]);
+				}
+			}
+			result.funcs = removeDuplicate(result.funcs, (a, b) => a === b);
+			result.classes = removeDuplicate(result.classes, (a, b) => a === b);
+			return result;
+		}
+	}
 }
