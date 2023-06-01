@@ -14,13 +14,14 @@ import {
 import { TextDocument } from "vscode-languageserver-textdocument";
 import * as get_files from "get-all-files";
 import * as url from "url";
-import { Lexer, TokenData, TokenType } from "../lexer";
+import { DEPRECATED, Lexer, TokenData, TokenType } from "../lexer";
 import * as fs from "fs/promises";
 import {
 	ExtractedTokens,
 	HJMCFile,
 	JMCFile,
 	MacrosData,
+	Settings,
 	findStringDifference,
 	getAllFunctionsCall,
 	getClassRange,
@@ -48,6 +49,7 @@ import {
 } from "../data/semanticDatas";
 import { URI } from "vscode-uri";
 import { BuiltInFunctions, methodInfoToDoc } from "../data/builtinFuncs";
+import { HEADERS } from "../data/headers";
 
 let jmcConfigs: string[] = [];
 const jmcFiles: JMCFile[] = [];
@@ -58,7 +60,6 @@ let extracted: ExtractedTokens = {
 };
 let macros: MacrosData[] = [];
 export let currentFile: string | undefined;
-let lastIndex: number | null;
 
 //#region default
 const connection = createConnection(ProposedFeatures.all);
@@ -139,7 +140,7 @@ connection.onInitialize(async (params: InitializeParams) => {
 			// Tell the client that this server supports code completion.
 			completionProvider: {
 				resolveProvider: true,
-				triggerCharacters: ["."],
+				triggerCharacters: [".", "#"],
 			},
 			signatureHelpProvider: {
 				triggerCharacters: ["(", ",", " "],
@@ -355,14 +356,54 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 	}
 }
 
-connection.onCompletion(
-	async (arg, token, progress, result): Promise<CompletionItem[]> => {
+//TODO:
+connection.onCompletion(async (arg) => {
+	if (arg.textDocument.uri.endsWith(".hjmc")) {
+		//return headers
+		if (arg.context?.triggerCharacter == "#")
+			return HEADERS.map((v) => {
+				return {
+					label: v,
+					kind: CompletionItemKind.Keyword,
+				};
+			});
+		else {
+			const file = hjmcFiles.find(
+				(v) => v.path == url.fileURLToPath(arg.textDocument.uri)
+			);
+			if (file) {
+				const line = arg.position.line;
+				const current = file.parser.data[line];
+				switch (current.type) {
+					case HeaderType.BIND:
+						if (current.values.length == 0)
+							return [
+								{
+									label: "__namespace__",
+									kind: CompletionItemKind.Value,
+								},
+								{
+									label: "__UUID__",
+									kind: CompletionItemKind.Value,
+								},
+							];
+						break;
+					case HeaderType.INCLUDE: {
+						break;
+					}
+					case HeaderType.STATIC:
+					default:
+						return undefined;
+				}
+			}
+		}
+	} else if (arg.textDocument.uri.endsWith(".jmc")) {
 		const oFuncs = concatFuncsTokens(extracted).map(
 			(v) => v.value.split("\0")[0]
 		);
 		const cfDatas = await getFirstHirarchy(oFuncs);
 
-		//check if `$VARIABLE.get()`
+		//check if `$VARIABLE.get()` or `CLASS.METHOD`
 		if (arg.context?.triggerCharacter == ".") {
 			const doc = documents.get(arg.textDocument.uri);
 			const path = url.fileURLToPath(arg.textDocument.uri);
@@ -440,6 +481,7 @@ connection.onCompletion(
 			}
 		}
 
+		//variables
 		const vars: CompletionItem[] = concatVariableTokens(extracted).map(
 			(v) => {
 				return {
@@ -494,7 +536,7 @@ connection.onCompletion(
 			.concat(mos)
 			.concat(builtInClasses);
 	}
-);
+});
 
 connection.onCompletionResolve(
 	async (item: CompletionItem): Promise<CompletionItem> => {
@@ -783,6 +825,10 @@ connection.onRequest(
 		const doc = documents.get(params.textDocument.uri);
 		const builder = new vscode.SemanticTokensBuilder();
 		if (doc) {
+			const settings = (await connection.workspace.getConfiguration({
+				section: "jmc",
+				scopeUri: params.textDocument.uri,
+			})) as Settings;
 			const file = jmcFiles.find(
 				(v) => v.path == url.fileURLToPath(doc.uri)
 			);
@@ -828,17 +874,31 @@ connection.onRequest(
 									3,
 									0
 								);
-							} else if (tokens[i + 1].type == TokenType.DOT) {
+							} else if (
+								tokens[i + 1].type == TokenType.DOT &&
+								!settings.rawFuncHighlight
+							) {
 								const pos = doc.positionAt(token.pos);
 								builder.push(
 									pos.line,
 									pos.character,
 									token.value.length,
-									5,
+									0,
+									0
+								);
+							} else if (
+								tokens[i + 1].type == TokenType.DOT &&
+								settings.rawFuncHighlight
+							) {
+								const pos = doc.positionAt(token.pos);
+								builder.push(
+									pos.line,
+									pos.character,
+									token.value.length,
+									3,
 									0
 								);
 							}
-
 							break;
 						}
 						case TokenType.MACROS: {
@@ -849,6 +909,17 @@ connection.onRequest(
 								token.value.length,
 								5,
 								0
+							);
+							break;
+						}
+						case TokenType.OLD_IMPORT: {
+							const pos = doc.positionAt(token.pos);
+							builder.push(
+								pos.line,
+								pos.character,
+								token.value.length,
+								6,
+								2
 							);
 							break;
 						}

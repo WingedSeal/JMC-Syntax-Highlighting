@@ -42,7 +42,7 @@ export enum TokenType {
 	ELSE,
 	SWITCH,
 	CASE,
-	IMPORT,
+	OLD_IMPORT,
 	SEMI,
 	COLON,
 	ARROW_FUNC,
@@ -77,6 +77,7 @@ export enum TokenType {
 	COMPARASION,
 	COMMAND_LITERAL,
 	UNKNOWN,
+	IMPORT,
 }
 
 interface Token {
@@ -125,6 +126,10 @@ const Tokens: Token[] = [
 	},
 	{
 		regex: /^@import$/,
+		token: TokenType.OLD_IMPORT,
+	},
+	{
+		regex: /^import$/,
 		token: TokenType.IMPORT,
 	},
 	{
@@ -273,6 +278,7 @@ const TokenPatterns: TokenType[][] = [
 	[TokenType.VARIABLE, TokenType.OPERATION, TokenType.BOOL],
 ];
 
+export const DEPRECATED: TokenType[] = [TokenType.OLD_IMPORT];
 export class Lexer {
 	public tokens: TokenData[];
 	private raw: string[];

@@ -25,6 +25,7 @@ export class HeaderParser {
 		this.data = [];
 		this.header = "";
 		this.value = "";
+		let i = 0;
 		for (const line of text.split(/\r?\n/g)) {
 			this.header = line.split(" ")[0];
 			this.value = line.split(" ").slice(1).join(" ");
@@ -34,6 +35,7 @@ export class HeaderParser {
 			};
 
 			this.data.push(headerData);
+			i++;
 		}
 	}
 

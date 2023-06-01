@@ -2,7 +2,8 @@ import { Lexer, TokenData, TokenType } from "../lexer";
 import { HeaderParser } from "../parseHeader";
 
 export interface Settings {
-	compilerPath: string | null;
+	executable: string;
+	rawFuncHighlight: boolean;
 }
 
 export interface JMCFile {

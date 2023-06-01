@@ -10,13 +10,11 @@ import {
 import * as path from "path";
 import * as vscode from "vscode";
 import { Settings } from "../helpers/general";
+import { URI } from "vscode-uri";
 
 export let client: LanguageClient;
 
 export async function activate(context: ExtensionContext) {
-	//setup config
-	const config = vscode.workspace.getConfiguration("jmc");
-
 	//setup client
 	const clientOptions: LanguageClientOptions = {
 		documentSelector: [
@@ -68,10 +66,28 @@ export async function activate(context: ExtensionContext) {
 		}
 	);
 
-	context.subscriptions.push(compileCommand);
-
 	//define client
 	client = new LanguageClient("jmc", "JMC", serverOptions, clientOptions);
+
+	client.onRequest(
+		"workspace/configuration",
+		async (params: ConfigurationItem): Promise<Settings | undefined> => {
+			if (params.scopeUri && params.scopeUri.length == 0) {
+				const config = vscode.workspace.getConfiguration(
+					params.section,
+					URI.parse(params.scopeUri[0])
+				);
+				console.log(config);
+				return {
+					executable: config.get("executable") as string,
+					rawFuncHighlight: config.get(
+						"jmc.rawFuncHighlight"
+					) as boolean,
+				};
+			}
+			return undefined;
+		}
+	);
 
 	client.start().then(async () => {
 		console.log("Client Started");

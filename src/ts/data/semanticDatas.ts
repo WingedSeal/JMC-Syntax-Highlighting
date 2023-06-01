@@ -5,5 +5,10 @@ export const SemanticTokenTypes = [
 	"function",
 	"variable",
 	"string",
+	"keyword",
 ];
-export const SemanticTokenModifiers = ["declaration", "documentation"];
+export const SemanticTokenModifiers = [
+	"declaration",
+	"documentation",
+	"deprecated",
+];

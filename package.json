@@ -147,6 +147,14 @@
 					"description": "Specifies JMC.exe path for debugging",
 					"scope": "resource",
 					"editPresentation": "singlelineText"
+				},
+				"jmc.rawFuncHighlight": {
+					"type": [
+						"boolean"
+					],
+					"default": false,
+					"description": "It will highlight functions without classes",
+					"scope": "resource"
 				}
 			}
 		},

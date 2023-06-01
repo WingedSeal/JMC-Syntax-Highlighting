@@ -1,104 +1,104 @@
 {
-    "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
-    "name": "JMC",
-    "patterns": [
-        {
-            "include": "#keywords"
-        },
-        {
-            "include": "#double_strings"
-        },
-        {
-            "include": "#single_strings"
-        },
-        {
-            "include": "#comments"
-        },
-        {
-            "include": "#numbers"
-        },
-        {
-            "include": "#target_selectors"
-        },
-        {
-            "include": "#operators"
-        }
-    ],
-    "repository": {
-        "target_selectors": {
-            "patterns": [
-                {
-                    "name": "constant.numeric.jmc",
-                    "match": "(@[parse])"
-                }
-            ]
-        },
-        "keywords": {
-            "patterns": [
-                {
-                    "name": "keyword.control.jmc",
-                    "match": "\\b(if|else|while|for|do|switch|case|class|true|false|schedule)\\b"
-                },
-                {
-                    "name": "storage.type.function.jmc",
-                    "match": "\\b(function)\\b"
-                },
-                {
-                    "name": "storage.type.new.jmc",
-                    "match": "\\b(new)\\b"
-                },
-                {
-                    "name": "storage.type.arrow.jmc",
-                    "match": "(=>)"
-                }
-            ]
-        },
-        "operators": {
-            "patterns": [
-                {
-                    "name": "keyword.operator.jmc",
-                    "match": "([=\\*\\-\\/\\+\\%\\.><(?:\\|\\|)(?:\\&\\&)\\!,]|@import|matches)"
-                }
-            ]
-        },
-        "double_strings": {
-            "name": "string.quoted.double.jmc",
-            "begin": "\"",
-            "end": "\"",
-            "patterns": [
-                {
-                    "name": "constant.character.escape.jmc",
-                    "match": "\\\\."
-                }
-            ]
-        },
-        "single_strings": {
-            "name": "string.quoted.single.jmc",
-            "begin": "'",
-            "end": "'",
-            "patterns": [
-                {
-                    "name": "constant.character.escape.jmc",
-                    "match": "\\\\."
-                }
-            ]
-        },
-        "comments": {
-            "patterns": [
-                {
-                    "name": "comment.line.jmc",
-                    "match": "(//.*)"
-                }
-            ]
-        },
-        "numbers": {
-            "patterns": [
-                {
-                    "name": "constant.numeric.jmc",
-                    "match": "\\b(\\d+(?:[\\.]\\d+)?)\\b"
-                }
-            ]
-        }
-    },
-    "scopeName": "source.jmc"
+	"$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+	"name": "JMC",
+	"patterns": [
+		{
+			"include": "#keywords"
+		},
+		{
+			"include": "#double_strings"
+		},
+		{
+			"include": "#single_strings"
+		},
+		{
+			"include": "#comments"
+		},
+		{
+			"include": "#numbers"
+		},
+		{
+			"include": "#target_selectors"
+		},
+		{
+			"include": "#operators"
+		}
+	],
+	"repository": {
+		"target_selectors": {
+			"patterns": [
+				{
+					"name": "constant.numeric.jmc",
+					"match": "(@[parse])"
+				}
+			]
+		},
+		"keywords": {
+			"patterns": [
+				{
+					"name": "keyword.control.jmc",
+					"match": "\\b(if|else|while|for|do|switch|case|class|true|false|schedule|import)\\b"
+				},
+				{
+					"name": "storage.type.function.jmc",
+					"match": "\\b(function)\\b"
+				},
+				{
+					"name": "storage.type.new.jmc",
+					"match": "\\b(new)\\b"
+				},
+				{
+					"name": "storage.type.arrow.jmc",
+					"match": "(=>)"
+				}
+			]
+		},
+		"operators": {
+			"patterns": [
+				{
+					"name": "keyword.operator.jmc",
+					"match": "([=\\*\\-\\/\\+\\%\\.><(?:\\|\\|)(?:\\&\\&)\\!,]|matches)"
+				}
+			]
+		},
+		"double_strings": {
+			"name": "string.quoted.double.jmc",
+			"begin": "\"",
+			"end": "\"",
+			"patterns": [
+				{
+					"name": "constant.character.escape.jmc",
+					"match": "\\\\."
+				}
+			]
+		},
+		"single_strings": {
+			"name": "string.quoted.single.jmc",
+			"begin": "'",
+			"end": "'",
+			"patterns": [
+				{
+					"name": "constant.character.escape.jmc",
+					"match": "\\\\."
+				}
+			]
+		},
+		"comments": {
+			"patterns": [
+				{
+					"name": "comment.line.jmc",
+					"match": "(//.*)"
+				}
+			]
+		},
+		"numbers": {
+			"patterns": [
+				{
+					"name": "constant.numeric.jmc",
+					"match": "\\b(\\d+(?:[\\.]\\d+)?)\\b"
+				}
+			]
+		}
+	},
+	"scopeName": "source.jmc"
 }
