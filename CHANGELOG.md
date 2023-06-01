@@ -1,5 +1,15 @@
 # Change Log
 
+## [0.3.1]
+### Added
+- Run Compiler in editor
+- Header completion
+- Setting for overriding func classes highlighting to func
+### Changed
+- Auto Completion of Functions changed to section by section
+### Improved
+- file processing
+
 ## [0.3.0]
 ### Changed
 - Moved all things into server
