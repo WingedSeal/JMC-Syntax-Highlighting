@@ -1,23 +1,10 @@
-import { MacrosData, splitTokenArraySync } from "./helpers/general";
-
-interface ParserModifier {
-	amount?: string;
-	type?: string;
-	min?: number;
-	max?: number;
-}
-
-export interface CommandData {
-	type: string;
-	name: string;
-	executable: boolean;
-	redirects: string[];
-	childrens: CommandData[];
-	parser?: {
-		parser: string;
-		modifier?: ParserModifier;
-	};
-}
+import { START_COMMAND } from "./data/commands";
+import { MC_ITEMS } from "./data/mcDatas";
+import {
+	MacrosData,
+	joinCommandData,
+	splitTokenArraySync,
+} from "./helpers/general";
 
 export enum ErrorType {
 	INVALID,
@@ -48,6 +35,7 @@ export enum TokenType {
 	ARROW_FUNC,
 	LITERAL,
 	INT,
+	FLOAT,
 	BOOL,
 	STRING,
 	VARIABLE,
@@ -78,6 +66,24 @@ export enum TokenType {
 	COMMAND_LITERAL,
 	UNKNOWN,
 	IMPORT,
+	RMP,
+	LMP,
+	COMMAND_SELECTOR,
+	MODIFIED_CP,
+	MODIFIED_LPAREN,
+	MODIFIED_MP,
+	NBT,
+	SELECTOR_INFO,
+	COMMAND_INFO,
+	DELETED,
+	COMMAND_FINAL,
+	COMMAND_INT,
+	COMMAND_FLOAT,
+	COMMAND_VECTOR,
+	COMMAND_ITEM_STACK,
+	COMMAND_STRING,
+	COMMAND_INVALID,
+	COMMAND_FC,
 }
 
 interface Token {
@@ -99,6 +105,10 @@ const Tokens: Token[] = [
 	{
 		regex: /^function$/,
 		token: TokenType.FUNCTION,
+	},
+	{
+		regex: /^@[parse]$/,
+		token: TokenType.COMMAND_SELECTOR,
 	},
 	{
 		regex: /^class$/,
@@ -153,6 +163,10 @@ const Tokens: Token[] = [
 		token: TokenType.INT,
 	},
 	{
+		regex: /^-?\d*\.?\d+$/,
+		token: TokenType.FLOAT,
+	},
+	{
 		regex: /^true|false$/,
 		token: TokenType.BOOL,
 	},
@@ -175,6 +189,14 @@ const Tokens: Token[] = [
 	{
 		regex: /^\}$/,
 		token: TokenType.RCP,
+	},
+	{
+		regex: /^\[$/,
+		token: TokenType.LMP,
+	},
+	{
+		regex: /^\]$/,
+		token: TokenType.RMP,
 	},
 	{
 		regex: /^=$/,
@@ -248,6 +270,10 @@ const Tokens: Token[] = [
 		regex: /^[a-zA-Z_][a-zA-Z0-9_]*$/,
 		token: TokenType.LITERAL,
 	},
+	{
+		regex: /^.+$/,
+		token: TokenType.UNKNOWN,
+	},
 ];
 
 export const TOKEN_OPERATION: TokenType[] = [
@@ -281,6 +307,7 @@ const TokenPatterns: TokenType[][] = [
 export const DEPRECATED: TokenType[] = [TokenType.OLD_IMPORT];
 export class Lexer {
 	public tokens: TokenData[];
+
 	private raw: string[];
 	private trimmed: string[];
 	private currentIndex: number;
@@ -293,11 +320,14 @@ export class Lexer {
 	constructor(text: string, macros: MacrosData[]) {
 		this.currentIndex = 0;
 		this.raw = text
-			.split(/(\/\/.*)|(\s|\;|\{|\}|\(|\)|\|\||&&|==|!=|!|,|\.|\:|\=\>)/m)
+			.split(
+				/(\/\/.*)|(-?\d*\.?\d+)|(["\'].*["\'])|(\s|\;|\{|\}|\[|\]|\(|\)|\|\||&&|==|!=|!|,|\.|\:|\=\>|\=)/m
+			)
 			.filter((v) => v != undefined);
 		this.trimmed = this.raw.map((v) => v.trim());
 		this.macros = macros.map((v) => v.target);
 		this.tokens = this.init();
+		this.parseCommands();
 	}
 
 	static getTokenType(text: string): TokenType {
@@ -306,10 +336,6 @@ export class Lexer {
 		);
 	}
 
-	/**
-	 *
-	 * @returns
-	 */
 	private init(): TokenData[] {
 		const datas: TokenData[] = [];
 		for (; this.currentIndex < this.trimmed.length; this.currentIndex++) {
@@ -336,17 +362,14 @@ export class Lexer {
 		datas: TokenData[]
 	): TokenData | null {
 		const result = Tokens.find((v) => v.regex.test(current));
+
 		if (this.macros.includes(current)) {
 			return {
 				type: TokenType.MACROS,
 				pos: pos,
 				value: current,
 			};
-		}
-		// else if (startCommand.includes(current)) {
-		// 	datas = datas.concat(this.parseCommand());
-		// }
-		else if (result) {
+		} else if (result) {
 			if (result.token == TokenType.SWITCH) {
 				if (datas[datas.length - 1].type == TokenType.DOT) {
 					result.token = TokenType.LITERAL;
@@ -361,29 +384,55 @@ export class Lexer {
 		return null;
 	}
 
-	//TODO:
-	// private parseCommand(): TokenData[] {
-	// 	const tokens: TokenData[] = [];
+	private parseCommands() {
+		for (let i = 0; i < this.tokens.length; i++) {
+			const token = this.tokens[i];
+			const next = this.tokens[i + 1];
+			const startIndex = i;
+			if (
+				START_COMMAND.includes(token.value) &&
+				!TOKEN_OPERATION.includes(next.type)
+			) {
+				//get the token range
+				const tokens: TokenData[] = [];
+				for (; i < this.tokens.length; i++) {
+					const c = this.tokens[i];
+					delete this.tokens[i];
+					tokens.push(c);
+					if (c.type === TokenType.SEMI) break;
+				}
+				const data = joinCommandData(tokens);
 
-	// 	const currentCommand = Commands.find(
-	// 		(v) => v.name == this.trimmed[this.currentIndex]
-	// 	);
-	// 	const start = this.trimmed[this.currentIndex];
-	// 	if (currentCommand) {
-	// 		tokens.push({
-	// 			type: TokenType.COMMAND_LITERAL,
-	// 			pos: this.GetPosition(),
-	// 			value: start,
-	// 		});
-	// 		while (currentCommand != undefined) {
-	// 			const params = currentCommand.childrens;
-	// 			break;
-	// 			this.currentIndex++;
-	// 		}
-	// 	}
+				//tokenize it
+				for (const t of data) {
+					if (t.type === TokenType.LITERAL && t.value.match(/^\w+$/))
+						t.type = TokenType.COMMAND_LITERAL;
+					else if (
+						t.type === TokenType.LITERAL &&
+						t.value.match(/^\S+$/)
+					)
+						t.type = TokenType.COMMAND_STRING;
+					else if (t.value.match(/^@[prase]/))
+						t.type = TokenType.COMMAND_SELECTOR;
+					else if (
+						t.type === TokenType.SEMI ||
+						t.type === TokenType.LPAREN ||
+						t.type === TokenType.RPAREN
+					)
+						continue;
+					else if (MC_ITEMS.find((v) => t.value.startsWith(v.name)))
+						t.type = TokenType.COMMAND_ITEM_STACK;
+					else t.type = TokenType.COMMAND_INVALID;
+				}
 
-	// 	return tokens;
-	// }
+				for (let i = startIndex; i < startIndex + tokens.length; i++) {
+					this.tokens[i] = data[i - startIndex];
+				}
+
+				this.tokens = this.tokens.filter((v) => v != undefined);
+			}
+		}
+	}
 
 	/**
 	 *

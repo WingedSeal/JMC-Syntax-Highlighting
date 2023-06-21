@@ -10,11 +10,12 @@ import {
 	CompletionItemKind,
 	SemanticTokens,
 	Position,
+	Range,
 } from "vscode-languageserver/node";
 import { TextDocument } from "vscode-languageserver-textdocument";
 import * as get_files from "get-all-files";
 import * as url from "url";
-import { DEPRECATED, Lexer, TokenData, TokenType } from "../lexer";
+import { Lexer, TokenData, TokenType } from "../lexer";
 import * as fs from "fs/promises";
 import {
 	ExtractedTokens,
@@ -51,14 +52,14 @@ import { URI } from "vscode-uri";
 import { BuiltInFunctions, methodInfoToDoc } from "../data/builtinFuncs";
 import { HEADERS } from "../data/headers";
 
-let jmcConfigs: string[] = [];
-const jmcFiles: JMCFile[] = [];
-let hjmcFiles: HJMCFile[] = [];
-let extracted: ExtractedTokens = {
+export let jmcConfigs: string[] = [];
+export const jmcFiles: JMCFile[] = [];
+export let hjmcFiles: HJMCFile[] = [];
+export let extracted: ExtractedTokens = {
 	variables: [],
 	funcs: [],
 };
-let macros: MacrosData[] = [];
+export let macros: MacrosData[] = [];
 export let currentFile: string | undefined;
 
 //#region default
@@ -140,7 +141,7 @@ connection.onInitialize(async (params: InitializeParams) => {
 			// Tell the client that this server supports code completion.
 			completionProvider: {
 				resolveProvider: true,
-				triggerCharacters: [".", "#"],
+				triggerCharacters: [".", "#", " ", "/"],
 			},
 			signatureHelpProvider: {
 				triggerCharacters: ["(", ",", " "],
@@ -197,11 +198,6 @@ connection.onDidChangeConfiguration((change) => {
 	documents.all().forEach(validateTextDocument);
 });
 
-/**
- *
- * @param resource
- * @returns
- */
 function getDocumentSettings(resource: string): Thenable<ServerSettings> {
 	if (!hasConfigurationCapability) {
 		return Promise.resolve(globalSettings);
@@ -243,6 +239,7 @@ async function validateJMC(
 		if (changedIndex) {
 			const lexerTokens = file.lexer.tokens;
 
+			//get ranged text
 			const start = doc.positionAt(changedIndex);
 			const startPos = Position.create(start.line, 0);
 			const startOffset = doc.offsetAt(startPos);
@@ -271,6 +268,7 @@ async function validateJMC(
 				if (token) tokens.push(token);
 				currentIndex += t.length;
 			}
+
 			if (file.text.length > fileText.length) {
 				file.lexer.tokens = lexerTokens
 					.slice(0, startIndex)
@@ -356,7 +354,6 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 	}
 }
 
-//TODO:
 connection.onCompletion(async (arg) => {
 	if (arg.textDocument.uri.endsWith(".hjmc")) {
 		//return headers
@@ -368,15 +365,21 @@ connection.onCompletion(async (arg) => {
 				};
 			});
 		else {
-			const file = hjmcFiles.find(
-				(v) => v.path == url.fileURLToPath(arg.textDocument.uri)
-			);
-			if (file) {
-				const line = arg.position.line;
-				const current = file.parser.data[line];
+			const doc = documents.get(arg.textDocument.uri);
+			if (doc) {
+				const start = Position.create(arg.position.line, 0);
+				const end = doc.positionAt(
+					doc.offsetAt(Position.create(arg.position.line + 1, 0))
+				);
+				const range = Range.create(start, end);
+				const text = doc.getText(range);
+				const current = HeaderParser.parseText(text);
 				switch (current.type) {
 					case HeaderType.BIND:
-						if (current.values.length == 0)
+						if (
+							current.values[0] == "" ||
+							current.values[0] == undefined
+						)
 							return [
 								{
 									label: "__namespace__",
@@ -388,9 +391,6 @@ connection.onCompletion(async (arg) => {
 								},
 							];
 						break;
-					case HeaderType.INCLUDE: {
-						break;
-					}
 					case HeaderType.STATIC:
 					default:
 						return undefined;
@@ -402,6 +402,10 @@ connection.onCompletion(async (arg) => {
 			(v) => v.value.split("\0")[0]
 		);
 		const cfDatas = await getFirstHirarchy(oFuncs);
+		const doc = documents.get(arg.textDocument.uri);
+		const file = jmcFiles.find(
+			(v) => v.path === url.fileURLToPath(arg.textDocument.uri)
+		);
 
 		//check if `$VARIABLE.get()` or `CLASS.METHOD`
 		if (arg.context?.triggerCharacter == ".") {
@@ -481,6 +485,26 @@ connection.onCompletion(async (arg) => {
 			}
 		}
 
+		//keywords
+		const keywords: CompletionItem[] = [
+			{
+				label: "import",
+				kind: CompletionItemKind.Keyword,
+			},
+			{
+				label: "class",
+				kind: CompletionItemKind.Keyword,
+			},
+			{
+				label: "function",
+				kind: CompletionItemKind.Keyword,
+			},
+			{
+				label: "new",
+				kind: CompletionItemKind.Keyword,
+			},
+		];
+
 		//variables
 		const vars: CompletionItem[] = concatVariableTokens(extracted).map(
 			(v) => {
@@ -531,6 +555,7 @@ connection.onCompletion(async (arg) => {
 
 		//return vars.concat(funcs).concat(mos).concat(builtInClasses);
 		return vars
+			.concat(keywords)
 			.concat(funcs)
 			.concat(classes)
 			.concat(mos)
@@ -818,7 +843,7 @@ connection.onDefinition(async (params) => {
 	return null;
 });
 
-//semantic highlight
+//*semantic highlight
 connection.onRequest(
 	"textDocument/semanticTokens/full",
 	async (params: vscode.SemanticTokensParams): Promise<SemanticTokens> => {
@@ -912,19 +937,17 @@ connection.onRequest(
 							);
 							break;
 						}
-						case TokenType.OLD_IMPORT: {
+						default: {
 							const pos = doc.positionAt(token.pos);
 							builder.push(
 								pos.line,
 								pos.character,
 								token.value.length,
-								6,
-								2
+								-1,
+								0
 							);
 							break;
 						}
-						default:
-							break;
 					}
 				}
 			}

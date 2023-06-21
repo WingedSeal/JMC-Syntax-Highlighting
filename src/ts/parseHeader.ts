@@ -18,29 +18,28 @@ export interface HeaderData {
 
 export class HeaderParser {
 	public data: HeaderData[];
-	private header: string;
-	private value: string;
 
 	constructor(text: string) {
 		this.data = [];
-		this.header = "";
-		this.value = "";
 		let i = 0;
 		for (const line of text.split(/\r?\n/g)) {
-			this.header = line.split(" ")[0];
-			this.value = line.split(" ").slice(1).join(" ");
-			const headerData: HeaderData = {
-				type: this.getHeaderType(),
-				values: this.getValues(),
-			};
-
-			this.data.push(headerData);
+			this.data.push(HeaderParser.parseText(line));
 			i++;
 		}
 	}
 
-	private getHeaderType(): HeaderType {
-		switch (this.header) {
+	static parseText(line: string): HeaderData {
+		const header = line.split(" ")[0];
+		const value = line.split(" ").slice(1).join(" ");
+		const headerData: HeaderData = {
+			type: this.getHeaderType(header),
+			values: this.getValues(header, value),
+		};
+		return headerData;
+	}
+
+	private static getHeaderType(header: string): HeaderType {
+		switch (header) {
 			case "#define":
 				return HeaderType.DEFINE;
 			case "#bind":
@@ -64,15 +63,15 @@ export class HeaderParser {
 		}
 	}
 
-	private getValues(): string[] {
-		const header = this.getHeaderType();
+	private static getValues(headerS: string, value: string): string[] {
+		const header = this.getHeaderType(headerS);
 		if (
 			header == HeaderType.CREDIT ||
 			header == HeaderType.INCLUDE ||
 			header == HeaderType.STATIC
 		) {
-			return [this.value];
+			return [value];
 		}
-		return this.value.split(" ");
+		return value.split(" ");
 	}
 }

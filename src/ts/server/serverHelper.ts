@@ -100,7 +100,7 @@ export async function getHirarchy(funcs: string[], query: string[]) {
 		classes: [],
 		funcs: [],
 	};
-	console.log(query);
+
 	for (let i = 0; i < query.length; i++) {
 		const current = query[i];
 		const q = splitedFuncs.filter((v) => v[i] == current);
