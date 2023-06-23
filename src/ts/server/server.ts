@@ -71,95 +71,100 @@ let hasWorkspaceFolderCapability = false;
 let hasDiagnosticRelatedInformationCapability = false;
 //#endregion
 connection.onInitialize(async (params: InitializeParams) => {
-	//initialze the JMCFiles & HJMC Files
-	if (params.workspaceFolders) {
-		for (const folder of params.workspaceFolders) {
-			const files = get_files
-				.getAllFilesSync(url.fileURLToPath(folder.uri))
-				.toArray();
-			jmcConfigs = jmcConfigs.concat(
-				files.filter((v) => v.endsWith("jmc_config.json"))
-			);
-			const jfiles = files.filter(
-				(v) => v.endsWith(".jmc") || v.endsWith(".hjmc")
-			);
-			for (const f of jfiles.filter((v) => v.endsWith(".hjmc"))) {
-				const text = await fs.readFile(f, "utf-8");
-				const parser = new HeaderParser(text);
-				hjmcFiles.push({
-					path: f,
-					parser: parser,
-				});
-				for (const header of parser.data) {
-					if (header.type == HeaderType.DEFINE) {
-						macros.push({
-							path: f,
-							target: header.values[0],
-							values: header.values.slice(1),
-						});
+	try {
+		//initialze the JMCFiles & HJMC Files
+		if (params.workspaceFolders) {
+			for (const folder of params.workspaceFolders) {
+				const files = get_files
+					.getAllFilesSync(url.fileURLToPath(folder.uri))
+					.toArray();
+				jmcConfigs = jmcConfigs.concat(
+					files.filter((v) => v.endsWith("jmc_config.json"))
+				);
+				const jfiles = files.filter(
+					(v) => v.endsWith(".jmc") || v.endsWith(".hjmc")
+				);
+				for (const f of jfiles.filter((v) => v.endsWith(".hjmc"))) {
+					const text = await fs.readFile(f, "utf-8");
+					const parser = new HeaderParser(text);
+					hjmcFiles.push({
+						path: f,
+						parser: parser,
+					});
+					for (const header of parser.data) {
+						if (header.type == HeaderType.DEFINE) {
+							macros.push({
+								path: f,
+								target: header.values[0],
+								values: header.values.slice(1),
+							});
+						}
 					}
 				}
-			}
-			for (const f of jfiles.filter((v) => v.endsWith(".jmc"))) {
-				const text = await fs.readFile(f, "utf-8");
-				jmcFiles.push({
-					path: f,
-					lexer: new Lexer(text, macros),
-					text: text,
-				});
-			}
+				for (const f of jfiles.filter((v) => v.endsWith(".jmc"))) {
+					const text = await fs.readFile(f, "utf-8");
+					jmcFiles.push({
+						path: f,
+						lexer: new Lexer(text, macros),
+						text: text,
+					});
+				}
 
-			extracted = await getTokens(jmcFiles);
+				extracted = await getTokens(jmcFiles);
+			}
 		}
-	}
-	//#region default
-	const capabilities = params.capabilities;
+		//#region default
+		const capabilities = params.capabilities;
 
-	hasConfigurationCapability = !!(
-		capabilities.workspace && !!capabilities.workspace.configuration
-	);
-	hasWorkspaceFolderCapability = !!(
-		capabilities.workspace && !!capabilities.workspace.workspaceFolders
-	);
-	hasDiagnosticRelatedInformationCapability = !!(
-		capabilities.textDocument &&
-		capabilities.textDocument.publishDiagnostics &&
-		capabilities.textDocument.publishDiagnostics.relatedInformation
-	);
+		hasConfigurationCapability = !!(
+			capabilities.workspace && !!capabilities.workspace.configuration
+		);
+		hasWorkspaceFolderCapability = !!(
+			capabilities.workspace && !!capabilities.workspace.workspaceFolders
+		);
+		hasDiagnosticRelatedInformationCapability = !!(
+			capabilities.textDocument &&
+			capabilities.textDocument.publishDiagnostics &&
+			capabilities.textDocument.publishDiagnostics.relatedInformation
+		);
 
-	const SemanticTokensOptions: vscode.SemanticTokensOptions = {
-		legend: {
-			tokenTypes: SemanticTokenTypes,
-			tokenModifiers: SemanticTokenModifiers,
-		},
-		full: true,
-	};
-
-	const result: InitializeResult = {
-		capabilities: {
-			textDocumentSync: TextDocumentSyncKind.Incremental,
-			// Tell the client that this server supports code completion.
-			completionProvider: {
-				resolveProvider: true,
-				triggerCharacters: [".", "#", " ", "/"],
+		const SemanticTokensOptions: vscode.SemanticTokensOptions = {
+			legend: {
+				tokenTypes: SemanticTokenTypes,
+				tokenModifiers: SemanticTokenModifiers,
 			},
-			signatureHelpProvider: {
-				triggerCharacters: ["(", ",", " "],
-				retriggerCharacters: [",", " "],
-			},
-			semanticTokensProvider: SemanticTokensOptions,
-			definitionProvider: true,
-		},
-	};
-	if (hasWorkspaceFolderCapability) {
-		result.capabilities.workspace = {
-			workspaceFolders: {
-				supported: true,
+			full: true,
+		};
+
+		const result: InitializeResult = {
+			capabilities: {
+				textDocumentSync: TextDocumentSyncKind.Incremental,
+				// Tell the client that this server supports code completion.
+				completionProvider: {
+					resolveProvider: true,
+					triggerCharacters: [".", "#", " ", "/"],
+				},
+				signatureHelpProvider: {
+					triggerCharacters: ["(", ",", " "],
+					retriggerCharacters: [",", " "],
+				},
+				semanticTokensProvider: SemanticTokensOptions,
+				definitionProvider: true,
 			},
 		};
+		if (hasWorkspaceFolderCapability) {
+			result.capabilities.workspace = {
+				workspaceFolders: {
+					supported: true,
+				},
+			};
+		}
+		return result;
+		//#endregion
+	} catch (e: any) {
+		console.log(e);
+		throw new e();
 	}
-	return result;
-	//#endregion
 });
 
 connection.onInitialized(() => {
@@ -243,18 +248,19 @@ async function validateJMC(
 			const start = doc.positionAt(changedIndex);
 			const startPos = Position.create(start.line, 0);
 			const startOffset = doc.offsetAt(startPos);
-			const startIndex = getIndexByOffset(file.lexer, startOffset);
+			const startIndex = getIndexByOffset(file.lexer.tokens, startOffset);
 
 			const end = doc.positionAt(changedIndex + differenceLength);
 			const endPos = Position.create(end.line + 1, 0);
 			const endIndex =
-				getIndexByOffset(file.lexer, doc.offsetAt(endPos)) - 1;
+				getIndexByOffset(file.lexer.tokens, doc.offsetAt(endPos)) - 1;
 
 			const range = vscode.Range.create(startPos, endPos);
 			const text = doc.getText(range);
 
 			let currentIndex = startOffset;
 
+			//tokenize the text
 			const tokens: TokenData[] = [];
 			const splited = await splitTokenString(text);
 			for (let i = 0; i < splited.length; i++) {
@@ -269,6 +275,7 @@ async function validateJMC(
 				currentIndex += t.length;
 			}
 
+			//modify the tokens
 			if (file.text.length > fileText.length) {
 				file.lexer.tokens = lexerTokens
 					.slice(0, startIndex)
@@ -279,6 +286,7 @@ async function validateJMC(
 							return v;
 						})
 					);
+				file.lexer.parseCommand(changedIndex);
 			} else {
 				file.lexer.tokens = lexerTokens
 					.slice(0, startIndex)
@@ -289,6 +297,7 @@ async function validateJMC(
 							return v;
 						})
 					);
+				file.lexer.parseCommand(changedIndex);
 			}
 		}
 
@@ -414,7 +423,7 @@ connection.onCompletion(async (arg) => {
 			const file = jmcFiles.find((v) => v.path == path);
 			if (doc && file) {
 				const offset = doc.offsetAt(arg.position);
-				let index = getIndexByOffset(file.lexer, offset - 1);
+				let index = getIndexByOffset(file.lexer.tokens, offset - 1);
 				if (
 					file.lexer.tokens[index].type == TokenType.LCP ||
 					file.lexer.tokens[index].type == TokenType.RCP
@@ -579,7 +588,7 @@ connection.onSignatureHelp(async (params) => {
 		const triggerChar = context.triggerCharacter;
 
 		const index = getIndexByOffset(
-			file.lexer,
+			file.lexer.tokens,
 			doc.offsetAt(params.position) - 2
 		);
 		const tokens = file.lexer.tokens;
@@ -711,7 +720,7 @@ connection.onDefinition(async (params) => {
 
 	if (currFile && rDoc) {
 		const index = getIndexByOffset(
-			currFile.lexer,
+			currFile.lexer.tokens,
 			rDoc.offsetAt(params.position)
 		);
 

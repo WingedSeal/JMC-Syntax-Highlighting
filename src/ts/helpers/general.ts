@@ -38,6 +38,11 @@ export interface FileTokens {
 	tokens: TokenData[];
 }
 
+export interface StatementRange {
+	start: number;
+	end: number;
+}
+
 type IsDuplicate<T> = (a: T, b: T) => boolean;
 
 /**
@@ -96,13 +101,13 @@ export function findStringDifferenceSync(
 
 /**
  * get the tokens index of by the offset provided
- * @param lexer {@link Lexer}
+ * @param tokens {@link Lexer}
  * @param offset offset of the text
  * @returns index of the tokens
  */
-export function getIndexByOffset(lexer: Lexer, offset: number): number {
-	return lexer.tokens.findIndex((val) => {
-		return val.pos > offset;
+export function getIndexByOffset(tokens: TokenData[], offset: number): number {
+	return tokens.findIndex((val) => {
+		return val.pos >= offset;
 	});
 }
 /**
@@ -609,6 +614,13 @@ export function joinFunction(tokens: TokenData[]): TokenData[] {
 	}
 
 	return tokens.filter((v) => v);
+}
+
+export function getTokensByRange(
+	tokens: TokenData[],
+	range: StatementRange
+): TokenData[] {
+	return tokens.filter((v) => v.pos <= range.end && v.pos >= range.start);
 }
 
 /**

@@ -2,10 +2,12 @@ import { START_COMMAND } from "./data/commands";
 import { MC_ITEMS } from "./data/mcDatas";
 import {
 	MacrosData,
+	StatementRange,
+	getIndexByOffset,
+	getTokensByRange,
 	joinCommandData,
 	splitTokenArraySync,
 } from "./helpers/general";
-
 export enum ErrorType {
 	INVALID,
 	UNKNWON_TOKEN,
@@ -359,10 +361,14 @@ export class Lexer {
 	tokenize(
 		current: string,
 		pos: number,
-		datas: TokenData[]
+		datas: TokenData[],
+		cmd = true
 	): TokenData | null {
 		const result = Tokens.find((v) => v.regex.test(current));
-
+		const commandRanges = this.getCommandRanges(datas);
+		const inCommandRange = commandRanges.find(
+			(v) => pos >= v.start && pos <= v.end
+		);
 		if (this.macros.includes(current)) {
 			return {
 				type: TokenType.MACROS,
@@ -370,6 +376,16 @@ export class Lexer {
 				value: current,
 			};
 		} else if (result) {
+			if (inCommandRange && cmd) {
+				const token: TokenData = {
+					type: result.token,
+					pos: pos,
+					value: current,
+				};
+				const type = this.tokenizeCommand(token);
+				token.type = type != undefined ? type : token.type;
+				return token;
+			}
 			if (result.token == TokenType.SWITCH) {
 				if (datas[datas.length - 1].type == TokenType.DOT) {
 					result.token = TokenType.LITERAL;
@@ -382,6 +398,68 @@ export class Lexer {
 			};
 		}
 		return null;
+	}
+
+	tokenizeCommand(token: TokenData): TokenType | undefined {
+		if (token.type === TokenType.LITERAL && token.value.match(/^\w+$/))
+			return TokenType.COMMAND_LITERAL;
+		else if (token.type === TokenType.LITERAL && token.value.match(/^\S+$/))
+			return TokenType.COMMAND_STRING;
+		else if (token.value.match(/^@[prase]/))
+			return TokenType.COMMAND_SELECTOR;
+		else if (
+			token.type === TokenType.SEMI ||
+			token.type === TokenType.LPAREN ||
+			token.type === TokenType.RPAREN
+		)
+			return undefined;
+		else if (MC_ITEMS.find((v) => token.value.startsWith(v.name)))
+			return TokenType.COMMAND_ITEM_STACK;
+		else return TokenType.COMMAND_INVALID;
+	}
+
+	private getCommandRanges(tokens: TokenData[]): StatementRange[] {
+		const r: StatementRange[] = [];
+
+		for (let i = 0; i < tokens.length; i++) {
+			const token = tokens[i];
+			if (
+				token.type === TokenType.COMMAND_LITERAL ||
+				START_COMMAND.includes(token.value)
+			) {
+				for (; i < tokens.length; i++) {
+					const t = tokens[i];
+					if (END_TOKEN.includes(t.type)) {
+						r.push({
+							start: token.pos,
+							end: t.pos,
+						});
+						i++;
+						break;
+					}
+				}
+			}
+		}
+
+		return r;
+	}
+
+	parseCommand(pos: number) {
+		const commands = this.getCommandRanges(this.tokens);
+		const range = commands.find((v) => pos >= v.start && pos <= v.end);
+
+		if (range) {
+			const tks = getTokensByRange(this.tokens, range)
+				.map((v) => this.tokenize(v.value, v.pos, this.tokens, false)!)
+				.filter((v) => v != undefined);
+			let joined = joinCommandData(tks);
+			const startIndex = getIndexByOffset(this.tokens, tks[0].pos);
+			joined = joined.slice(0, joined.length - 1);
+			for (let i = startIndex; i < startIndex + tks.length; i++) {
+				this.tokens[i] = joined[i - startIndex];
+			}
+			this.tokens = this.tokens.filter((v) => v != undefined);
+		}
 	}
 
 	private parseCommands() {
@@ -405,33 +483,16 @@ export class Lexer {
 
 				//tokenize it
 				for (const t of data) {
-					if (t.type === TokenType.LITERAL && t.value.match(/^\w+$/))
-						t.type = TokenType.COMMAND_LITERAL;
-					else if (
-						t.type === TokenType.LITERAL &&
-						t.value.match(/^\S+$/)
-					)
-						t.type = TokenType.COMMAND_STRING;
-					else if (t.value.match(/^@[prase]/))
-						t.type = TokenType.COMMAND_SELECTOR;
-					else if (
-						t.type === TokenType.SEMI ||
-						t.type === TokenType.LPAREN ||
-						t.type === TokenType.RPAREN
-					)
-						continue;
-					else if (MC_ITEMS.find((v) => t.value.startsWith(v.name)))
-						t.type = TokenType.COMMAND_ITEM_STACK;
-					else t.type = TokenType.COMMAND_INVALID;
+					const type = this.tokenizeCommand(t);
+					t.type = type != undefined ? type : t.type;
 				}
 
 				for (let i = startIndex; i < startIndex + tokens.length; i++) {
 					this.tokens[i] = data[i - startIndex];
 				}
-
-				this.tokens = this.tokens.filter((v) => v != undefined);
 			}
 		}
+		this.tokens = this.tokens.filter((v) => v != undefined);
 	}
 
 	/**
