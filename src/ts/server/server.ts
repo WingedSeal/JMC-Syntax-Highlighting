@@ -51,6 +51,7 @@ import {
 import { URI } from "vscode-uri";
 import { BuiltInFunctions, methodInfoToDoc } from "../data/builtinFuncs";
 import { HEADERS } from "../data/headers";
+import { START_COMMAND } from "../data/commands";
 
 export let jmcConfigs: string[] = [];
 export const jmcFiles: JMCFile[] = [];
@@ -286,7 +287,7 @@ async function validateJMC(
 							return v;
 						})
 					);
-				file.lexer.parseCommand(changedIndex);
+				file.lexer.parseCommand(changedIndex, fileText);
 			} else {
 				file.lexer.tokens = lexerTokens
 					.slice(0, startIndex)
@@ -297,7 +298,7 @@ async function validateJMC(
 							return v;
 						})
 					);
-				file.lexer.parseCommand(changedIndex);
+				file.lexer.parseCommand(changedIndex, fileText);
 			}
 		}
 
@@ -514,6 +515,11 @@ connection.onCompletion(async (arg) => {
 			},
 		];
 
+		const commands: CompletionItem[] = START_COMMAND.map((v) => ({
+			label: v,
+			kind: CompletionItemKind.Keyword,
+		}));
+
 		//variables
 		const vars: CompletionItem[] = concatVariableTokens(extracted).map(
 			(v) => {
@@ -565,6 +571,7 @@ connection.onCompletion(async (arg) => {
 		//return vars.concat(funcs).concat(mos).concat(builtInClasses);
 		return vars
 			.concat(keywords)
+			.concat(commands)
 			.concat(funcs)
 			.concat(classes)
 			.concat(mos)
@@ -943,6 +950,28 @@ connection.onRequest(
 								token.value.length,
 								5,
 								0
+							);
+							break;
+						}
+						case TokenType.COMMAND_LITERAL: {
+							const pos = doc.positionAt(token.pos);
+							builder.push(
+								pos.line,
+								pos.character,
+								token.value.length,
+								6,
+								0
+							);
+							break;
+						}
+						case TokenType.OLD_IMPORT: {
+							const pos = doc.positionAt(token.pos);
+							builder.push(
+								pos.line,
+								pos.character,
+								token.value.length,
+								6,
+								0b0100
 							);
 							break;
 						}

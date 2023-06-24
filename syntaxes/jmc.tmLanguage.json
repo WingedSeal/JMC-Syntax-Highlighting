@@ -36,7 +36,7 @@
 		"keywords": {
 			"patterns": [
 				{
-					"name": "keyword.control.jmc",
+					"name": "keyword.control..jmc",
 					"match": "\\b(if|else|while|for|do|switch|case|class|true|false|schedule|import)\\b"
 				},
 				{
@@ -57,7 +57,7 @@
 			"patterns": [
 				{
 					"name": "keyword.operator.jmc",
-					"match": "([=\\*\\-\\/\\+\\%\\.><(?:\\|\\|)(?:\\&\\&)\\!,]|matches)"
+					"match": "([=\\*\\-\\/\\+\\%\\.><(?:\\|\\|)(?:\\&\\&)\\!,]|matches|\\~|\\^)"
 				}
 			]
 		},

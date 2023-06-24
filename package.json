@@ -76,7 +76,7 @@
 		},
 		"semanticTokenModifiers": [
 			{
-				"id": "native",
+				"id": "deprecated",
 				"description": "native"
 			}
 		],

@@ -86,6 +86,7 @@ export enum TokenType {
 	COMMAND_STRING,
 	COMMAND_INVALID,
 	COMMAND_FC,
+	COMMAND_VALUE,
 }
 
 interface Token {
@@ -400,8 +401,13 @@ export class Lexer {
 		return null;
 	}
 
-	tokenizeCommand(token: TokenData): TokenType | undefined {
-		if (token.type === TokenType.LITERAL && token.value.match(/^\w+$/))
+	tokenizeCommand(token: TokenData): TokenType {
+		if (
+			token.type === TokenType.COMMAND_LITERAL &&
+			token.value.includes(".")
+		)
+			return TokenType.COMMAND_VALUE;
+		else if (token.type === TokenType.LITERAL && token.value.match(/^\w+$/))
 			return TokenType.COMMAND_LITERAL;
 		else if (token.type === TokenType.LITERAL && token.value.match(/^\S+$/))
 			return TokenType.COMMAND_STRING;
@@ -412,10 +418,12 @@ export class Lexer {
 			token.type === TokenType.LPAREN ||
 			token.type === TokenType.RPAREN
 		)
-			return undefined;
+			return token.type;
 		else if (MC_ITEMS.find((v) => token.value.startsWith(v.name)))
 			return TokenType.COMMAND_ITEM_STACK;
-		else return TokenType.COMMAND_INVALID;
+		else if (TokenType[token.type].startsWith("COMMAND")) {
+			return token.type;
+		} else return TokenType.COMMAND_INVALID;
 	}
 
 	private getCommandRanges(tokens: TokenData[]): StatementRange[] {
@@ -434,7 +442,6 @@ export class Lexer {
 							start: token.pos,
 							end: t.pos,
 						});
-						i++;
 						break;
 					}
 				}
@@ -444,21 +451,28 @@ export class Lexer {
 		return r;
 	}
 
-	parseCommand(pos: number) {
+	parseCommand(pos: number, text: string) {
 		const commands = this.getCommandRanges(this.tokens);
 		const range = commands.find((v) => pos >= v.start && pos <= v.end);
-
 		if (range) {
-			const tks = getTokensByRange(this.tokens, range)
-				.map((v) => this.tokenize(v.value, v.pos, this.tokens, false)!)
-				.filter((v) => v != undefined);
-			let joined = joinCommandData(tks);
-			const startIndex = getIndexByOffset(this.tokens, tks[0].pos);
-			joined = joined.slice(0, joined.length - 1);
-			for (let i = startIndex; i < startIndex + tks.length; i++) {
-				this.tokens[i] = joined[i - startIndex];
+			const tokens = getTokensByRange(this.tokens, range)
+				.map((v) => {
+					return this.tokenize(v.value, v.pos, this.tokens, false)!;
+				})
+				.filter((v) => v != null);
+			console.log(tokens);
+			if (tokens.length > 0) {
+				const joined = joinCommandData(tokens).map((v) => {
+					v.type = this.tokenizeCommand(v);
+					return v;
+				});
+				console.log(joinCommandData(tokens));
+				const startIndex = getIndexByOffset(this.tokens, joined[0].pos);
+				for (let i = startIndex; i < startIndex + tokens.length; i++) {
+					this.tokens[i] = joined[i - startIndex];
+				}
+				this.tokens = this.tokens.filter((v) => v != undefined);
 			}
-			this.tokens = this.tokens.filter((v) => v != undefined);
 		}
 	}
 
