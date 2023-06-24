@@ -6,9 +6,12 @@ export const SemanticTokenTypes = [
 	"variable",
 	"string",
 	"keyword",
+	"commandKeyword",
+	"commandNumber",
 ];
 export const SemanticTokenModifiers = [
 	"declaration",
 	"documentation",
 	"deprecated",
+	"commandStart",
 ];

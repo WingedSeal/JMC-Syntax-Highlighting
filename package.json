@@ -72,88 +72,71 @@
 		"configurationDefaults": {
 			"[jmc]": {
 				"editor.semanticHighlighting.enabled": true
+			},
+			"editor.semanticTokenColorCustomizations": {
+				"rules": {
+					"commandKeyword": {
+						"foreground": "#ffbfec"
+					},
+					"*.deprecated": {
+						"strikethrough": true
+					},
+					"*.commandStart": {
+						"bold": true
+					}
+				}
 			}
 		},
 		"semanticTokenModifiers": [
 			{
-				"id": "deprecated",
-				"description": "native"
+				"id": "commandStart",
+				"description": "start of the command"
 			}
 		],
 		"semanticTokenScopes": [
 			{
 				"scopes": {
-					"scoreboard": [
-						"entity.name.class.jmc"
+					"command_keyword": [
+						"keyword.other.jmc"
 					],
-					"undefinedVariable": [
+					"command_number": [
 						"constant.numeric.jmc"
-					],
-					"func": [
-						"storage.type.function.jmc"
-					],
-					"clas": [
-						"entity.name.class.jmc"
-					],
-					"command": [
-						"keyword.control.jmc"
-					],
-					"macros": [
-						"storage.type.class.jmc"
 					]
 				}
 			}
 		],
 		"semanticTokenTypes": [
 			{
-				"id": "scoreboard",
-				"superType": "variable",
-				"description": "defined scoreboard highlighting"
+				"id": "command_keyword",
+				"superType": "commandKeyword",
+				"description": "keyword for the commands"
 			},
 			{
-				"id": "unusedVariable",
-				"superType": "undefinedVariable",
-				"description": "NA"
-			},
-			{
-				"id": "func",
-				"superType": "function",
-				"description": "NA"
-			},
-			{
-				"id": "clas",
-				"superType": "class",
-				"description": "NA"
-			},
-			{
-				"id": "command",
-				"superType": "keyword",
-				"description": "NA"
-			},
-			{
-				"id": "macros",
-				"superType": "macro",
-				"description": "NA"
+				"id": "command_number",
+				"superType": "commandNumber",
+				"description": "number for the commands"
 			}
 		],
 		"configuration": {
 			"title": "JMC",
 			"properties": {
 				"jmc.executable": {
-					"type": [
-						"string"
-					],
+					"type": "string",
 					"default": "",
 					"description": "Specifies JMC.exe path for debugging",
 					"scope": "resource",
 					"editPresentation": "singlelineText"
 				},
 				"jmc.rawFuncHighlight": {
-					"type": [
-						"boolean"
-					],
+					"type": "boolean",
 					"default": false,
 					"description": "It will highlight functions without classes",
+					"scope": "resource"
+				},
+				"jmc.boldFirstCommand": {
+					"type": "boolean",
+					"default": true,
+					"description": "Bold the first token of the command",
 					"scope": "resource"
 				}
 			}

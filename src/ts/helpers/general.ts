@@ -721,6 +721,10 @@ export function joinNamespace(tokens: TokenData[]): TokenData[] {
 	return datas;
 }
 
+export function joinNumber(tokens: TokenData[]): TokenData[] {
+	
+}
+
 /**
  *
  * @param tokens

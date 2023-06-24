@@ -954,12 +954,23 @@ connection.onRequest(
 							break;
 						}
 						case TokenType.COMMAND_LITERAL: {
+							if (START_COMMAND.includes(token.value)) {
+								const pos = doc.positionAt(token.pos);
+								builder.push(
+									pos.line,
+									pos.character,
+									token.value.length,
+									7,
+									0b1000
+								);
+								break;
+							}
 							const pos = doc.positionAt(token.pos);
 							builder.push(
 								pos.line,
 								pos.character,
 								token.value.length,
-								6,
+								7,
 								0
 							);
 							break;

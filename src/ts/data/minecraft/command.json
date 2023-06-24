@@ -9072,7 +9072,7 @@
 												"parser": {
 													"parser": "brigadier:float",
 													"modifier": {
-														"min": 0
+														"min": 0.0
 													}
 												}
 											}
@@ -9147,8 +9147,8 @@
 																		"parser": {
 																			"parser": "brigadier:float",
 																			"modifier": {
-																				"min": 0,
-																				"max": 1
+																				"min": 0.0,
+																				"max": 1.0
 																			}
 																		}
 																	}
@@ -9156,8 +9156,8 @@
 																"parser": {
 																	"parser": "brigadier:float",
 																	"modifier": {
-																		"min": 0,
-																		"max": 2
+																		"min": 0.0,
+																		"max": 2.0
 																	}
 																}
 															}
@@ -9165,7 +9165,7 @@
 														"parser": {
 															"parser": "brigadier:float",
 															"modifier": {
-																"min": 0
+																"min": 0.0
 															}
 														}
 													}
@@ -9225,8 +9225,8 @@
 																		"parser": {
 																			"parser": "brigadier:float",
 																			"modifier": {
-																				"min": 0,
-																				"max": 1
+																				"min": 0.0,
+																				"max": 1.0
 																			}
 																		}
 																	}
@@ -9234,8 +9234,8 @@
 																"parser": {
 																	"parser": "brigadier:float",
 																	"modifier": {
-																		"min": 0,
-																		"max": 2
+																		"min": 0.0,
+																		"max": 2.0
 																	}
 																}
 															}
@@ -9243,7 +9243,7 @@
 														"parser": {
 															"parser": "brigadier:float",
 															"modifier": {
-																"min": 0
+																"min": 0.0
 															}
 														}
 													}
@@ -9303,8 +9303,8 @@
 																		"parser": {
 																			"parser": "brigadier:float",
 																			"modifier": {
-																				"min": 0,
-																				"max": 1
+																				"min": 0.0,
+																				"max": 1.0
 																			}
 																		}
 																	}
@@ -9312,8 +9312,8 @@
 																"parser": {
 																	"parser": "brigadier:float",
 																	"modifier": {
-																		"min": 0,
-																		"max": 2
+																		"min": 0.0,
+																		"max": 2.0
 																	}
 																}
 															}
@@ -9321,7 +9321,7 @@
 														"parser": {
 															"parser": "brigadier:float",
 															"modifier": {
-																"min": 0
+																"min": 0.0
 															}
 														}
 													}
@@ -9381,8 +9381,8 @@
 																		"parser": {
 																			"parser": "brigadier:float",
 																			"modifier": {
-																				"min": 0,
-																				"max": 1
+																				"min": 0.0,
+																				"max": 1.0
 																			}
 																		}
 																	}
@@ -9390,8 +9390,8 @@
 																"parser": {
 																	"parser": "brigadier:float",
 																	"modifier": {
-																		"min": 0,
-																		"max": 2
+																		"min": 0.0,
+																		"max": 2.0
 																	}
 																}
 															}
@@ -9399,7 +9399,7 @@
 														"parser": {
 															"parser": "brigadier:float",
 															"modifier": {
-																"min": 0
+																"min": 0.0
 															}
 														}
 													}
@@ -9459,8 +9459,8 @@
 																		"parser": {
 																			"parser": "brigadier:float",
 																			"modifier": {
-																				"min": 0,
-																				"max": 1
+																				"min": 0.0,
+																				"max": 1.0
 																			}
 																		}
 																	}
@@ -9468,8 +9468,8 @@
 																"parser": {
 																	"parser": "brigadier:float",
 																	"modifier": {
-																		"min": 0,
-																		"max": 2
+																		"min": 0.0,
+																		"max": 2.0
 																	}
 																}
 															}
@@ -9477,7 +9477,7 @@
 														"parser": {
 															"parser": "brigadier:float",
 															"modifier": {
-																"min": 0
+																"min": 0.0
 															}
 														}
 													}
@@ -9537,8 +9537,8 @@
 																		"parser": {
 																			"parser": "brigadier:float",
 																			"modifier": {
-																				"min": 0,
-																				"max": 1
+																				"min": 0.0,
+																				"max": 1.0
 																			}
 																		}
 																	}
@@ -9546,8 +9546,8 @@
 																"parser": {
 																	"parser": "brigadier:float",
 																	"modifier": {
-																		"min": 0,
-																		"max": 2
+																		"min": 0.0,
+																		"max": 2.0
 																	}
 																}
 															}
@@ -9555,7 +9555,7 @@
 														"parser": {
 															"parser": "brigadier:float",
 															"modifier": {
-																"min": 0
+																"min": 0.0
 															}
 														}
 													}
@@ -9615,8 +9615,8 @@
 																		"parser": {
 																			"parser": "brigadier:float",
 																			"modifier": {
-																				"min": 0,
-																				"max": 1
+																				"min": 0.0,
+																				"max": 1.0
 																			}
 																		}
 																	}
@@ -9624,8 +9624,8 @@
 																"parser": {
 																	"parser": "brigadier:float",
 																	"modifier": {
-																		"min": 0,
-																		"max": 2
+																		"min": 0.0,
+																		"max": 2.0
 																	}
 																}
 															}
@@ -9633,7 +9633,7 @@
 														"parser": {
 															"parser": "brigadier:float",
 															"modifier": {
-																"min": 0
+																"min": 0.0
 															}
 														}
 													}
@@ -9693,8 +9693,8 @@
 																		"parser": {
 																			"parser": "brigadier:float",
 																			"modifier": {
-																				"min": 0,
-																				"max": 1
+																				"min": 0.0,
+																				"max": 1.0
 																			}
 																		}
 																	}
@@ -9702,8 +9702,8 @@
 																"parser": {
 																	"parser": "brigadier:float",
 																	"modifier": {
-																		"min": 0,
-																		"max": 2
+																		"min": 0.0,
+																		"max": 2.0
 																	}
 																}
 															}
@@ -9711,7 +9711,7 @@
 														"parser": {
 															"parser": "brigadier:float",
 															"modifier": {
-																"min": 0
+																"min": 0.0
 															}
 														}
 													}
@@ -9771,8 +9771,8 @@
 																		"parser": {
 																			"parser": "brigadier:float",
 																			"modifier": {
-																				"min": 0,
-																				"max": 1
+																				"min": 0.0,
+																				"max": 1.0
 																			}
 																		}
 																	}
@@ -9780,8 +9780,8 @@
 																"parser": {
 																	"parser": "brigadier:float",
 																	"modifier": {
-																		"min": 0,
-																		"max": 2
+																		"min": 0.0,
+																		"max": 2.0
 																	}
 																}
 															}
@@ -9789,7 +9789,7 @@
 														"parser": {
 															"parser": "brigadier:float",
 															"modifier": {
-																"min": 0
+																"min": 0.0
 															}
 														}
 													}
@@ -9849,8 +9849,8 @@
 																		"parser": {
 																			"parser": "brigadier:float",
 																			"modifier": {
-																				"min": 0,
-																				"max": 1
+																				"min": 0.0,
+																				"max": 1.0
 																			}
 																		}
 																	}
@@ -9858,8 +9858,8 @@
 																"parser": {
 																	"parser": "brigadier:float",
 																	"modifier": {
-																		"min": 0,
-																		"max": 2
+																		"min": 0.0,
+																		"max": 2.0
 																	}
 																}
 															}
@@ -9867,7 +9867,7 @@
 														"parser": {
 															"parser": "brigadier:float",
 															"modifier": {
-																"min": 0
+																"min": 0.0
 															}
 														}
 													}
@@ -11079,7 +11079,7 @@
 										"parser": {
 											"parser": "brigadier:float",
 											"modifier": {
-												"min": 1
+												"min": 1.0
 											}
 										}
 									}
@@ -11087,7 +11087,7 @@
 								"parser": {
 									"parser": "brigadier:float",
 									"modifier": {
-										"min": 0
+										"min": 0.0
 									}
 								}
 							}
@@ -12750,8 +12750,8 @@
 								"parser": {
 									"parser": "brigadier:float",
 									"modifier": {
-										"min": -60000000,
-										"max": 60000000
+										"min": -60000000.0,
+										"max": 60000000.0
 									}
 								}
 							}
@@ -12797,7 +12797,7 @@
 										"parser": {
 											"parser": "brigadier:float",
 											"modifier": {
-												"min": 0
+												"min": 0.0
 											}
 										}
 									}
@@ -12818,7 +12818,7 @@
 										"parser": {
 											"parser": "brigadier:float",
 											"modifier": {
-												"min": 0
+												"min": 0.0
 											}
 										}
 									}
@@ -12862,8 +12862,8 @@
 								"parser": {
 									"parser": "brigadier:float",
 									"modifier": {
-										"min": -60000000,
-										"max": 60000000
+										"min": -60000000.0,
+										"max": 60000000.0
 									}
 								}
 							}
@@ -13347,7 +13347,7 @@
 		{
 			"parser": "brigadier:float",
 			"modifier": {
-				"min": 0
+				"min": 0.0
 			},
 			"examples": ["0.0", "0", "1", "0.01"]
 		},
@@ -13359,16 +13359,16 @@
 		{
 			"parser": "brigadier:float",
 			"modifier": {
-				"min": 0,
-				"max": 1
+				"min": 0.0,
+				"max": 1.0
 			},
 			"examples": ["0.0", "0", "1", "1.0", "0.5"]
 		},
 		{
 			"parser": "brigadier:float",
 			"modifier": {
-				"min": 0,
-				"max": 2
+				"min": 0.0,
+				"max": 2.0
 			},
 			"examples": ["0", "2", "1.0", "2.0"]
 		},
@@ -13416,7 +13416,7 @@
 		{
 			"parser": "brigadier:float",
 			"modifier": {
-				"min": 1
+				"min": 1.0
 			},
 			"examples": ["1", "1.0", "1.000"]
 		},
@@ -13469,8 +13469,8 @@
 		{
 			"parser": "brigadier:float",
 			"modifier": {
-				"min": -60000000,
-				"max": 60000000
+				"min": -60000000.0,
+				"max": 60000000.0
 			},
 			"examples": []
 		}
