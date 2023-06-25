@@ -419,7 +419,7 @@ export class Lexer {
 			token.type === TokenType.RPAREN
 		)
 			return token.type;
-		else if (MC_ITEMS.find((v) => token.value.startsWith(v.name)))
+		else if (MC_ITEMS.find((v) => token.value.startsWith(v)))
 			return TokenType.COMMAND_ITEM_STACK;
 		else if (TokenType[token.type].startsWith("COMMAND")) {
 			return token.type;
@@ -451,7 +451,7 @@ export class Lexer {
 		return r;
 	}
 
-	parseCommand(pos: number, text: string) {
+	parseCommand(pos: number) {
 		const commands = this.getCommandRanges(this.tokens);
 		const range = commands.find((v) => pos >= v.start && pos <= v.end);
 		if (range) {
@@ -460,13 +460,11 @@ export class Lexer {
 					return this.tokenize(v.value, v.pos, this.tokens, false)!;
 				})
 				.filter((v) => v != null);
-			console.log(tokens);
 			if (tokens.length > 0) {
 				const joined = joinCommandData(tokens).map((v) => {
 					v.type = this.tokenizeCommand(v);
 					return v;
 				});
-				console.log(joinCommandData(tokens));
 				const startIndex = getIndexByOffset(this.tokens, joined[0].pos);
 				for (let i = startIndex; i < startIndex + tokens.length; i++) {
 					this.tokens[i] = joined[i - startIndex];
@@ -483,7 +481,9 @@ export class Lexer {
 			const startIndex = i;
 			if (
 				START_COMMAND.includes(token.value) &&
-				!TOKEN_OPERATION.includes(next.type)
+				!TOKEN_OPERATION.includes(next.type) &&
+				(!this.tokens[i - 2] ||
+					this.tokens[i - 1].type !== TokenType.IF)
 			) {
 				//get the token range
 				const tokens: TokenData[] = [];

@@ -1,21 +1,6 @@
-import mc_blocks from "./minecraft/blocks.json";
-import mc_items from "./minecraft/items.json";
+import MinecraftData from "minecraft-data";
 
-interface BlockData {
-	name: string;
-}
+const mcc = MinecraftData("1.19.4");
 
-interface ItemData {
-	name: string;
-}
-
-export const MC_BLOCKS: BlockData[] = mc_blocks.map((v) => {
-	return {
-		name: v.name,
-	};
-});
-export const MC_ITEMS: ItemData[] = mc_items.map((v) => {
-	return {
-		name: v.name,
-	};
-});
+export const MC_BLOCKS = mcc.blocksArray.map((v) => v.name);
+export const MC_ITEMS = mcc.itemsArray.map((v) => v.name);

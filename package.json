@@ -172,6 +172,7 @@
 		"@vscode-logging/wrapper": "^1.0.2",
 		"@vscode/test-electron": "^2.3.2",
 		"get-all-files": "^4.1.0",
+		"minecraft-data": "^3.37.0",
 		"path": "^0.12.7",
 		"vscode-jsonrpc": "^8.1.0",
 		"vscode-languageclient": "^8.1.0",

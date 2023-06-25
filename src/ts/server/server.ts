@@ -287,7 +287,7 @@ async function validateJMC(
 							return v;
 						})
 					);
-				file.lexer.parseCommand(changedIndex, fileText);
+				file.lexer.parseCommand(changedIndex);
 			} else {
 				file.lexer.tokens = lexerTokens
 					.slice(0, startIndex)
@@ -298,7 +298,7 @@ async function validateJMC(
 							return v;
 						})
 					);
-				file.lexer.parseCommand(changedIndex, fileText);
+				file.lexer.parseCommand(changedIndex);
 			}
 		}
 

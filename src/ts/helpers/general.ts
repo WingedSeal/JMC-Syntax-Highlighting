@@ -722,7 +722,7 @@ export function joinNamespace(tokens: TokenData[]): TokenData[] {
 }
 
 export function joinNumber(tokens: TokenData[]): TokenData[] {
-	
+	return [];
 }
 
 /**

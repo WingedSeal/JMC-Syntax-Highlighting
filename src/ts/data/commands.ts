@@ -1,4 +1,9 @@
-import * as mcc from "./minecraft/command.json";
+import MinecraftData from "minecraft-data";
+
+export interface Command {
+	root: CommandData;
+	parsers: CommandParser[];
+}
 
 export interface ParserModifier {
 	amount?: string;
@@ -12,7 +17,7 @@ export interface CommandData {
 	name: string;
 	executable: boolean;
 	redirects: string[];
-	childrens: CommandData[];
+	children: CommandData[];
 	parser?: {
 		parser: string;
 		modifier?: ParserModifier;
@@ -25,6 +30,7 @@ export interface CommandParser {
 	examples: string[];
 }
 
+const mcc = MinecraftData("1.16").commands as Command;
 export const COMMANDS_TREE = (
 	mcc.root.children as unknown as CommandData[]
 ).filter((v) => !["function", "reload"].includes(v.name));
