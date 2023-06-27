@@ -22,7 +22,7 @@ export async function activate(context: ExtensionContext) {
 			{ scheme: "file", language: "hjmc" },
 		],
 		synchronize: {
-			fileEvents: workspace.createFileSystemWatcher("**/.clientsrc"),
+			fileEvents: workspace.createFileSystemWatcher("**/*.jmc"),
 		},
 	};
 

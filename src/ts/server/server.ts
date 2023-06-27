@@ -54,7 +54,7 @@ import { HEADERS } from "../data/headers";
 import { START_COMMAND } from "../data/commands";
 
 export let jmcConfigs: string[] = [];
-export const jmcFiles: JMCFile[] = [];
+export let jmcFiles: JMCFile[] = [];
 export let hjmcFiles: HJMCFile[] = [];
 export let extracted: ExtractedTokens = {
 	variables: [],
@@ -68,8 +68,6 @@ const connection = createConnection(ProposedFeatures.all);
 const documents: TextDocuments<TextDocument> = new TextDocuments(TextDocument);
 
 let hasConfigurationCapability = false;
-let hasWorkspaceFolderCapability = false;
-let hasDiagnosticRelatedInformationCapability = false;
 //#endregion
 connection.onInitialize(async (params: InitializeParams) => {
 	try {
@@ -120,14 +118,6 @@ connection.onInitialize(async (params: InitializeParams) => {
 		hasConfigurationCapability = !!(
 			capabilities.workspace && !!capabilities.workspace.configuration
 		);
-		hasWorkspaceFolderCapability = !!(
-			capabilities.workspace && !!capabilities.workspace.workspaceFolders
-		);
-		hasDiagnosticRelatedInformationCapability = !!(
-			capabilities.textDocument &&
-			capabilities.textDocument.publishDiagnostics &&
-			capabilities.textDocument.publishDiagnostics.relatedInformation
-		);
 
 		const SemanticTokensOptions: vscode.SemanticTokensOptions = {
 			legend: {
@@ -151,15 +141,19 @@ connection.onInitialize(async (params: InitializeParams) => {
 				},
 				semanticTokensProvider: SemanticTokensOptions,
 				definitionProvider: true,
+				workspace: {
+					workspaceFolders: {
+						supported: true,
+					},
+					fileOperations: {
+						didCreate: {
+							filters: [],
+						},
+					},
+				},
 			},
 		};
-		if (hasWorkspaceFolderCapability) {
-			result.capabilities.workspace = {
-				workspaceFolders: {
-					supported: true,
-				},
-			};
-		}
+
 		return result;
 		//#endregion
 	} catch (e: any) {
@@ -176,11 +170,6 @@ connection.onInitialized(() => {
 			undefined
 		);
 	}
-	if (hasWorkspaceFolderCapability) {
-		connection.workspace.onDidChangeWorkspaceFolders((_event) => {
-			connection.console.log("Workspace folder change event received.");
-		});
-	}
 });
 
 interface ServerSettings {
@@ -191,6 +180,38 @@ const defaultSettings: ServerSettings = { maxNumberOfProblems: 1000 };
 let globalSettings: ServerSettings = defaultSettings;
 
 const documentSettings: Map<string, Thenable<ServerSettings>> = new Map();
+
+connection.onDidChangeWatchedFiles(async (v) => {
+	for (const change of v.changes) {
+		switch (change.type) {
+			case vscode.FileChangeType.Created: {
+				const path = url.fileURLToPath(change.uri);
+				const text = await fs.readFile(path, "utf-8");
+				const lexer = new Lexer(text, macros);
+				const file: JMCFile = {
+					path: path,
+					text: text,
+					lexer: lexer,
+				};
+				jmcFiles.push(file);
+				break;
+			}
+			case vscode.FileChangeType.Deleted: {
+				const path = url.fileURLToPath(change.uri);
+				const q = jmcFiles.find((v) => v && v.path === path);
+				if (q) {
+					const index = jmcFiles.indexOf(q);
+					delete jmcFiles[index];
+					jmcFiles = jmcFiles.filter((v) => v);
+				}
+				break;
+			}
+			case vscode.FileChangeType.Changed:
+			default:
+				break;
+		}
+	}
+});
 
 connection.onDidChangeConfiguration((change) => {
 	if (hasConfigurationCapability) {
@@ -416,6 +437,7 @@ connection.onCompletion(async (arg) => {
 		const file = jmcFiles.find(
 			(v) => v.path === url.fileURLToPath(arg.textDocument.uri)
 		);
+		if (!file || (file && file.lexer.tokens.length === 0)) return null;
 
 		//check if `$VARIABLE.get()` or `CLASS.METHOD`
 		if (arg.context?.triggerCharacter == ".") {
@@ -433,7 +455,7 @@ connection.onCompletion(async (arg) => {
 				else if (file.lexer.tokens[index].type == TokenType.SEMI)
 					index++;
 				const token = file.lexer.tokens[index - 3];
-				if (token.type == TokenType.VARIABLE) {
+				if (token && token.type == TokenType.VARIABLE) {
 					return [
 						{
 							label: "get",
@@ -441,7 +463,7 @@ connection.onCompletion(async (arg) => {
 							insertText: "get()",
 						},
 					];
-				} else if (token.type == TokenType.LITERAL) {
+				} else if (token && token.type == TokenType.LITERAL) {
 					const classResult = BuiltInFunctions.find(
 						(v) => v.class == token.value
 					);
@@ -906,7 +928,10 @@ connection.onRequest(
 							break;
 						}
 						case TokenType.LITERAL: {
-							if (tokens[i + 1].type == TokenType.LPAREN) {
+							if (
+								tokens[i + 1] &&
+								tokens[i + 1].type == TokenType.LPAREN
+							) {
 								const pos = doc.positionAt(token.pos);
 								builder.push(
 									pos.line,
@@ -916,6 +941,7 @@ connection.onRequest(
 									0
 								);
 							} else if (
+								tokens[i + 1] &&
 								tokens[i + 1].type == TokenType.DOT &&
 								!settings.rawFuncHighlight
 							) {
@@ -928,6 +954,7 @@ connection.onRequest(
 									0
 								);
 							} else if (
+								tokens[i + 1] &&
 								tokens[i + 1].type == TokenType.DOT &&
 								settings.rawFuncHighlight
 							) {

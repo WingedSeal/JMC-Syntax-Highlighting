@@ -483,7 +483,8 @@ export class Lexer {
 				START_COMMAND.includes(token.value) &&
 				!TOKEN_OPERATION.includes(next.type) &&
 				(!this.tokens[i - 2] ||
-					this.tokens[i - 1].type !== TokenType.IF)
+					(this.tokens[i - 1] &&
+						this.tokens[i - 1].type !== TokenType.IF))
 			) {
 				//get the token range
 				const tokens: TokenData[] = [];
