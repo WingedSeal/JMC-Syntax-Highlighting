@@ -437,24 +437,14 @@ connection.onCompletion(async (arg) => {
 		const file = jmcFiles.find(
 			(v) => v.path === url.fileURLToPath(arg.textDocument.uri)
 		);
-		if (!file || (file && file.lexer.tokens.length === 0)) return null;
 
 		//check if `$VARIABLE.get()` or `CLASS.METHOD`
 		if (arg.context?.triggerCharacter == ".") {
-			const doc = documents.get(arg.textDocument.uri);
-			const path = url.fileURLToPath(arg.textDocument.uri);
-			const file = jmcFiles.find((v) => v.path == path);
 			if (doc && file) {
 				const offset = doc.offsetAt(arg.position);
-				let index = getIndexByOffset(file.lexer.tokens, offset - 1);
-				if (
-					file.lexer.tokens[index].type == TokenType.LCP ||
-					file.lexer.tokens[index].type == TokenType.RCP
-				)
-					index--;
-				else if (file.lexer.tokens[index].type == TokenType.SEMI)
-					index++;
-				const token = file.lexer.tokens[index - 3];
+				const index = getIndexByOffset(file.lexer.tokens, offset - 1);
+				const token = file.lexer.tokens[index - 1];
+				console.log(token);
 				if (token && token.type == TokenType.VARIABLE) {
 					return [
 						{
@@ -622,6 +612,7 @@ connection.onSignatureHelp(async (params) => {
 		);
 		const tokens = file.lexer.tokens;
 		const currentToken = tokens[index];
+		console.log(currentToken);
 		const statement = await getCurrentStatement(file.lexer, currentToken);
 
 		if (triggerChar == "(" && statement) {
