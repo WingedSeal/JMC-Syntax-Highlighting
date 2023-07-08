@@ -14,6 +14,10 @@ export interface CFData {
 	funcs: string[];
 }
 
+export interface ServerSettings {
+	maxNumberOfProblems: number;
+}
+
 /**
  *
  * @param files

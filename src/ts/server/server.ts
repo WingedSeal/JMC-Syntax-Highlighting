@@ -35,6 +35,7 @@ import {
 	splitTokenString,
 } from "../helpers/general";
 import {
+	ServerSettings,
 	concatFuncsTokens,
 	concatVariableTokens,
 	getAllVariables,
@@ -67,118 +68,95 @@ export let currentFile: string | undefined;
 const connection = createConnection(ProposedFeatures.all);
 const documents: TextDocuments<TextDocument> = new TextDocuments(TextDocument);
 
-let hasConfigurationCapability = false;
 //#endregion
 connection.onInitialize(async (params: InitializeParams) => {
-	try {
-		//initialze the JMCFiles & HJMC Files
-		if (params.workspaceFolders) {
-			for (const folder of params.workspaceFolders) {
-				const files = get_files
-					.getAllFilesSync(url.fileURLToPath(folder.uri))
-					.toArray();
-				jmcConfigs = jmcConfigs.concat(
-					files.filter((v) => v.endsWith("jmc_config.json"))
-				);
-				const jfiles = files.filter(
-					(v) => v.endsWith(".jmc") || v.endsWith(".hjmc")
-				);
-				for (const f of jfiles.filter((v) => v.endsWith(".hjmc"))) {
-					const text = await fs.readFile(f, "utf-8");
-					const parser = new HeaderParser(text);
-					hjmcFiles.push({
-						path: f,
-						parser: parser,
-					});
-					for (const header of parser.data) {
-						if (header.type == HeaderType.DEFINE) {
-							macros.push({
-								path: f,
-								target: header.values[0],
-								values: header.values.slice(1),
-							});
-						}
+	//initialze the JMCFiles & HJMC Files
+	if (params.workspaceFolders) {
+		for (const folder of params.workspaceFolders) {
+			const files = get_files
+				.getAllFilesSync(url.fileURLToPath(folder.uri))
+				.toArray();
+			jmcConfigs = jmcConfigs.concat(
+				files.filter((v) => v.endsWith("jmc_config.json"))
+			);
+			const jfiles = files.filter(
+				(v) => v.endsWith(".jmc") || v.endsWith(".hjmc")
+			);
+			for (const f of jfiles.filter((v) => v.endsWith(".hjmc"))) {
+				const text = await fs.readFile(f, "utf-8");
+				const parser = new HeaderParser(text);
+				hjmcFiles.push({
+					path: f,
+					parser: parser,
+				});
+				for (const header of parser.data) {
+					if (header.type == HeaderType.DEFINE) {
+						macros.push({
+							path: f,
+							target: header.values[0],
+							values: header.values.slice(1),
+						});
 					}
 				}
-				for (const f of jfiles.filter((v) => v.endsWith(".jmc"))) {
-					const text = await fs.readFile(f, "utf-8");
-					jmcFiles.push({
-						path: f,
-						lexer: new Lexer(text, macros),
-						text: text,
-					});
-				}
-
-				extracted = await getTokens(jmcFiles);
 			}
+			for (const f of jfiles.filter((v) => v.endsWith(".jmc"))) {
+				const text = await fs.readFile(f, "utf-8");
+				jmcFiles.push({
+					path: f,
+					lexer: new Lexer(text, macros),
+					text: text,
+				});
+			}
+
+			extracted = await getTokens(jmcFiles);
 		}
-		//#region default
-		const capabilities = params.capabilities;
-
-		hasConfigurationCapability = !!(
-			capabilities.workspace && !!capabilities.workspace.configuration
-		);
-
-		const SemanticTokensOptions: vscode.SemanticTokensOptions = {
-			legend: {
-				tokenTypes: SemanticTokenTypes,
-				tokenModifiers: SemanticTokenModifiers,
-			},
-			full: true,
-		};
-
-		const result: InitializeResult = {
-			capabilities: {
-				textDocumentSync: TextDocumentSyncKind.Incremental,
-				// Tell the client that this server supports code completion.
-				completionProvider: {
-					resolveProvider: true,
-					triggerCharacters: [".", "#", " ", "/"],
-				},
-				signatureHelpProvider: {
-					triggerCharacters: ["(", ",", " "],
-					retriggerCharacters: [",", " "],
-				},
-				semanticTokensProvider: SemanticTokensOptions,
-				definitionProvider: true,
-				workspace: {
-					workspaceFolders: {
-						supported: true,
-					},
-					fileOperations: {
-						didCreate: {
-							filters: [],
-						},
-					},
-				},
-			},
-		};
-
-		return result;
-		//#endregion
-	} catch (e: any) {
-		console.log(e);
-		throw new e();
 	}
+	//#region default
+	const capabilities = params.capabilities;
+
+	const result: InitializeResult = {
+		capabilities: {
+			textDocumentSync: TextDocumentSyncKind.Incremental,
+			// Tell the client that this server supports code completion.
+			completionProvider: {
+				resolveProvider: true,
+				triggerCharacters: [".", "#", " ", "/"],
+			},
+			signatureHelpProvider: {
+				triggerCharacters: ["(", ",", " "],
+				retriggerCharacters: [",", " "],
+			},
+			semanticTokensProvider: {
+				legend: {
+					tokenTypes: SemanticTokenTypes,
+					tokenModifiers: SemanticTokenModifiers,
+				},
+				full: true,
+			},
+			definitionProvider: true,
+			workspace: {
+				workspaceFolders: {
+					supported: true,
+				},
+			},
+		},
+	};
+
+	return result;
+	//#endregion
 });
 
 connection.onInitialized(() => {
-	if (hasConfigurationCapability) {
-		// Register for all configuration changes.
-		connection.client.register(
-			DidChangeConfigurationNotification.type,
-			undefined
-		);
-	}
+	// Register for all configuration changes.
+	connection.client.register(
+		DidChangeConfigurationNotification.type,
+		undefined
+	);
 });
 
-interface ServerSettings {
-	maxNumberOfProblems: number;
-}
-
+//settings
 const defaultSettings: ServerSettings = { maxNumberOfProblems: 1000 };
-let globalSettings: ServerSettings = defaultSettings;
-
+const globalSettings: ServerSettings = defaultSettings;
 const documentSettings: Map<string, Thenable<ServerSettings>> = new Map();
 
 connection.onDidChangeWatchedFiles(async (v) => {
@@ -214,21 +192,11 @@ connection.onDidChangeWatchedFiles(async (v) => {
 });
 
 connection.onDidChangeConfiguration((change) => {
-	if (hasConfigurationCapability) {
-		documentSettings.clear();
-	} else {
-		globalSettings = <ServerSettings>(
-			(change.settings.languageServerExample || defaultSettings)
-		);
-	}
-
+	documentSettings.clear();
 	documents.all().forEach(validateTextDocument);
 });
 
 function getDocumentSettings(resource: string): Thenable<ServerSettings> {
-	if (!hasConfigurationCapability) {
-		return Promise.resolve(globalSettings);
-	}
 	let result = documentSettings.get(resource);
 	if (!result) {
 		result = connection.workspace.getConfiguration({
@@ -357,6 +325,10 @@ async function validateHJMC(
 	return parser;
 }
 
+/**
+ *
+ * @param textDocument
+ */
 async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 	const settings = await getDocumentSettings(textDocument.uri);
 
@@ -444,7 +416,6 @@ connection.onCompletion(async (arg) => {
 				const offset = doc.offsetAt(arg.position);
 				const index = getIndexByOffset(file.lexer.tokens, offset - 1);
 				const token = file.lexer.tokens[index - 1];
-				console.log(token);
 				if (token && token.type == TokenType.VARIABLE) {
 					return [
 						{
@@ -876,150 +847,234 @@ connection.onDefinition(async (params) => {
 connection.onRequest(
 	"textDocument/semanticTokens/full",
 	async (params: vscode.SemanticTokensParams): Promise<SemanticTokens> => {
-		const doc = documents.get(params.textDocument.uri);
-		const builder = new vscode.SemanticTokensBuilder();
-		if (doc) {
-			const settings = (await connection.workspace.getConfiguration({
-				section: "jmc",
-				scopeUri: params.textDocument.uri,
-			})) as Settings;
-			const file = jmcFiles.find(
-				(v) => v.path == url.fileURLToPath(doc.uri)
-			);
-			if (file) {
-				const tokens = file.lexer.tokens;
-				for (let i = 0; i < tokens.length; i++) {
-					const token = tokens[i];
-					switch (token.type) {
-						case TokenType.CLASS:
-							if (
-								tokens[i + 1] &&
-								tokens[i + 1].type === TokenType.LITERAL
-							) {
-								const current = tokens[i + 1];
-								const pos = doc.positionAt(current.pos);
+		try {
+			const doc = documents.get(params.textDocument.uri);
+			const builder = new vscode.SemanticTokensBuilder();
+			if (doc) {
+				const settings = (await connection.workspace.getConfiguration({
+					section: "jmc",
+					scopeUri: params.textDocument.uri,
+				})) as Settings;
+				const file = jmcFiles.find(
+					(v) => v.path == url.fileURLToPath(doc.uri)
+				);
+				if (file) {
+					const tokens = file.lexer.tokens;
+					for (let i = 0; i < tokens.length; i++) {
+						const token = tokens[i];
+						switch (token.type) {
+							case TokenType.CLASS:
+								if (
+									tokens[i + 1] &&
+									tokens[i + 1].type === TokenType.LITERAL
+								) {
+									const current = tokens[i + 1];
+									const pos = doc.positionAt(current.pos);
+									builder.push(
+										pos.line,
+										pos.character,
+										current.value.length,
+										0,
+										0
+									);
+								}
+								break;
+							case TokenType.VARIABLE: {
+								const pos = doc.positionAt(token.pos);
 								builder.push(
 									pos.line,
 									pos.character,
-									current.value.length,
-									0,
+									token.value.length,
+									4,
 									0
 								);
+								break;
 							}
-							break;
-						case TokenType.VARIABLE: {
-							const pos = doc.positionAt(token.pos);
-							builder.push(
-								pos.line,
-								pos.character,
-								token.value.length,
-								4,
-								0
-							);
-							break;
-						}
-						case TokenType.LITERAL: {
-							if (
-								tokens[i + 1] &&
-								tokens[i + 1].type == TokenType.LPAREN
-							) {
-								const pos = doc.positionAt(token.pos);
-								builder.push(
-									pos.line,
-									pos.character,
-									token.value.length,
-									3,
-									0
-								);
-							} else if (
-								tokens[i + 1] &&
-								tokens[i + 1].type == TokenType.DOT &&
-								!settings.rawFuncHighlight
-							) {
-								const pos = doc.positionAt(token.pos);
-								builder.push(
-									pos.line,
-									pos.character,
-									token.value.length,
-									0,
-									0
-								);
-							} else if (
-								tokens[i + 1] &&
-								tokens[i + 1].type == TokenType.DOT &&
-								settings.rawFuncHighlight
-							) {
-								const pos = doc.positionAt(token.pos);
-								builder.push(
-									pos.line,
-									pos.character,
-									token.value.length,
-									3,
-									0
-								);
+							case TokenType.LITERAL: {
+								if (
+									tokens[i + 1] &&
+									tokens[i + 1].type == TokenType.LPAREN
+								) {
+									const pos = doc.positionAt(token.pos);
+									builder.push(
+										pos.line,
+										pos.character,
+										token.value.length,
+										3,
+										0
+									);
+								} else if (
+									tokens[i + 1] &&
+									tokens[i + 1].type == TokenType.DOT &&
+									!settings.rawFuncHighlight
+								) {
+									const pos = doc.positionAt(token.pos);
+									builder.push(
+										pos.line,
+										pos.character,
+										token.value.length,
+										0,
+										0
+									);
+								} else if (
+									tokens[i + 1] &&
+									tokens[i + 1].type == TokenType.DOT &&
+									settings.rawFuncHighlight
+								) {
+									const pos = doc.positionAt(token.pos);
+									builder.push(
+										pos.line,
+										pos.character,
+										token.value.length,
+										3,
+										0
+									);
+								}
+								break;
 							}
-							break;
-						}
-						case TokenType.MACROS: {
-							const pos = doc.positionAt(token.pos);
-							builder.push(
-								pos.line,
-								pos.character,
-								token.value.length,
-								5,
-								0
-							);
-							break;
-						}
-						case TokenType.COMMAND_LITERAL: {
-							if (START_COMMAND.includes(token.value)) {
+							case TokenType.MACROS: {
+								const pos = doc.positionAt(token.pos);
+								builder.push(
+									pos.line,
+									pos.character,
+									token.value.length,
+									5,
+									0
+								);
+								break;
+							}
+							case TokenType.COMMAND_LITERAL: {
+								if (START_COMMAND.includes(token.value)) {
+									const pos = doc.positionAt(token.pos);
+									builder.push(
+										pos.line,
+										pos.character,
+										token.value.length,
+										7,
+										0b1000
+									);
+									break;
+								}
 								const pos = doc.positionAt(token.pos);
 								builder.push(
 									pos.line,
 									pos.character,
 									token.value.length,
 									7,
-									0b1000
+									0
 								);
 								break;
 							}
-							const pos = doc.positionAt(token.pos);
-							builder.push(
-								pos.line,
-								pos.character,
-								token.value.length,
-								7,
-								0
-							);
-							break;
-						}
-						case TokenType.OLD_IMPORT: {
-							const pos = doc.positionAt(token.pos);
-							builder.push(
-								pos.line,
-								pos.character,
-								token.value.length,
-								6,
-								0b0100
-							);
-							break;
-						}
-						default: {
-							const pos = doc.positionAt(token.pos);
-							builder.push(
-								pos.line,
-								pos.character,
-								token.value.length,
-								-1,
-								0
-							);
-							break;
+							case TokenType.OLD_IMPORT: {
+								const pos = doc.positionAt(token.pos);
+								builder.push(
+									pos.line,
+									pos.character,
+									token.value.length,
+									6,
+									0b0100
+								);
+								break;
+							}
+							case TokenType.COMMAND_FC: {
+								const pos = doc.positionAt(token.pos);
+								const splited = token.value
+									.split(/\(|\)|(\.|\s+)/)
+									.filter((v) => v != "" && v != undefined);
+								if (splited.length > 0) {
+									if (splited[0].startsWith("$")) {
+										builder.push(
+											pos.line,
+											pos.character,
+											splited[0].length,
+											4,
+											0
+										);
+										const np = doc.positionAt(
+											token.pos +
+												splited[0].length +
+												splited[1].length
+										);
+										builder.push(
+											np.line,
+											np.character,
+											splited[2].length,
+											3,
+											0
+										);
+									} else if (splited.length > 1) {
+										const startToken = splited[0];
+										//highlight first token
+										builder.push(
+											pos.line,
+											pos.character,
+											startToken.length,
+											0,
+											0
+										);
+										let ts = token.pos + startToken.length;
+
+										//hightlight token in the middle
+										for (
+											let i = 1;
+											i < splited.length - 1;
+											i++
+										) {
+											const t = splited[i];
+											const np = doc.positionAt(ts);
+											builder.push(
+												np.line,
+												np.character,
+												t.length,
+												0,
+												0
+											);
+											ts += t.length;
+										}
+
+										//highlight last token
+										const lastIndex = splited.length - 1;
+										const lastToken = splited[lastIndex];
+										const np = doc.positionAt(ts);
+										builder.push(
+											np.line,
+											np.character,
+											lastToken.length,
+											3,
+											0
+										);
+									} else {
+										builder.push(
+											pos.line,
+											pos.character,
+											token.value.length,
+											3,
+											0
+										);
+									}
+								}
+								break;
+							}
+							default: {
+								const pos = doc.positionAt(token.pos);
+								builder.push(
+									pos.line,
+									pos.character,
+									token.value.length,
+									-1,
+									0
+								);
+								break;
+							}
 						}
 					}
 				}
 			}
+			return builder.build();
+		} catch (e: any) {
+			console.log(e);
+			throw new e();
 		}
-		return builder.build();
 	}
 );
 
