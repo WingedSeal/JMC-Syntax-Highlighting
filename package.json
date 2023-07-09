@@ -83,6 +83,9 @@
 					},
 					"*.commandStart": {
 						"bold": true
+					},
+					"*.classCamel": {
+						"foreground": "#ffb300"
 					}
 				}
 			}
@@ -91,6 +94,10 @@
 			{
 				"id": "commandStart",
 				"description": "start of the command"
+			},
+			{
+				"id": "classCamel",
+				"description": "camel case of the class"
 			}
 		],
 		"semanticTokenScopes": [
@@ -137,6 +144,12 @@
 					"type": "boolean",
 					"default": true,
 					"description": "Bold the first token of the command",
+					"scope": "resource"
+				},
+				"jmc.capitalizedClass": {
+					"type": "boolean",
+					"default": false,
+					"description": "change the capitalized class color",
 					"scope": "resource"
 				}
 			}

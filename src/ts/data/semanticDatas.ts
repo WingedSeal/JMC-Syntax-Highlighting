@@ -14,4 +14,5 @@ export const SemanticTokenModifiers = [
 	"documentation",
 	"deprecated",
 	"commandStart",
+	"classCamel",
 ];

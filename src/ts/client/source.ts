@@ -83,6 +83,12 @@ export async function activate(context: ExtensionContext) {
 					rawFuncHighlight: config.get(
 						"jmc.rawFuncHighlight"
 					) as boolean,
+					boldFirstCommand: config.get(
+						"jmc.boldFirstCommand"
+					) as boolean,
+					capitalizedClass: config.get(
+						"jmc.capitalizedClass"
+					) as boolean,
 				};
 			}
 			return undefined;

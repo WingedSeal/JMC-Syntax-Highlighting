@@ -1003,14 +1003,21 @@ connection.onRequest(
 											0
 										);
 									} else if (splited.length > 1) {
+										let num = 0;
 										const startToken = splited[0];
+										if (
+											/^[A-Z]/.test(startToken) &&
+											settings.capitalizedClass
+										) {
+											num = 0b10000;
+										}
 										//highlight first token
 										builder.push(
 											pos.line,
 											pos.character,
 											startToken.length,
 											0,
-											0
+											num
 										);
 										let ts = token.pos + startToken.length;
 
@@ -1020,14 +1027,21 @@ connection.onRequest(
 											i < splited.length - 1;
 											i++
 										) {
+											num = 0;
 											const t = splited[i];
 											const np = doc.positionAt(ts);
+											if (
+												/^[A-Z]/.test(t) &&
+												settings.capitalizedClass
+											) {
+												num = 0b10000;
+											}
 											builder.push(
 												np.line,
 												np.character,
 												t.length,
 												0,
-												0
+												num
 											);
 											ts += t.length;
 										}

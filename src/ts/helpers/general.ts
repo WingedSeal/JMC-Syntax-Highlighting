@@ -4,6 +4,8 @@ import { HeaderParser } from "../parseHeader";
 export interface Settings {
 	executable: string;
 	rawFuncHighlight: boolean;
+	boldFirstCommand: boolean;
+	capitalizedClass: boolean;
 }
 
 export interface JMCFile {
