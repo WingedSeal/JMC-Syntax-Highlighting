@@ -667,6 +667,7 @@ export function joinNBT(tokens: TokenData[]): TokenData[] {
  * @param tokens
  * @returns
  */
+//TODO: specify length between dots
 export function joinDot(tokens: TokenData[]): TokenData[] {
 	const datas: TokenData[] = [];
 	for (let i = 0; i < tokens.length; i++) {

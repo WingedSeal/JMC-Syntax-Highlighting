@@ -426,7 +426,7 @@ export class Lexer {
 		} else return TokenType.COMMAND_INVALID;
 	}
 
-	private getCommandRanges(tokens: TokenData[]): StatementRange[] {
+	getCommandRanges(tokens: TokenData[]): StatementRange[] {
 		const r: StatementRange[] = [];
 
 		for (let i = 0; i < tokens.length; i++) {

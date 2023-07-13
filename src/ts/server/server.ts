@@ -52,23 +52,25 @@ import {
 import { URI } from "vscode-uri";
 import { BuiltInFunctions, methodInfoToDoc } from "../data/builtinFuncs";
 import { HEADERS } from "../data/headers";
-import { START_COMMAND } from "../data/commands";
+import {
+	COMMAND_ENTITY_SELECTORS,
+	START_COMMAND,
+	getNode,
+} from "../data/commands";
 
-export let jmcConfigs: string[] = [];
+export let jmcConfigPaths: string[] = [];
 export let jmcFiles: JMCFile[] = [];
 export let hjmcFiles: HJMCFile[] = [];
-export let extracted: ExtractedTokens = {
+export let extractedTokens: ExtractedTokens = {
 	variables: [],
 	funcs: [],
 };
 export let macros: MacrosData[] = [];
 export let currentFile: string | undefined;
 
-//#region default
 const connection = createConnection(ProposedFeatures.all);
 const documents: TextDocuments<TextDocument> = new TextDocuments(TextDocument);
 
-//#endregion
 connection.onInitialize(async (params: InitializeParams) => {
 	//initialze the JMCFiles & HJMC Files
 	if (params.workspaceFolders) {
@@ -76,7 +78,7 @@ connection.onInitialize(async (params: InitializeParams) => {
 			const files = get_files
 				.getAllFilesSync(url.fileURLToPath(folder.uri))
 				.toArray();
-			jmcConfigs = jmcConfigs.concat(
+			jmcConfigPaths = jmcConfigPaths.concat(
 				files.filter((v) => v.endsWith("jmc_config.json"))
 			);
 			const jfiles = files.filter(
@@ -108,7 +110,7 @@ connection.onInitialize(async (params: InitializeParams) => {
 				});
 			}
 
-			extracted = await getTokens(jmcFiles);
+			extractedTokens = await getTokens(jmcFiles);
 		}
 	}
 	//#region default
@@ -155,8 +157,6 @@ connection.onInitialized(() => {
 });
 
 //settings
-const defaultSettings: ServerSettings = { maxNumberOfProblems: 1000 };
-const globalSettings: ServerSettings = defaultSettings;
 const documentSettings: Map<string, Thenable<ServerSettings>> = new Map();
 
 connection.onDidChangeWatchedFiles(async (v) => {
@@ -326,7 +326,8 @@ async function validateHJMC(
 }
 
 /**
- *
+ * validate a document
+ * @description use {@linkcode validateJMC} if document changed
  * @param textDocument
  */
 async function validateTextDocument(textDocument: TextDocument): Promise<void> {
@@ -343,11 +344,11 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 			const funcs = await getFunctions(lexer);
 			const vars = await getVariablesDeclare(lexer);
 
-			extracted.variables = extracted.variables.map((v) => {
+			extractedTokens.variables = extractedTokens.variables.map((v) => {
 				if (v.path == path) v.tokens = vars;
 				return v;
 			});
-			extracted.funcs = extracted.funcs.map((v) => {
+			extractedTokens.funcs = extractedTokens.funcs.map((v) => {
 				if (v.path == path) v.tokens = funcs;
 				return v;
 			});
@@ -401,7 +402,7 @@ connection.onCompletion(async (arg) => {
 			}
 		}
 	} else if (arg.textDocument.uri.endsWith(".jmc")) {
-		const oFuncs = concatFuncsTokens(extracted).map(
+		const oFuncs = concatFuncsTokens(extractedTokens).map(
 			(v) => v.value.split("\0")[0]
 		);
 		const cfDatas = await getFirstHirarchy(oFuncs);
@@ -477,6 +478,58 @@ connection.onCompletion(async (arg) => {
 				}
 			}
 		}
+		//check for commands
+		if (file && doc) {
+			const cRanges = file.lexer.getCommandRanges(file.lexer.tokens);
+			const pos = doc.offsetAt(arg.position);
+			const range = cRanges.find((v) => v.end > pos && v.start < pos);
+
+			//return completion if cursor inside a command range
+			if (range) {
+				const lexer = file.lexer;
+				//get current token
+				const index = getIndexByOffset(lexer.tokens, pos) - 1;
+				const t = lexer.tokens[index];
+				if (t) {
+					//get range of tokens
+					const cStartIndex = getIndexByOffset(
+						lexer.tokens,
+						range.start
+					);
+					const tokens = lexer.tokens.slice(cStartIndex, index + 1);
+					const tokensValues = tokens.map((v) => v.value);
+					const nodes = getNode(tokensValues);
+
+					//return completion items
+					const items: CompletionItem[] = [];
+					for (const node of nodes) {
+						const cmdNode = node[1];
+						if (cmdNode.type === "literal") {
+							items.push({
+								label: node[0],
+								kind: CompletionItemKind.Keyword,
+							});
+						} else {
+							switch (cmdNode.parser) {
+								case "minecraft:entity":
+									items.concat(
+										COMMAND_ENTITY_SELECTORS.map((v) => {
+											return {
+												label: v,
+												kind: CompletionItemKind.Constant,
+											};
+										})
+									);
+									break;
+								default:
+									break;
+							}
+						}
+					}
+					return items;
+				}
+			}
+		}
 
 		//keywords
 		const keywords: CompletionItem[] = [
@@ -498,21 +551,22 @@ connection.onCompletion(async (arg) => {
 			},
 		];
 
+		//start commands eg. execute, xp, weather
 		const commands: CompletionItem[] = START_COMMAND.map((v) => ({
 			label: v,
 			kind: CompletionItemKind.Keyword,
 		}));
 
 		//variables
-		const vars: CompletionItem[] = concatVariableTokens(extracted).map(
-			(v) => {
-				return {
-					label: v.value.slice(1),
-					insertText: v.value,
-					kind: CompletionItemKind.Variable,
-				};
-			}
-		);
+		const vars: CompletionItem[] = concatVariableTokens(
+			extractedTokens
+		).map((v) => {
+			return {
+				label: v.value.slice(1),
+				insertText: v.value,
+				kind: CompletionItemKind.Variable,
+			};
+		});
 
 		//funcs & classes
 		const funcs: CompletionItem[] = cfDatas.funcs.map(
@@ -551,7 +605,6 @@ connection.onCompletion(async (arg) => {
 			};
 		});
 
-		//return vars.concat(funcs).concat(mos).concat(builtInClasses);
 		return vars
 			.concat(keywords)
 			.concat(commands)
