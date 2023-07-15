@@ -9,7 +9,7 @@
 	"main": "./src/js/client/source",
 	"publisher": "WingedSeal",
 	"engines": {
-		"vscode": "^1.76.0"
+		"vscode": "^1.79.0"
 	},
 	"icon": "images/jmc_icon.png",
 	"categories": [
@@ -180,13 +180,14 @@
 	},
 	"dependencies": {
 		"@types/express": "^4.17.15",
-		"@types/vscode": "^1.76.0",
+		"@types/vscode": "^1.79.0",
 		"@vscode-logging/logger": "^1.2.3",
 		"@vscode-logging/wrapper": "^1.0.2",
 		"@vscode/test-electron": "^2.3.2",
 		"get-all-files": "^4.1.0",
 		"minecraft-data": "^3.37.0",
 		"path": "^0.12.7",
+		"tslog": "^4.8.2",
 		"vscode-jsonrpc": "^8.1.0",
 		"vscode-languageclient": "^8.1.0",
 		"vscode-languageserver": "^8.1.0",
