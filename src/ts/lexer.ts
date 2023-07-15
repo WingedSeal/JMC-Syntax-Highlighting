@@ -87,6 +87,7 @@ export enum TokenType {
 	COMMAND_INVALID,
 	COMMAND_FC,
 	COMMAND_VALUE,
+	COMMAND_NUMBER,
 }
 
 interface Token {
@@ -407,7 +408,12 @@ export class Lexer {
 			token.value.includes(".")
 		)
 			return TokenType.COMMAND_VALUE;
-		else if (token.type === TokenType.LITERAL && token.value.match(/^\w+$/))
+		else if (/^-?\d*(?:\.\d+)?(?!\.)[lsb]?$/.test(token.value)) {
+			return TokenType.COMMAND_NUMBER;
+		} else if (
+			token.type === TokenType.LITERAL &&
+			token.value.match(/^\w+$/)
+		)
 			return TokenType.COMMAND_LITERAL;
 		else if (token.type === TokenType.LITERAL && token.value.match(/^\S+$/))
 			return TokenType.COMMAND_STRING;

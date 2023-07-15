@@ -997,7 +997,10 @@ connection.onRequest(
 								break;
 							}
 							case TokenType.COMMAND_LITERAL: {
-								if (START_COMMAND.includes(token.value)) {
+								if (
+									START_COMMAND.includes(token.value) &&
+									settings.boldFirstCommand
+								) {
 									const pos = doc.positionAt(token.pos);
 									builder.push(
 										pos.line,
@@ -1120,6 +1123,17 @@ connection.onRequest(
 										);
 									}
 								}
+								break;
+							}
+							case TokenType.COMMAND_NUMBER: {
+								const pos = doc.positionAt(token.pos);
+								builder.push(
+									pos.line,
+									pos.character,
+									token.value.length,
+									9,
+									0
+								);
 								break;
 							}
 							default: {

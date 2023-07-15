@@ -667,7 +667,6 @@ export function joinNBT(tokens: TokenData[]): TokenData[] {
  * @param tokens
  * @returns
  */
-//TODO: specify length between dots
 export function joinDot(tokens: TokenData[]): TokenData[] {
 	const datas: TokenData[] = [];
 	for (let i = 0; i < tokens.length; i++) {
@@ -675,11 +674,13 @@ export function joinDot(tokens: TokenData[]): TokenData[] {
 		const dLastIndex = datas.length - 1;
 		const dCurrent = datas[dLastIndex];
 
+		//continue if it is the start
 		if (dLastIndex === -1) {
 			datas.push(current);
 			continue;
 		}
 
+		//join dots
 		if (dCurrent) {
 			if (
 				dCurrent.type === TokenType.LITERAL &&
@@ -725,7 +726,21 @@ export function joinNamespace(tokens: TokenData[]): TokenData[] {
 }
 
 export function joinNumber(tokens: TokenData[]): TokenData[] {
-	return [];
+	const datas: TokenData[] = [];
+
+	for (let i = 0; i < tokens.length; i++) {
+		const token = tokens[i];
+		if (
+			!isNaN(+token.value) &&
+			["l", "s", "b"].includes(tokens[i + 1].value)
+		) {
+			token.value += tokens[i + 1].value;
+			datas.push(token);
+			i++;
+		} else datas.push(token);
+	}
+
+	return datas;
 }
 
 /**
@@ -739,5 +754,8 @@ export function joinCommandData(tokens: TokenData[]): TokenData[] {
 	const jn = joinNBT(jb);
 	const jf = joinFunction(jn);
 	const jna = joinNamespace(jf);
-	return jna.filter((v) => v);
+	const jnum = joinNumber(jna);
+
+	//remove undefined
+	return jnum.filter((v) => v);
 }
