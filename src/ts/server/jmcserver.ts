@@ -1,27 +1,11 @@
 import * as vscode from "vscode-languageserver/node";
-import {
-	InitializeResult,
-	TextDocumentSyncKind,
-} from "vscode-languageserver/node";
-import {
-	SemanticTokenModifiers,
-	SemanticTokenTypes,
-} from "../data/semanticDatas";
 import { BaseServer, ServerData } from "./serverData";
 import * as get_files from "get-all-files";
 import * as url from "url";
 import * as fs from "fs/promises";
 import { HeaderParser, HeaderType } from "../parseHeader";
 import { Lexer, TokenData, TokenType } from "../lexer";
-import {
-	concatFuncsTokens,
-	concatVariableTokens,
-	getAllVariables,
-	getFirstHirarchy,
-	getHirarchy,
-	getTokens,
-} from "./serverHelper";
-import * as log from "tslog";
+import { ExtractedTokensHelper, HirarchyHelper } from "../helpers/serverHelper";
 import {
 	JMCFile,
 	Settings,
@@ -49,18 +33,18 @@ import { URI } from "vscode-uri";
 export class JMCServer extends ServerData implements BaseServer {
 	connection: vscode.Connection;
 	documents: vscode.TextDocuments<TextDocument>;
-	logger: log.Logger<log.ILogObj>;
 
 	constructor(connection: vscode.Connection) {
 		super();
 		this.connection = connection;
-		this.logger = new log.Logger({
-			name: "JMCServer",
-			type: "pretty",
-		});
 		this.documents = new vscode.TextDocuments(TextDocument);
+		this.validateJMC = this.validateJMC.bind(this);
 	}
 
+	/**
+	 * register features
+	 * @reminder remember use {@link start} to start the server
+	 */
 	register() {
 		//documents
 		this.documents.onDidChangeContent((change) => {
@@ -86,8 +70,13 @@ export class JMCServer extends ServerData implements BaseServer {
 		);
 		this.connection.onSignatureHelp(this.onSignatureHelp.bind(this));
 		this.connection.onDefinition(this.onDefinition.bind(this));
+
+		this.logger.info("register completed");
 	}
 
+	/**
+	 * start the server
+	 */
 	start() {
 		this.documents.listen(this.connection);
 		this.connection.listen();
@@ -133,39 +122,12 @@ export class JMCServer extends ServerData implements BaseServer {
 					});
 				}
 
-				this.extractedTokens = await getTokens(this.jmcFiles);
+				this.extractedTokens = await ExtractedTokensHelper.getTokens(
+					this.jmcFiles
+				);
 			}
 		}
-
-		const result: InitializeResult = {
-			capabilities: {
-				textDocumentSync: TextDocumentSyncKind.Incremental,
-				// Tell the client that this server supports code completion.
-				completionProvider: {
-					resolveProvider: true,
-					triggerCharacters: [".", "#", " ", "/"],
-				},
-				signatureHelpProvider: {
-					triggerCharacters: ["(", ",", " "],
-					retriggerCharacters: [",", " "],
-				},
-				semanticTokensProvider: {
-					legend: {
-						tokenTypes: SemanticTokenTypes,
-						tokenModifiers: SemanticTokenModifiers,
-					},
-					full: true,
-				},
-				definitionProvider: true,
-				workspace: {
-					workspaceFolders: {
-						supported: true,
-					},
-				},
-			},
-		};
-		this.logger.info("Initialize done");
-		return result;
+		return this.initResult;
 	}
 
 	async onInitialized(params: vscode.InitializedParams) {
@@ -173,7 +135,6 @@ export class JMCServer extends ServerData implements BaseServer {
 			vscode.DidChangeConfigurationNotification.type,
 			undefined
 		);
-		this.logger.info("Initialized done");
 	}
 
 	async onDidChangeWatchedFiles(
@@ -474,7 +435,6 @@ export class JMCServer extends ServerData implements BaseServer {
 			return builder.build();
 			// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		} catch (e: any) {
-			console.log(e);
 			throw new e();
 		}
 	}
@@ -496,7 +456,6 @@ export class JMCServer extends ServerData implements BaseServer {
 			);
 			const tokens = file.lexer.tokens;
 			const currentToken = tokens[index];
-			console.log(currentToken);
 			const statement = await getCurrentStatement(
 				file.lexer,
 				currentToken
@@ -646,7 +605,9 @@ export class JMCServer extends ServerData implements BaseServer {
 			);
 
 			if (currentToken.type == TokenType.VARIABLE) {
-				for (const ev of await getAllVariables(this.jmcFiles)) {
+				for (const ev of await ExtractedTokensHelper.getAllVariables(
+					this.jmcFiles
+				)) {
 					const vTokens = ev.tokens.filter(
 						(v) => v.value == currentToken.value
 					);
@@ -780,7 +741,7 @@ export class JMCServer extends ServerData implements BaseServer {
 	//#region validate docs
 	/**
 	 * validate a document
-	 * @description use {@linkcode validateJMC} if document changed
+	 * @description use {@link validateJMC} or {@link validateHJMC} if document changed
 	 * @param textDocument
 	 */
 	private async validateTextDocument(
@@ -1000,10 +961,10 @@ export class JMCServer extends ServerData implements BaseServer {
 	}
 
 	private async jmcCompletion(arg: vscode.CompletionParams) {
-		const oFuncs = concatFuncsTokens(this.extractedTokens).map(
-			(v) => v.value.split("\0")[0]
-		);
-		const cfDatas = await getFirstHirarchy(oFuncs);
+		const oFuncs = ExtractedTokensHelper.concatFuncsTokens(
+			this.extractedTokens
+		).map((v) => v.value.split("\0")[0]);
+		const cfDatas = await HirarchyHelper.getFirstHirarchy(oFuncs);
 		const doc = this.documents.get(arg.textDocument.uri);
 		const file = this.jmcFiles.find(
 			(v) => v.path === url.fileURLToPath(arg.textDocument.uri)
@@ -1046,7 +1007,7 @@ export class JMCServer extends ServerData implements BaseServer {
 							);
 							if (literal) {
 								const splited = literal.split(".");
-								const query = await getHirarchy(
+								const query = await HirarchyHelper.getHirarchy(
 									oFuncs,
 									splited
 								);
@@ -1159,15 +1120,16 @@ export class JMCServer extends ServerData implements BaseServer {
 		}));
 
 		//variables
-		const vars: vscode.CompletionItem[] = concatVariableTokens(
-			this.extractedTokens
-		).map((v) => {
-			return {
-				label: v.value.slice(1),
-				insertText: v.value,
-				kind: vscode.CompletionItemKind.Variable,
-			};
-		});
+		const vars: vscode.CompletionItem[] =
+			ExtractedTokensHelper.concatVariableTokens(
+				this.extractedTokens
+			).map((v) => {
+				return {
+					label: v.value.slice(1),
+					insertText: v.value,
+					kind: vscode.CompletionItemKind.Variable,
+				};
+			});
 
 		//funcs & classes
 		const funcs: vscode.CompletionItem[] = cfDatas.funcs.map(

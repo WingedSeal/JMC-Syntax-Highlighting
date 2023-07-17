@@ -1,6 +1,5 @@
 node_modules
 *.vsix
-test
 .vscode
 src/js
 temp

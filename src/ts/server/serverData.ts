@@ -1,4 +1,3 @@
-import { ILogObj, Logger } from "tslog";
 import {
 	ExtractedTokens,
 	HJMCFile,
@@ -6,6 +5,11 @@ import {
 	MacrosData,
 } from "../helpers/general";
 import * as vscode from "vscode-languageserver/node";
+import {
+	SemanticTokenModifiers,
+	SemanticTokenTypes,
+} from "../data/semanticDatas";
+import ServerLogger from "./serverLogger";
 
 export abstract class ServerData {
 	protected jmcConfigPaths: string[];
@@ -13,6 +17,8 @@ export abstract class ServerData {
 	protected hjmcFiles: HJMCFile[];
 	protected extractedTokens: ExtractedTokens;
 	protected macros: MacrosData[];
+	protected initResult: vscode.InitializeResult;
+	protected logger: ServerLogger;
 
 	constructor() {
 		this.jmcConfigPaths = [];
@@ -23,12 +29,39 @@ export abstract class ServerData {
 			funcs: [],
 		};
 		this.macros = [];
+		this.initResult = {
+			capabilities: {
+				textDocumentSync: vscode.TextDocumentSyncKind.Incremental,
+				// Tell the client that this server supports code completion.
+				completionProvider: {
+					resolveProvider: true,
+					triggerCharacters: [".", "#", " ", "/"],
+				},
+				signatureHelpProvider: {
+					triggerCharacters: ["(", ",", " "],
+					retriggerCharacters: [",", " "],
+				},
+				semanticTokensProvider: {
+					legend: {
+						tokenTypes: SemanticTokenTypes,
+						tokenModifiers: SemanticTokenModifiers,
+					},
+					full: true,
+				},
+				definitionProvider: true,
+				workspace: {
+					workspaceFolders: {
+						supported: true,
+					},
+				},
+			},
+		};
+		this.logger = new ServerLogger("JMCServer");
 	}
 }
 
 export interface BaseServer {
 	connection: vscode.Connection;
-	logger: Logger<ILogObj>;
 
 	//funcs
 	onInitialize(

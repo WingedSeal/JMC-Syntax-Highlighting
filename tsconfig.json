@@ -8,5 +8,9 @@
         "forceConsistentCasingInFileNames": true,
         "resolveJsonModule": true,
         "outDir": "./src/js",
-    }
+    },
+    "exclude": [
+        "./test",
+        "./temp"
+    ]
 }

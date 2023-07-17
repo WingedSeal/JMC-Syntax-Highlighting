@@ -1,7 +1,6 @@
 import { workspace, ExtensionContext } from "vscode";
 import {
 	ConfigurationItem,
-	ConfigurationParams,
 	LanguageClient,
 	LanguageClientOptions,
 	ServerOptions,

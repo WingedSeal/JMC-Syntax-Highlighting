@@ -388,10 +388,12 @@ export class Lexer {
 				token.type = type != undefined ? type : token.type;
 				return token;
 			}
-			if (result.token == TokenType.SWITCH) {
-				if (datas[datas.length - 1].type == TokenType.DOT) {
-					result.token = TokenType.LITERAL;
-				}
+			if (
+				result.token == TokenType.SWITCH &&
+				datas[datas.length - 1] &&
+				datas[datas.length - 1].type == TokenType.DOT
+			) {
+				result.token = TokenType.LITERAL;
 			}
 			return {
 				type: result.token,
