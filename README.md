@@ -32,4 +32,4 @@ Documentation for JMC: <https://jmc.wingedseal.com>
 ## Project Status
 current project is still in progress  
 if you have encountered any bugs or want to suggest a feature  
-please create a issue for that :(
+please create a issue for that :(  
