@@ -592,6 +592,8 @@ export function joinFunction(tokens: TokenData[]): TokenData[] {
 		const token = tokens[i];
 		if (
 			token.type === TokenType.LITERAL &&
+			tokens[i + 1] &&
+			tokens[i + 2] &&
 			tokens[i + 1].type === TokenType.LPAREN &&
 			tokens[i + 2].type === TokenType.RPAREN
 		) {
@@ -713,6 +715,13 @@ export function joinNamespace(tokens: TokenData[]): TokenData[] {
 		const s = tokens[i + 1];
 		const t = tokens[i + 2];
 		if (s && t && f.value === "minecraft" && s.type === TokenType.COLON) {
+			datas.push({
+				type: TokenType.COMMAND_FINAL,
+				pos: f.pos,
+				value: `${f.value}${s.value}${t.value}`,
+			});
+			i += 2;
+		} else if (s && t && s.type === TokenType.COLON) {
 			datas.push({
 				type: TokenType.COMMAND_FINAL,
 				pos: f.pos,

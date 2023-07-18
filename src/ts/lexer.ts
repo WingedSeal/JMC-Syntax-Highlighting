@@ -424,7 +424,8 @@ export class Lexer {
 		else if (
 			token.type === TokenType.SEMI ||
 			token.type === TokenType.LPAREN ||
-			token.type === TokenType.RPAREN
+			token.type === TokenType.RPAREN ||
+			END_TOKEN.includes(token.type)
 		)
 			return token.type;
 		else if (MC_ITEMS.find((v) => token.value.startsWith(v)))
@@ -443,9 +444,17 @@ export class Lexer {
 				token.type === TokenType.COMMAND_LITERAL ||
 				START_COMMAND.includes(token.value)
 			) {
+				if (
+					token.type === TokenType.LITERAL &&
+					token.value === "data" &&
+					tokens[i - 2] &&
+					tokens[i - 2].type === TokenType.IF
+				)
+					continue;
+
 				for (; i < tokens.length; i++) {
 					const t = tokens[i];
-					if (END_TOKEN.includes(t.type)) {
+					if (["}", "{", ";"].includes(t.value)) {
 						r.push({
 							start: token.pos,
 							end: t.pos,
@@ -483,44 +492,45 @@ export class Lexer {
 	}
 
 	private parseCommands() {
-		for (let i = 0; i < this.tokens.length; i++) {
-			const token = this.tokens[i];
-			const next = this.tokens[i + 1];
-			const startIndex = i;
-			if (
-				START_COMMAND.includes(token.value) &&
-				!TOKEN_OPERATION.includes(next.type) &&
-				(!this.tokens[i - 2] ||
-					(this.tokens[i - 1] &&
-						this.tokens[i - 1].type !== TokenType.IF))
-			) {
-				//get the token range
-				const tokens: TokenData[] = [];
-				for (; i < this.tokens.length; i++) {
-					const c = this.tokens[i];
-					delete this.tokens[i];
-					tokens.push(c);
-					if (c.type === TokenType.SEMI) break;
-				}
-				const data = joinCommandData(tokens);
+		this.tokens.filter((v) => v).forEach((v) => this.parseCommand(v.pos));
+		// for (let i = 0; i < this.tokens.length; i++) {
+		// 	const token = this.tokens[i];
+		// 	const next = this.tokens[i + 1];
+		// 	const startIndex = i;
+		// 	if (
+		// 		START_COMMAND.includes(token.value) &&
+		// 		!TOKEN_OPERATION.includes(next.type) &&
+		// 		(!this.tokens[i - 2] ||
+		// 			(this.tokens[i - 2] &&
+		// 				this.tokens[i - 2].type !== TokenType.IF))
+		// 	) {
+		// 		//get the token range
+		// 		const tokens: TokenData[] = [];
+		// 		for (; i < this.tokens.length; i++) {
+		// 			const c = this.tokens[i];
+		// 			delete this.tokens[i];
+		// 			tokens.push(c);
+		// 			if (c.type === TokenType.SEMI) break;
+		// 		}
+		// 		const data = joinCommandData(tokens);
 
-				//tokenize it
-				for (const t of data) {
-					const type = this.tokenizeCommand(t);
-					t.type = type != undefined ? type : t.type;
-				}
+		// 		//tokenize it
+		// 		for (const t of data) {
+		// 			const type = this.tokenizeCommand(t);
+		// 			t.type = type != undefined ? type : t.type;
+		// 		}
 
-				for (let i = startIndex; i < startIndex + tokens.length; i++) {
-					this.tokens[i] = data[i - startIndex];
-				}
-			}
-		}
-		this.tokens = this.tokens.filter((v) => v != undefined);
+		// 		for (let i = startIndex; i < startIndex + tokens.length; i++) {
+		// 			this.tokens[i] = data[i - startIndex];
+		// 		}
+		// 	}
+		// }
+		// this.tokens = this.tokens.filter((v) => v != undefined);
 	}
 
 	/**
-	 *
-	 * @returns
+	 * get the position of the current index
+	 * @returns offset of the index
 	 */
 	private GetPosition(index: number): number {
 		const t = this.raw.slice(0, index).join("");

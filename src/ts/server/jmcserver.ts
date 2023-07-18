@@ -18,6 +18,7 @@ import {
 	getLiteralWithDot,
 	getVariablesDeclare,
 	offsetToPosition,
+	removeDuplicate,
 	splitTokenString,
 } from "../helpers/general";
 import { TextDocument } from "vscode-languageserver-textdocument";
@@ -435,6 +436,7 @@ export class JMCServer extends ServerData implements BaseServer {
 			return builder.build();
 			// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		} catch (e: any) {
+			this.logger.fatal(e);
 			throw new e();
 		}
 	}
@@ -1062,7 +1064,7 @@ export class JMCServer extends ServerData implements BaseServer {
 					const nodes = getNode(tokensValues);
 
 					//return completion items
-					const items: vscode.CompletionItem[] = [];
+					let items: vscode.CompletionItem[] = [];
 					for (const node of nodes) {
 						const cmdNode = node[1];
 						if (cmdNode.type === "literal") {
@@ -1072,8 +1074,8 @@ export class JMCServer extends ServerData implements BaseServer {
 							});
 						} else {
 							switch (cmdNode.parser) {
-								case "minecraft:entity":
-									items.concat(
+								case "minecraft:entity": {
+									items = items.concat(
 										COMMAND_ENTITY_SELECTORS.map((v) => {
 											return {
 												label: v,
@@ -1083,6 +1085,7 @@ export class JMCServer extends ServerData implements BaseServer {
 										})
 									);
 									break;
+								}
 								default:
 									break;
 							}

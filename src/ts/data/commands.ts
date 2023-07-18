@@ -114,7 +114,13 @@ const treeHead = Object.entries(cmd_datas.children);
 export const START_COMMAND = treeHead
 	.map((v) => v[0])
 	.filter((v) => !["function", "reload"].includes(v));
-export const COMMAND_ENTITY_SELECTORS: string[] = ["@s", "@p", "@r", "@e", "@a"];
+export const COMMAND_ENTITY_SELECTORS: string[] = [
+	"@s",
+	"@p",
+	"@r",
+	"@e",
+	"@a",
+];
 
 export function getNode(tokens: string[]): [string, CommandNode][] {
 	let treeNode = treeHead;

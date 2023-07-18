@@ -100,5 +100,47 @@ describe("Tokenizing Pass Case", () => {
 			const helper = new LexerHelper(text, expected);
 			expect(helper.tokens).toEqual(expected);
 		});
+
+		test("Import", () => {
+			const text = `import "*";`;
+			const expected: TokenData[] = [
+				{ type: 44, pos: 0, value: "import" },
+				{ type: 43, pos: 7, value: '"*"' },
+				{ type: 9, pos: 10, value: ";" },
+			];
+			const helper = new LexerHelper(text, expected);
+			expect(helper.tokens).toEqual(expected);
+		});
+
+		test("Function Call", () => {
+			const text = `guns.test();`;
+			const expected: TokenData[] = [
+				{ type: 12, pos: 0, value: "guns" },
+				{ type: 37, pos: 4, value: "." },
+				{ type: 12, pos: 5, value: "test" },
+				{ type: 18, pos: 9, value: "(" },
+				{ type: 19, pos: 10, value: ")" },
+				{ type: 9, pos: 11, value: ";" },
+			];
+			const helper = new LexerHelper(text, expected);
+			expect(helper.tokens).toEqual(expected);
+		});
+	});
+
+	describe("Command", () => {
+		test("item", () => {
+			const text = `item modify entity @s weapon.mainhand gun:gun_interval_changed;`;
+			const expected: TokenData[] = [
+				{ type: 42, pos: 0, value: "item" },
+				{ type: 42, pos: 5, value: "modify" },
+				{ type: 42, pos: 12, value: "entity" },
+				{ type: 47, pos: 19, value: "@s" },
+				{ type: 61, pos: 22, value: "weapon.mainhand" },
+				{ type: 61, pos: 38, value: "gun:gun_interval_changed" },
+				{ type: 9, pos: 62, value: ";" },
+			];
+			const helper = new LexerHelper(text, expected);
+			expect(helper.tokens).toEqual(expected);
+		});
 	});
 });

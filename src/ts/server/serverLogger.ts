@@ -32,6 +32,6 @@ export default class ServerLogger {
 		const day = date.getDate();
 		const hours = date.getHours();
 		const minute = date.getMinutes();
-		return `[${year}-${month}-${day}][${hours}:${minute}][${this.name}][${level}] `;
+		return `[${year}-${month}-${day} ${hours}:${minute}] [${this.name}] [${level}] `;
 	}
 }
