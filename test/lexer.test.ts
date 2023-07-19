@@ -1,8 +1,9 @@
 import { TokenData } from "../src/ts/lexer";
 import { describe, expect, test } from "@jest/globals";
+import * as jest from "@jest/globals";
 import LexerHelper from "./helper/lexer";
 
-describe("Tokenizing Pass Case", () => {
+describe("Tokenizing", () => {
 	describe("Basic", () => {
 		test("Comment", () => {
 			const text = `//test\nhello;`;
@@ -138,6 +139,41 @@ describe("Tokenizing Pass Case", () => {
 				{ type: 61, pos: 22, value: "weapon.mainhand" },
 				{ type: 61, pos: 38, value: "gun:gun_interval_changed" },
 				{ type: 9, pos: 62, value: ";" },
+			];
+			const helper = new LexerHelper(text, expected);
+			expect(helper.tokens).toEqual(expected);
+		});
+
+		test("give", () => {
+			const text = `give @s minecraft:carrot_on_a_stick{ammo:1b,id:1,maxAmmo:25,ammo_count:0,isMagazine:1b};`;
+			const expected: TokenData[] = [
+				{ type: 42, pos: 0, value: "give" },
+				{ type: 47, pos: 5, value: "@s" },
+				{
+					type: 59,
+					pos: 8,
+					value: "minecraft:carrot_on_a_stick{ammo:1b,id:1,maxAmmo:25,ammo_count:0,isMagazine:1b}",
+				},
+				{ type: 9, pos: 87, value: ";" },
+			];
+			const helper = new LexerHelper(text, expected);
+			expect(helper.tokens).toEqual(expected);
+		});
+
+		test("Command with Vars", () => {
+			const text = `execute store result entity @s Item.tag.ammo int 2 run $temp.get();`;
+			const expected: TokenData[] = [
+				{ type: 42, pos: 0, value: "execute" },
+				{ type: 42, pos: 8, value: "store" },
+				{ type: 42, pos: 14, value: "result" },
+				{ type: 42, pos: 21, value: "entity" },
+				{ type: 47, pos: 28, value: "@s" },
+				{ type: 61, pos: 31, value: "Item.tag.ammo" },
+				{ type: 42, pos: 45, value: "int" },
+				{ type: 64, pos: 49, value: "2" },
+				{ type: 42, pos: 51, value: "run" },
+				{ type: 61, pos: 55, value: "$temp.get()" },
+				{ type: 9, pos: 66, value: ";" },
 			];
 			const helper = new LexerHelper(text, expected);
 			expect(helper.tokens).toEqual(expected);

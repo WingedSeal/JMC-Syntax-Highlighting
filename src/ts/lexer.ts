@@ -8,6 +8,7 @@ import {
 	joinCommandData,
 	splitTokenArraySync,
 } from "./helpers/general";
+import ExtensionLogger from "./server/extlogger";
 export enum ErrorType {
 	INVALID,
 	UNKNWON_TOKEN,
@@ -312,6 +313,7 @@ export const DEPRECATED: TokenType[] = [TokenType.OLD_IMPORT];
 export class Lexer {
 	public tokens: TokenData[];
 
+	private logger: ExtensionLogger;
 	private raw: string[];
 	private trimmed: string[];
 	private currentIndex: number;
@@ -322,6 +324,7 @@ export class Lexer {
 	 * @param text
 	 */
 	constructor(text: string, macros: MacrosData[]) {
+		this.logger = new ExtensionLogger("Lexer");
 		this.currentIndex = 0;
 		this.raw = text
 			.split(
@@ -428,7 +431,13 @@ export class Lexer {
 			END_TOKEN.includes(token.type)
 		)
 			return token.type;
-		else if (MC_ITEMS.find((v) => token.value.startsWith(v)))
+		else if (
+			MC_ITEMS.find(
+				(v) =>
+					token.value.startsWith(v) ||
+					token.value.startsWith("minecraft:" + v)
+			)
+		)
 			return TokenType.COMMAND_ITEM_STACK;
 		else if (TokenType[token.type].startsWith("COMMAND")) {
 			return token.type;
@@ -454,7 +463,7 @@ export class Lexer {
 
 				for (; i < tokens.length; i++) {
 					const t = tokens[i];
-					if (["}", "{", ";"].includes(t.value)) {
+					if ([";"].includes(t.value)) {
 						r.push({
 							start: token.pos,
 							end: t.pos,
@@ -468,6 +477,10 @@ export class Lexer {
 		return r;
 	}
 
+	/**
+	 * parse a command
+	 * @param pos offset of current token
+	 */
 	parseCommand(pos: number) {
 		const commands = this.getCommandRanges(this.tokens);
 		const range = commands.find((v) => pos >= v.start && pos <= v.end);
@@ -477,6 +490,7 @@ export class Lexer {
 					return this.tokenize(v.value, v.pos, this.tokens, false)!;
 				})
 				.filter((v) => v != null);
+			console.log(tokens);
 			if (tokens.length > 0) {
 				const joined = joinCommandData(tokens).map((v) => {
 					v.type = this.tokenizeCommand(v);
@@ -493,39 +507,6 @@ export class Lexer {
 
 	private parseCommands() {
 		this.tokens.filter((v) => v).forEach((v) => this.parseCommand(v.pos));
-		// for (let i = 0; i < this.tokens.length; i++) {
-		// 	const token = this.tokens[i];
-		// 	const next = this.tokens[i + 1];
-		// 	const startIndex = i;
-		// 	if (
-		// 		START_COMMAND.includes(token.value) &&
-		// 		!TOKEN_OPERATION.includes(next.type) &&
-		// 		(!this.tokens[i - 2] ||
-		// 			(this.tokens[i - 2] &&
-		// 				this.tokens[i - 2].type !== TokenType.IF))
-		// 	) {
-		// 		//get the token range
-		// 		const tokens: TokenData[] = [];
-		// 		for (; i < this.tokens.length; i++) {
-		// 			const c = this.tokens[i];
-		// 			delete this.tokens[i];
-		// 			tokens.push(c);
-		// 			if (c.type === TokenType.SEMI) break;
-		// 		}
-		// 		const data = joinCommandData(tokens);
-
-		// 		//tokenize it
-		// 		for (const t of data) {
-		// 			const type = this.tokenizeCommand(t);
-		// 			t.type = type != undefined ? type : t.type;
-		// 		}
-
-		// 		for (let i = startIndex; i < startIndex + tokens.length; i++) {
-		// 			this.tokens[i] = data[i - startIndex];
-		// 		}
-		// 	}
-		// }
-		// this.tokens = this.tokens.filter((v) => v != undefined);
 	}
 
 	/**

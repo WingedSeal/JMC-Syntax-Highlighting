@@ -9,7 +9,7 @@ import {
 	SemanticTokenModifiers,
 	SemanticTokenTypes,
 } from "../data/semanticDatas";
-import ServerLogger from "./serverLogger";
+import ExtensionLogger from "./extlogger";
 
 export abstract class ServerData {
 	protected jmcConfigPaths: string[];
@@ -18,7 +18,7 @@ export abstract class ServerData {
 	protected extractedTokens: ExtractedTokens;
 	protected macros: MacrosData[];
 	protected initResult: vscode.InitializeResult;
-	protected logger: ServerLogger;
+	protected logger: ExtensionLogger;
 
 	constructor() {
 		this.jmcConfigPaths = [];
@@ -56,7 +56,7 @@ export abstract class ServerData {
 				},
 			},
 		};
-		this.logger = new ServerLogger("JMCServer");
+		this.logger = new ExtensionLogger("JMCServer");
 	}
 }
 

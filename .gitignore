@@ -1,9 +1,11 @@
 node_modules
 *.vsix
 .vscode
+.vs
 src/js
 temp
 old
 TODO.todo
 *.deprecated.ts
 *.deprecated
+coverage

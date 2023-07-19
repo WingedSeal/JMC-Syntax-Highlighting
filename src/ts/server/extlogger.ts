@@ -1,28 +1,30 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-export default class ServerLogger {
+export default class ExtensionLogger {
 	private name: string;
-	constructor(name: string) {
+	level: number;
+	constructor(name: string, level = 2) {
 		this.name = name;
+		this.level = level;
 	}
 
 	verbose(message: any) {
-		console.info(this.getStyle("VERBOSE") + message);
+		if (this.level <= 0) console.info(this.getStyle("VERBOSE") + message);
 	}
 
 	debug(message: any) {
-		console.info(this.getStyle("DEBUG") + message);
+		if (this.level <= 1) console.info(this.getStyle("DEBUG") + message);
 	}
 
 	info(message: any) {
-		console.info(this.getStyle("INFO") + message);
+		if (this.level <= 2) console.info(this.getStyle("INFO") + message);
 	}
 
 	error(message: any) {
-		console.info(this.getStyle("ERROR") + message);
+		if (this.level <= 3) console.info(this.getStyle("ERROR") + message);
 	}
 
 	fatal(message: any) {
-		console.info(this.getStyle("FATAL") + message);
+		if (this.level <= 4) console.info(this.getStyle("FATAL") + message);
 	}
 
 	private getStyle(level: string): string {

@@ -1,5 +1,8 @@
 import { Lexer, TokenData, TokenType } from "../lexer";
 import { HeaderParser } from "../parseHeader";
+import ExtensionLogger from "../server/extlogger";
+
+const logger = new ExtensionLogger("Helper");
 
 export interface Settings {
 	executable: string;
@@ -63,6 +66,12 @@ export const removeDuplicate = <TItems>(
 			index
 	);
 
+/**
+ * find the differnences between two strings
+ * @param str1 text 1
+ * @param str2 text 2
+ * @returns pos of the changed index
+ */
 export async function findStringDifference(
 	str1: string,
 	str2: string
@@ -82,6 +91,12 @@ export async function findStringDifference(
 	return null;
 }
 
+/**
+ * find the differnences between two strings
+ * @param str1 text 1
+ * @param str2 text 2
+ * @returns pos of the changed index
+ */
 export function findStringDifferenceSync(
 	str1: string,
 	str2: string
@@ -411,9 +426,9 @@ export async function getCurrentStatement(
 }
 
 /**
- *
- * @param text
- * @returns
+ * split string into tokenizable string
+ * @param text the string
+ * @returns splited string
  */
 export async function splitTokenString(text: string): Promise<string[]> {
 	return text
@@ -529,12 +544,7 @@ export async function getLiteralWithDot(
 	}
 }
 
-/**
- *
- * @param tokens
- * @param joinParen
- * @returns
- */
+//#region commands
 export function joinBrackets(tokens: TokenData[]): TokenData[] {
 	const datas: TokenData[] = [];
 
@@ -582,11 +592,6 @@ export function joinBrackets(tokens: TokenData[]): TokenData[] {
 	return datas;
 }
 
-/**
- *
- * @param tokens
- * @returns
- */
 export function joinFunction(tokens: TokenData[]): TokenData[] {
 	for (let i = 0; i < tokens.length; i++) {
 		const token = tokens[i];
@@ -627,11 +632,6 @@ export function getTokensByRange(
 	return tokens.filter((v) => v.pos <= range.end && v.pos >= range.start);
 }
 
-/**
- *
- * @param tokens
- * @returns
- */
 export function joinNBT(tokens: TokenData[]): TokenData[] {
 	const datas: TokenData[] = [];
 	for (let i = 0; i < tokens.length; i++) {
@@ -664,11 +664,6 @@ export function joinNBT(tokens: TokenData[]): TokenData[] {
 	return datas;
 }
 
-/**
- *
- * @param tokens
- * @returns
- */
 export function joinDot(tokens: TokenData[]): TokenData[] {
 	const datas: TokenData[] = [];
 	for (let i = 0; i < tokens.length; i++) {
@@ -702,11 +697,6 @@ export function joinDot(tokens: TokenData[]): TokenData[] {
 	return datas;
 }
 
-/**
- *
- * @param tokens
- * @returns
- */
 export function joinNamespace(tokens: TokenData[]): TokenData[] {
 	const datas: TokenData[] = [];
 
@@ -753,11 +743,13 @@ export function joinNumber(tokens: TokenData[]): TokenData[] {
 }
 
 /**
- *
- * @param tokens
- * @returns
+ * turns tokens into a recognizable commands
+ * @param tokens lexer tokens
+ * @returns	tokens that parsed
  */
 export function joinCommandData(tokens: TokenData[]): TokenData[] {
+	logger.verbose(`parsing tokens ${JSON.stringify(tokens)}`);
+
 	const jd = joinDot(tokens);
 	const jb = joinBrackets(jd);
 	const jn = joinNBT(jb);
@@ -768,3 +760,4 @@ export function joinCommandData(tokens: TokenData[]): TokenData[] {
 	//remove undefined
 	return jnum.filter((v) => v);
 }
+//#endregion
