@@ -1,3 +1,7 @@
+/**
+ * remember to use "Fold All" for better reading :P
+ * it is too long :(
+ */
 import * as vscode from "vscode-languageserver/node";
 import { BaseServer, ServerData } from "./serverData";
 import * as get_files from "get-all-files";
@@ -30,7 +34,6 @@ import {
 	getNode,
 } from "../data/commands";
 import { URI } from "vscode-uri";
-
 export class JMCServer extends ServerData implements BaseServer {
 	connection: vscode.Connection;
 	documents: vscode.TextDocuments<TextDocument>;
@@ -849,7 +852,6 @@ export class JMCServer extends ServerData implements BaseServer {
 								return v;
 							})
 						);
-					file.lexer.parseCommand(changedIndex);
 				} else {
 					file.lexer.tokens = lexerTokens
 						.slice(0, startIndex)
@@ -860,8 +862,8 @@ export class JMCServer extends ServerData implements BaseServer {
 								return v;
 							})
 						);
-					file.lexer.parseCommand(changedIndex);
 				}
+				file.lexer.parseCommand(changedIndex);
 			}
 
 			file.text = fileText;

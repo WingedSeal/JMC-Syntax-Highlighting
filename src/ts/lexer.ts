@@ -9,6 +9,7 @@ import {
 	splitTokenArraySync,
 } from "./helpers/general";
 import ExtensionLogger from "./server/extlogger";
+
 export enum ErrorType {
 	INVALID,
 	UNKNWON_TOKEN,
@@ -23,6 +24,9 @@ export interface ErrorData {
 	token?: TokenData;
 }
 
+/**
+ * All tokens avaliable
+ */
 export enum TokenType {
 	COMMENT,
 	FUNCTION,
@@ -91,6 +95,9 @@ export enum TokenType {
 	COMMAND_NUMBER,
 }
 
+/**
+ * use to identify a string
+ */
 interface Token {
 	regex: RegExp;
 	token: TokenType;
@@ -281,6 +288,9 @@ const Tokens: Token[] = [
 	},
 ];
 
+/**
+ * operators
+ */
 export const TOKEN_OPERATION: TokenType[] = [
 	TokenType.OP_DIVIDEEQ,
 	TokenType.OP_EQ,
@@ -309,7 +319,13 @@ const TokenPatterns: TokenType[][] = [
 	[TokenType.VARIABLE, TokenType.OPERATION, TokenType.BOOL],
 ];
 
+/**
+ * deprecated tokens
+ */
 export const DEPRECATED: TokenType[] = [TokenType.OLD_IMPORT];
+/**
+ * lexer of jmc
+ */
 export class Lexer {
 	public tokens: TokenData[];
 
@@ -320,8 +336,9 @@ export class Lexer {
 	private macros: string[];
 
 	/**
-	 *
-	 * @param text
+	 * create a new lexer
+	 * @param text text of a file
+	 * @param macros see {@link MacrosData}
 	 */
 	constructor(text: string, macros: MacrosData[]) {
 		this.logger = new ExtensionLogger("Lexer");
@@ -337,12 +354,21 @@ export class Lexer {
 		this.parseCommands();
 	}
 
+	/**
+	 * get the token type of a string
+	 * @param text the string to be tokenized
+	 * @returns see {@link TokenType}
+	 */
 	static getTokenType(text: string): TokenType {
 		return (
 			Tokens.find((v) => v.regex.test(text))?.token ?? TokenType.UNKNOWN
 		);
 	}
 
+	/**
+	 * initialize the tokens list
+	 * @returns tokenzied array
+	 */
 	private init(): TokenData[] {
 		const datas: TokenData[] = [];
 		for (; this.currentIndex < this.trimmed.length; this.currentIndex++) {
@@ -361,6 +387,7 @@ export class Lexer {
 	 * @param current the text going to tokenize
 	 * @param pos the offset of the text
 	 * @param datas the previous tokenized datas
+	 * @param cmd if it needs to parse command
 	 * @returns tokenzied data
 	 */
 	tokenize(
@@ -407,6 +434,11 @@ export class Lexer {
 		return null;
 	}
 
+	/**
+	 * get the command token type of a token
+	 * @param token the token needs to be tokenized
+	 * @returns see {@link TokenType}
+	 */
 	tokenizeCommand(token: TokenData): TokenType {
 		if (
 			token.type === TokenType.COMMAND_LITERAL &&
@@ -444,6 +476,11 @@ export class Lexer {
 		} else return TokenType.COMMAND_INVALID;
 	}
 
+	/**
+	 * get the range of the commands
+	 * @param tokens tokens of the previous datas
+	 * @returns an array with start and end of commands
+	 */
 	getCommandRanges(tokens: TokenData[]): StatementRange[] {
 		const r: StatementRange[] = [];
 
@@ -490,7 +527,6 @@ export class Lexer {
 					return this.tokenize(v.value, v.pos, this.tokens, false)!;
 				})
 				.filter((v) => v != null);
-			console.log(tokens);
 			if (tokens.length > 0) {
 				const joined = joinCommandData(tokens).map((v) => {
 					v.type = this.tokenizeCommand(v);
@@ -505,6 +541,9 @@ export class Lexer {
 		}
 	}
 
+	/**
+	 * see {@link parseCommand}
+	 */
 	private parseCommands() {
 		this.tokens.filter((v) => v).forEach((v) => this.parseCommand(v.pos));
 	}
@@ -520,6 +559,9 @@ export class Lexer {
 	}
 }
 
+/**
+ * @todo
+ */
 export class ErrorLexer {
 	private lexer: Lexer;
 	private index: number;

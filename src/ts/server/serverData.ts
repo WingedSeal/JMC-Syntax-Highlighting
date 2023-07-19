@@ -56,7 +56,7 @@ export abstract class ServerData {
 				},
 			},
 		};
-		this.logger = new ExtensionLogger("JMCServer");
+		this.logger = new ExtensionLogger("JMCServer", 0);
 	}
 }
 

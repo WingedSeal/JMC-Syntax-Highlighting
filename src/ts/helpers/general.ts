@@ -731,6 +731,7 @@ export function joinNumber(tokens: TokenData[]): TokenData[] {
 		const token = tokens[i];
 		if (
 			!isNaN(+token.value) &&
+			tokens[i + 1] &&
 			["l", "s", "b"].includes(tokens[i + 1].value)
 		) {
 			token.value += tokens[i + 1].value;
