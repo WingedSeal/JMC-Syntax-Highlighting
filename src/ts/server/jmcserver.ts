@@ -84,6 +84,7 @@ export class JMCServer extends ServerData implements BaseServer {
 	start() {
 		this.documents.listen(this.connection);
 		this.connection.listen();
+		this.logger.info("Server Started");
 	}
 
 	//#region register
@@ -184,264 +185,128 @@ export class JMCServer extends ServerData implements BaseServer {
 	async onSemanticHighlightFull(
 		params: vscode.SemanticTokensParams
 	): Promise<vscode.SemanticTokens> {
-		try {
-			const doc = this.documents.get(params.textDocument.uri);
-			const builder = new vscode.SemanticTokensBuilder();
-			if (doc) {
-				const settings =
-					(await this.connection.workspace.getConfiguration({
-						section: "jmc",
-						scopeUri: params.textDocument.uri,
-					})) as Settings;
-				const file = this.jmcFiles.find(
-					(v) => v.path == url.fileURLToPath(doc.uri)
-				);
-				if (file) {
-					const tokens = file.lexer.tokens;
-					for (let i = 0; i < tokens.length; i++) {
-						const token = tokens[i];
-						switch (token.type) {
-							case TokenType.CLASS:
-								if (
-									tokens[i + 1] &&
-									tokens[i + 1].type === TokenType.LITERAL
-								) {
-									const current = tokens[i + 1];
-									const pos = doc.positionAt(current.pos);
-									builder.push(
-										pos.line,
-										pos.character,
-										current.value.length,
-										0,
-										0
-									);
-								}
-								break;
-							case TokenType.VARIABLE: {
-								const pos = doc.positionAt(token.pos);
+		const doc = this.documents.get(params.textDocument.uri);
+		const builder = new vscode.SemanticTokensBuilder();
+		if (doc) {
+			const settings = (await this.connection.workspace.getConfiguration({
+				section: "jmc",
+				scopeUri: params.textDocument.uri,
+			})) as Settings;
+			const file = this.jmcFiles.find(
+				(v) => v.path == url.fileURLToPath(doc.uri)
+			);
+			if (file) {
+				const tokens = file.lexer.tokens;
+				for (let i = 0; i < tokens.length; i++) {
+					const token = tokens[i];
+					switch (token.type) {
+						case TokenType.CLASS:
+							if (
+								tokens[i + 1] &&
+								tokens[i + 1].type === TokenType.LITERAL
+							) {
+								const current = tokens[i + 1];
+								const pos = doc.positionAt(current.pos);
 								builder.push(
 									pos.line,
 									pos.character,
-									token.value.length,
-									4,
+									current.value.length,
+									0,
 									0
 								);
-								break;
 							}
-							case TokenType.LITERAL: {
-								if (
-									tokens[i + 1] &&
-									tokens[i + 1].type == TokenType.LPAREN
-								) {
-									const pos = doc.positionAt(token.pos);
-									builder.push(
-										pos.line,
-										pos.character,
-										token.value.length,
-										3,
-										0
-									);
-								} else if (
-									tokens[i + 1] &&
-									tokens[i + 1].type == TokenType.DOT &&
-									!settings.rawFuncHighlight
-								) {
-									const pos = doc.positionAt(token.pos);
-									builder.push(
-										pos.line,
-										pos.character,
-										token.value.length,
-										0,
-										0
-									);
-								} else if (
-									tokens[i + 1] &&
-									tokens[i + 1].type == TokenType.DOT &&
-									settings.rawFuncHighlight
-								) {
-									const pos = doc.positionAt(token.pos);
-									builder.push(
-										pos.line,
-										pos.character,
-										token.value.length,
-										3,
-										0
-									);
-								}
-								break;
-							}
-							case TokenType.MACROS: {
+							break;
+						case TokenType.VARIABLE: {
+							const pos = doc.positionAt(token.pos);
+							builder.push(
+								pos.line,
+								pos.character,
+								token.value.length,
+								4,
+								0
+							);
+							break;
+						}
+						case TokenType.LITERAL: {
+							if (
+								tokens[i + 1] &&
+								tokens[i + 1].type == TokenType.LPAREN
+							) {
 								const pos = doc.positionAt(token.pos);
 								builder.push(
 									pos.line,
 									pos.character,
 									token.value.length,
-									5,
+									3,
 									0
 								);
-								break;
-							}
-							case TokenType.COMMAND_LITERAL: {
-								if (
-									START_COMMAND.includes(token.value) &&
-									settings.boldFirstCommand
-								) {
-									const pos = doc.positionAt(token.pos);
-									builder.push(
-										pos.line,
-										pos.character,
-										token.value.length,
-										7,
-										0b1000
-									);
-									break;
-								}
+							} else if (
+								tokens[i + 1] &&
+								tokens[i + 1].type == TokenType.DOT &&
+								!settings.rawFuncHighlight
+							) {
 								const pos = doc.positionAt(token.pos);
 								builder.push(
 									pos.line,
 									pos.character,
 									token.value.length,
-									7,
+									0,
 									0
 								);
-								break;
-							}
-							case TokenType.OLD_IMPORT: {
+							} else if (
+								tokens[i + 1] &&
+								tokens[i + 1].type == TokenType.DOT &&
+								settings.rawFuncHighlight
+							) {
 								const pos = doc.positionAt(token.pos);
 								builder.push(
 									pos.line,
 									pos.character,
 									token.value.length,
-									6,
-									0b0100
-								);
-								break;
-							}
-							case TokenType.COMMAND_FC: {
-								const pos = doc.positionAt(token.pos);
-								const splited = token.value
-									.split(/\(|\)|(\.|\s+)/)
-									.filter((v) => v != "" && v != undefined);
-								if (splited.length > 0) {
-									if (splited[0].startsWith("$")) {
-										builder.push(
-											pos.line,
-											pos.character,
-											splited[0].length,
-											4,
-											0
-										);
-										const np = doc.positionAt(
-											token.pos +
-												splited[0].length +
-												splited[1].length
-										);
-										builder.push(
-											np.line,
-											np.character,
-											splited[2].length,
-											3,
-											0
-										);
-									} else if (splited.length > 1) {
-										let num = 0;
-										const startToken = splited[0];
-										if (
-											/^[A-Z]/.test(startToken) &&
-											settings.capitalizedClass
-										) {
-											num = 0b10000;
-										}
-										//highlight first token
-										builder.push(
-											pos.line,
-											pos.character,
-											startToken.length,
-											0,
-											num
-										);
-										let ts = token.pos + startToken.length;
-
-										//hightlight token in the middle
-										for (
-											let i = 1;
-											i < splited.length - 1;
-											i++
-										) {
-											num = 0;
-											const t = splited[i];
-											const np = doc.positionAt(ts);
-											if (
-												/^[A-Z]/.test(t) &&
-												settings.capitalizedClass
-											) {
-												num = 0b10000;
-											}
-											builder.push(
-												np.line,
-												np.character,
-												t.length,
-												0,
-												num
-											);
-											ts += t.length;
-										}
-
-										//highlight last token
-										const lastIndex = splited.length - 1;
-										const lastToken = splited[lastIndex];
-										const np = doc.positionAt(ts);
-										builder.push(
-											np.line,
-											np.character,
-											lastToken.length,
-											3,
-											0
-										);
-									} else {
-										builder.push(
-											pos.line,
-											pos.character,
-											token.value.length,
-											3,
-											0
-										);
-									}
-								}
-								break;
-							}
-							case TokenType.COMMAND_NUMBER: {
-								const pos = doc.positionAt(token.pos);
-								builder.push(
-									pos.line,
-									pos.character,
-									token.value.length,
-									9,
+									3,
 									0
 								);
-								break;
 							}
-							default: {
-								const pos = doc.positionAt(token.pos);
-								builder.push(
-									pos.line,
-									pos.character,
-									token.value.length,
-									-1,
-									0
-								);
-								break;
-							}
+							break;
+						}
+						case TokenType.MACROS: {
+							const pos = doc.positionAt(token.pos);
+							builder.push(
+								pos.line,
+								pos.character,
+								token.value.length,
+								5,
+								0
+							);
+							break;
+						}
+						case TokenType.OLD_IMPORT: {
+							const pos = doc.positionAt(token.pos);
+							builder.push(
+								pos.line,
+								pos.character,
+								token.value.length,
+								6,
+								0b0100
+							);
+							break;
+						}
+						default: {
+							const pos = doc.positionAt(token.pos);
+							builder.push(
+								pos.line,
+								pos.character,
+								token.value.length,
+								-1,
+								0
+							);
+							break;
 						}
 					}
 				}
 			}
-			return builder.build();
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		} catch (e: any) {
-			this.logger.fatal(e);
-			throw new e();
 		}
+		return builder.build();
 	}
 
 	async onSignatureHelp(
@@ -863,7 +728,7 @@ export class JMCServer extends ServerData implements BaseServer {
 							})
 						);
 				}
-				file.lexer.parseCommand(changedIndex);
+				file.lexer.updateCommand();
 			}
 
 			file.text = fileText;
@@ -1040,60 +905,6 @@ export class JMCServer extends ServerData implements BaseServer {
 							}
 						}
 					}
-				}
-			}
-		}
-		//check for commands
-		if (file && doc) {
-			const cRanges = file.lexer.getCommandRanges(file.lexer.tokens);
-			const pos = doc.offsetAt(arg.position);
-			const range = cRanges.find((v) => v.end > pos && v.start < pos);
-
-			//return completion if cursor inside a command range
-			if (range) {
-				const lexer = file.lexer;
-				//get current token
-				const index = getIndexByOffset(lexer.tokens, pos) - 1;
-				const t = lexer.tokens[index];
-				if (t) {
-					//get range of tokens
-					const cStartIndex = getIndexByOffset(
-						lexer.tokens,
-						range.start
-					);
-					const tokens = lexer.tokens.slice(cStartIndex, index + 1);
-					const tokensValues = tokens.map((v) => v.value);
-					const nodes = getNode(tokensValues);
-
-					//return completion items
-					let items: vscode.CompletionItem[] = [];
-					for (const node of nodes) {
-						const cmdNode = node[1];
-						if (cmdNode.type === "literal") {
-							items.push({
-								label: node[0],
-								kind: vscode.CompletionItemKind.Keyword,
-							});
-						} else {
-							switch (cmdNode.parser) {
-								case "minecraft:entity": {
-									items = items.concat(
-										COMMAND_ENTITY_SELECTORS.map((v) => {
-											return {
-												label: v,
-												kind: vscode.CompletionItemKind
-													.Constant,
-											};
-										})
-									);
-									break;
-								}
-								default:
-									break;
-							}
-						}
-					}
-					return items;
 				}
 			}
 		}

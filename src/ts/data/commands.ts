@@ -156,6 +156,11 @@ export function getNode(tokens: string[]): [string, CommandNode][] {
 	return [];
 }
 
+/**
+ *
+ * @param commands
+ * @returns
+ */
 export function checkExecutable(commands: [string, CommandNode][]): boolean {
 	return commands.length === 0
 		? false

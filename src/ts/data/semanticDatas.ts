@@ -9,6 +9,7 @@ export const SemanticTokenTypes = [
 	"commandKeyword",
 	"commandNumber",
 	"number",
+	"property",
 ];
 export const SemanticTokenModifiers = [
 	"declaration",

@@ -706,14 +706,14 @@ export function joinNamespace(tokens: TokenData[]): TokenData[] {
 		const t = tokens[i + 2];
 		if (s && t && f.value === "minecraft" && s.type === TokenType.COLON) {
 			datas.push({
-				type: TokenType.COMMAND_FINAL,
+				type: TokenType.COMMAND_NAMESAPCE,
 				pos: f.pos,
 				value: `${f.value}${s.value}${t.value}`,
 			});
 			i += 2;
 		} else if (s && t && s.type === TokenType.COLON) {
 			datas.push({
-				type: TokenType.COMMAND_FINAL,
+				type: TokenType.COMMAND_NAMESAPCE,
 				pos: f.pos,
 				value: `${f.value}${s.value}${t.value}`,
 			});

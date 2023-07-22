@@ -1,3 +1,4 @@
+import { CommandLexer } from "./commandLexer";
 import { START_COMMAND } from "./data/commands";
 import { MC_ITEMS } from "./data/mcDatas";
 import {
@@ -93,6 +94,7 @@ export enum TokenType {
 	COMMAND_FC,
 	COMMAND_VALUE,
 	COMMAND_NUMBER,
+	COMMAND_NAMESAPCE,
 }
 
 /**
@@ -327,7 +329,8 @@ export const DEPRECATED: TokenType[] = [TokenType.OLD_IMPORT];
  * lexer of jmc
  */
 export class Lexer {
-	public tokens: TokenData[];
+	tokens: TokenData[];
+	cmdLexer: CommandLexer;
 
 	private logger: ExtensionLogger;
 	private raw: string[];
@@ -342,16 +345,23 @@ export class Lexer {
 	 */
 	constructor(text: string, macros: MacrosData[]) {
 		this.logger = new ExtensionLogger("Lexer");
-		this.currentIndex = 0;
-		this.raw = text
-			.split(
-				/(\/\/.*)|(-?\d*\.?\d+)|(["\'].*["\'])|(\s|\;|\{|\}|\[|\]|\(|\)|\|\||&&|==|!=|!|,|\.|\:|\=\>|\=)/m
-			)
-			.filter((v) => v != undefined);
-		this.trimmed = this.raw.map((v) => v.trim());
-		this.macros = macros.map((v) => v.target);
-		this.tokens = this.init();
-		this.parseCommands();
+		try {
+			this.currentIndex = 0;
+			this.raw = text
+				.split(
+					/(\/\/.*)|(-?\d*\.?\d+)|(["\'].*["\'])|(\s|\;|\{|\}|\[|\]|\(|\)|\|\||&&|==|!=|!|,|\.|\:|\=\>|\=)/m
+				)
+				.filter((v) => v != undefined);
+			this.trimmed = this.raw.map((v) => v.trim());
+			this.macros = macros.map((v) => v.target);
+			this.tokens = this.init();
+			this.cmdLexer = new CommandLexer(this.tokens);
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		} catch (e: any) {
+			this.logger.fatal(e);
+			console.log(e);
+			throw new e();
+		}
 	}
 
 	/**
@@ -387,20 +397,14 @@ export class Lexer {
 	 * @param current the text going to tokenize
 	 * @param pos the offset of the text
 	 * @param datas the previous tokenized datas
-	 * @param cmd if it needs to parse command
 	 * @returns tokenzied data
 	 */
 	tokenize(
 		current: string,
 		pos: number,
-		datas: TokenData[],
-		cmd = true
+		datas: TokenData[]
 	): TokenData | null {
 		const result = Tokens.find((v) => v.regex.test(current));
-		const commandRanges = this.getCommandRanges(datas);
-		const inCommandRange = commandRanges.find(
-			(v) => pos >= v.start && pos <= v.end
-		);
 		if (this.macros.includes(current)) {
 			return {
 				type: TokenType.MACROS,
@@ -408,16 +412,6 @@ export class Lexer {
 				value: current,
 			};
 		} else if (result) {
-			if (inCommandRange && cmd) {
-				const token: TokenData = {
-					type: result.token,
-					pos: pos,
-					value: current,
-				};
-				const type = this.tokenizeCommand(token);
-				token.type = type != undefined ? type : token.type;
-				return token;
-			}
 			if (
 				result.token == TokenType.SWITCH &&
 				datas[datas.length - 1] &&
@@ -434,118 +428,15 @@ export class Lexer {
 		return null;
 	}
 
-	/**
-	 * get the command token type of a token
-	 * @param token the token needs to be tokenized
-	 * @returns see {@link TokenType}
-	 */
-	tokenizeCommand(token: TokenData): TokenType {
-		if (
-			token.type === TokenType.COMMAND_LITERAL &&
-			token.value.includes(".")
-		)
-			return TokenType.COMMAND_VALUE;
-		else if (/^-?\d*(?:\.\d+)?(?!\.)[lsb]?$/.test(token.value)) {
-			return TokenType.COMMAND_NUMBER;
-		} else if (
-			token.type === TokenType.LITERAL &&
-			token.value.match(/^\w+$/)
-		)
-			return TokenType.COMMAND_LITERAL;
-		else if (token.type === TokenType.LITERAL && token.value.match(/^\S+$/))
-			return TokenType.COMMAND_STRING;
-		else if (token.value.match(/^@[prase]/))
-			return TokenType.COMMAND_SELECTOR;
-		else if (
-			token.type === TokenType.SEMI ||
-			token.type === TokenType.LPAREN ||
-			token.type === TokenType.RPAREN ||
-			END_TOKEN.includes(token.type)
-		)
-			return token.type;
-		else if (
-			MC_ITEMS.find(
-				(v) =>
-					token.value.startsWith(v) ||
-					token.value.startsWith("minecraft:" + v)
-			)
-		)
-			return TokenType.COMMAND_ITEM_STACK;
-		else if (TokenType[token.type].startsWith("COMMAND")) {
-			return token.type;
-		} else return TokenType.COMMAND_INVALID;
-	}
-
-	/**
-	 * get the range of the commands
-	 * @param tokens tokens of the previous datas
-	 * @returns an array with start and end of commands
-	 */
-	getCommandRanges(tokens: TokenData[]): StatementRange[] {
-		const r: StatementRange[] = [];
-
-		for (let i = 0; i < tokens.length; i++) {
-			const token = tokens[i];
-			if (
-				token.type === TokenType.COMMAND_LITERAL ||
-				START_COMMAND.includes(token.value)
-			) {
-				if (
-					token.type === TokenType.LITERAL &&
-					token.value === "data" &&
-					tokens[i - 2] &&
-					tokens[i - 2].type === TokenType.IF
-				)
-					continue;
-
-				for (; i < tokens.length; i++) {
-					const t = tokens[i];
-					if ([";"].includes(t.value)) {
-						r.push({
-							start: token.pos,
-							end: t.pos,
-						});
-						break;
-					}
-				}
-			}
+	updateCommand() {
+		this.cmdLexer.update(this.tokens);
+		const ranges = this.cmdLexer.getRanges();
+		for (const range of ranges) {
+			this.tokens = this.tokens.filter((v) => {
+				const pos = v.pos;
+				return pos >= range.start && pos <= range.end;
+			});
 		}
-
-		return r;
-	}
-
-	/**
-	 * parse a command
-	 * @param pos offset of current token
-	 */
-	parseCommand(pos: number) {
-		const commands = this.getCommandRanges(this.tokens);
-		const range = commands.find((v) => pos >= v.start && pos <= v.end);
-		if (range) {
-			const tokens = getTokensByRange(this.tokens, range)
-				.map((v) => {
-					return this.tokenize(v.value, v.pos, this.tokens, false)!;
-				})
-				.filter((v) => v != null);
-			if (tokens.length > 0) {
-				const joined = joinCommandData(tokens).map((v) => {
-					v.type = this.tokenizeCommand(v);
-					return v;
-				});
-				const startIndex = getIndexByOffset(this.tokens, joined[0].pos);
-				for (let i = startIndex; i < startIndex + tokens.length; i++) {
-					this.tokens[i] = joined[i - startIndex];
-				}
-				this.tokens = this.tokens.filter((v) => v != undefined);
-			}
-		}
-	}
-
-	/**
-	 * see {@link parseCommand}
-	 */
-	private parseCommands() {
-		this.tokens.filter((v) => v).forEach((v) => this.parseCommand(v.pos));
 	}
 
 	/**
