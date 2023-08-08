@@ -1,14 +1,4 @@
-import { CommandLexer } from "./commandLexer";
-import { START_COMMAND } from "./data/commands";
-import { MC_ITEMS } from "./data/mcDatas";
-import {
-	MacrosData,
-	StatementRange,
-	getIndexByOffset,
-	getTokensByRange,
-	joinCommandData,
-	splitTokenArraySync,
-} from "./helpers/general";
+import { MacrosData, splitTokenArraySync } from "./helpers/general";
 import ExtensionLogger from "./server/extlogger";
 
 export enum ErrorType {
@@ -330,7 +320,6 @@ export const DEPRECATED: TokenType[] = [TokenType.OLD_IMPORT];
  */
 export class Lexer {
 	tokens: TokenData[];
-	cmdLexer: CommandLexer;
 
 	private logger: ExtensionLogger;
 	private raw: string[];
@@ -355,7 +344,6 @@ export class Lexer {
 			this.trimmed = this.raw.map((v) => v.trim());
 			this.macros = macros.map((v) => v.target);
 			this.tokens = this.init();
-			this.cmdLexer = new CommandLexer(this.tokens);
 			// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		} catch (e: any) {
 			this.logger.fatal(e);
@@ -426,17 +414,6 @@ export class Lexer {
 			};
 		}
 		return null;
-	}
-
-	updateCommand() {
-		this.cmdLexer.update(this.tokens);
-		const ranges = this.cmdLexer.getRanges();
-		for (const range of ranges) {
-			this.tokens = this.tokens.filter((v) => {
-				const pos = v.pos;
-				return pos >= range.start && pos <= range.end;
-			});
-		}
 	}
 
 	/**

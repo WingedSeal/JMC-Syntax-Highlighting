@@ -728,7 +728,6 @@ export class JMCServer extends ServerData implements BaseServer {
 							})
 						);
 				}
-				file.lexer.updateCommand();
 			}
 
 			file.text = fileText;
