@@ -200,35 +200,23 @@ export class JMCServer extends ServerData implements BaseServer {
 				for (let i = 0; i < tokens.length; i++) {
 					const token = tokens[i];
 					switch (token.type) {
-						case TokenType.CLASS:
+						case TokenType.CLASS: {
 							if (
 								tokens[i + 1] &&
 								tokens[i + 1].type === TokenType.LITERAL
 							) {
 								const current = tokens[i + 1];
 								const pos = doc.positionAt(current.pos);
-								if (
-									settings.capitalizedClass &&
-									/^[A-Z]/.test(current.value)
-								) {
-									builder.push(
-										pos.line,
-										pos.character,
-										current.value.length,
-										0,
-										0b10000
-									);
-								} else {
-									builder.push(
-										pos.line,
-										pos.character,
-										current.value.length,
-										0,
-										0
-									);
-								}
+								builder.push(
+									pos.line,
+									pos.character,
+									current.value.length,
+									0,
+									(settings.capitalizedClass && /^[A-Z]/.test(current.value)) ? 0b10000 : 0
+								);
 							}
 							break;
+						}
 						case TokenType.VARIABLE: {
 							const pos = doc.positionAt(token.pos);
 							builder.push(
