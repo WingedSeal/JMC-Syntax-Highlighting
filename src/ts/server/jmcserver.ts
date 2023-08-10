@@ -217,6 +217,39 @@ export class JMCServer extends ServerData implements BaseServer {
 							}
 							break;
 						}
+						case TokenType.NEW: {
+							if (
+								tokens[i + 1] &&
+								tokens[i + 1].type === TokenType.LITERAL
+							) {
+								const current = tokens[i + 1];
+								const pos = doc.positionAt(current.pos);
+								builder.push(
+									pos.line,
+									pos.character,
+									current.value.length,
+									0,
+									(settings.capitalizedClass && /^[A-Z]/.test(current.value)) ? 0b10000 : 0
+								);
+							}
+							if ( 
+								tokens[i + 2] && 
+								tokens[i + 2].type === TokenType.DOT &&
+								tokens[i + 3] &&
+								tokens[i + 3].type === TokenType.LITERAL
+							) {
+								const current = tokens[i + 3];
+								const pos = doc.positionAt(current.pos);
+								builder.push(
+									pos.line,
+									pos.character,
+									current.value.length,
+									0,
+									(settings.capitalizedClass && /^[A-Z]/.test(current.value)) ? 0b10000 : 0
+								);
+							}
+							break;
+						}
 						case TokenType.VARIABLE: {
 							const pos = doc.positionAt(token.pos);
 							builder.push(
