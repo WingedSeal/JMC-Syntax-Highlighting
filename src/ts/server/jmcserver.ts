@@ -207,13 +207,26 @@ export class JMCServer extends ServerData implements BaseServer {
 							) {
 								const current = tokens[i + 1];
 								const pos = doc.positionAt(current.pos);
-								builder.push(
-									pos.line,
-									pos.character,
-									current.value.length,
-									0,
-									0
-								);
+								if (
+									settings.capitalizedClass &&
+									/^[A-Z]/.test(current.value)
+								) {
+									builder.push(
+										pos.line,
+										pos.character,
+										current.value.length,
+										0,
+										0b10000
+									);
+								} else {
+									builder.push(
+										pos.line,
+										pos.character,
+										current.value.length,
+										0,
+										0
+									);
+								}
 							}
 							break;
 						case TokenType.VARIABLE: {
