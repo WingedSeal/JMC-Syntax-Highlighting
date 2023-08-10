@@ -3,7 +3,7 @@ export const HEADERS: string[] = [
 	"credit",
 	"include",
 	"command",
-	"override_minecraft",
+	"override",
 	"static",
 	"uninstall",
 	"del",
