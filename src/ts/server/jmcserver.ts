@@ -264,7 +264,7 @@ export class JMCServer extends ServerData implements BaseServer {
 									pos.character,
 									token.value.length,
 									0,
-									0
+									(settings.capitalizedClass && /^[A-Z]/.test(token.value)) ? 0b10000 : 0
 								);
 							} else if (
 								tokens[i + 1] &&
@@ -277,7 +277,7 @@ export class JMCServer extends ServerData implements BaseServer {
 									pos.character,
 									token.value.length,
 									3,
-									0
+									(settings.capitalizedClass && /^[A-Z]/.test(token.value)) ? 0b10000 : 0
 								);
 							}
 							break;
