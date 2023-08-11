@@ -25,6 +25,9 @@ export enum TokenType {
 	NEW,
 	IF,
 	ELSE,
+	FOR,
+	WHILE,
+	DO,
 	SWITCH,
 	CASE,
 	OLD_IMPORT,
@@ -129,6 +132,18 @@ const Tokens: Token[] = [
 	{
 		regex: /^else$/,
 		token: TokenType.ELSE,
+	},
+	{
+		regex: /^for$/,
+		token: TokenType.FOR,
+	},
+	{
+		regex: /^while$/,
+		token: TokenType.WHILE,
+	},
+	{
+		regex: /^do$/,
+		token: TokenType.DO,
 	},
 	{
 		regex: /^switch$/,
