@@ -174,7 +174,7 @@ const Tokens: Token[] = [
 		token: TokenType.ARROW_FUNC,
 	},
 	{
-		regex: /(^"([\w' ]|(\\"))*"$)|(^'([\w" ]|(\\'))*'$)/,
+		regex: /(^"([\w' *]|(\\"))*"$)|(^'([\w" *]|(\\'))*'$)/,
 		token: TokenType.STRING,
 	},
 	{
