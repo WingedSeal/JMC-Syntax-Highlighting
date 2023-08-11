@@ -5,7 +5,7 @@ export enum HeaderType {
 	INCLUDE,
 	COMMAND,
 	DEL,
-	OVERRIDE_MINECRAFT,
+	OVERRIDE,
 	UNINSTALL,
 	STATIC,
 	UNKNOWN,
@@ -52,8 +52,8 @@ export class HeaderParser {
 				return HeaderType.COMMAND;
 			case "#del":
 				return HeaderType.DEL;
-			case "#override_minecraft":
-				return HeaderType.OVERRIDE_MINECRAFT;
+			case "#override":
+				return HeaderType.OVERRIDE;
 			case "#uninstall":
 				return HeaderType.UNINSTALL;
 			case "#static":
