@@ -20,6 +20,8 @@ import {
 	getFunctions,
 	getIndexByOffset,
 	getLiteralWithDot,
+	getNextStatement,
+	getPreviousStatement,
 	getVariablesDeclare,
 	offsetToPosition,
 	removeDuplicate,
@@ -720,22 +722,28 @@ export class JMCServer extends ServerData implements BaseServer {
 			if (changedIndex) {
 				const lexerTokens = file.lexer.tokens;
 
+				const preStatement = await getPreviousStatement(
+					file.lexer,
+					changedIndex
+				);
+				const nextStatement = await getNextStatement(
+					file.lexer,
+					changedIndex + differenceLength
+				);
+
 				//get ranged text
-				const start = doc.positionAt(changedIndex);
-				const startPos = vscode.Position.create(start.line, 0);
-				const startOffset = doc.offsetAt(startPos);
+				const start = doc.positionAt(preStatement.start);
+				const startOffset = doc.offsetAt(start);
 				const startIndex = getIndexByOffset(
 					file.lexer.tokens,
 					startOffset
 				);
 
-				const end = doc.positionAt(changedIndex + differenceLength);
-				const endPos = vscode.Position.create(end.line + 1, 0);
+				const end = doc.positionAt(nextStatement.end);
 				const endIndex =
-					getIndexByOffset(file.lexer.tokens, doc.offsetAt(endPos)) -
-					1;
+					getIndexByOffset(file.lexer.tokens, doc.offsetAt(end)) - 1;
 
-				const range = vscode.Range.create(startPos, endPos);
+				const range = vscode.Range.create(start, end);
 				const text = doc.getText(range);
 
 				let currentIndex = startOffset;

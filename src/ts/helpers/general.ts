@@ -1,4 +1,4 @@
-import { Lexer, TokenData, TokenType } from "../lexer";
+import { END_TOKEN, Lexer, TokenData, TokenType } from "../lexer";
 import { HeaderParser } from "../parseHeader";
 import ExtensionLogger from "../server/extlogger";
 
@@ -542,6 +542,57 @@ export async function getLiteralWithDot(
 
 		return temp.reverse().join("") + str;
 	}
+}
+
+export async function getPreviousStatement(lexer: Lexer, offset: number) {
+	let leftCurrentStatement = false;
+	let startIndex = getIndexByOffset(lexer.tokens, offset);
+	const datas: TokenData[] = [];
+	if (
+		lexer.tokens[startIndex] &&
+		END_TOKEN.includes(lexer.tokens[startIndex].type)
+	)
+		startIndex--;
+
+	for (let i = startIndex; i != -1; i--) {
+		const token = lexer.tokens[i];
+		if (leftCurrentStatement && END_TOKEN.includes(token.type)) break;
+		leftCurrentStatement =
+			(token &&
+				!leftCurrentStatement &&
+				END_TOKEN.includes(token.type)) ||
+			leftCurrentStatement;
+		if (leftCurrentStatement) datas.push(token);
+	}
+	const start = datas[datas.length - 1];
+	const end = datas[0];
+	return {
+		start: start ? start.pos : -1,
+		end: end ? datas[0].pos + datas[0].value.length : -1,
+	};
+}
+
+export async function getNextStatement(lexer: Lexer, offset: number) {
+	let leftCurrentStatement = false;
+	const startIndex = getIndexByOffset(lexer.tokens, offset);
+	const datas: TokenData[] = [];
+
+	for (let i = startIndex; i < lexer.tokens.length; i++) {
+		const token = lexer.tokens[i];
+		if (leftCurrentStatement) datas.push(token);
+		if (leftCurrentStatement && END_TOKEN.includes(token.type)) break;
+		leftCurrentStatement =
+			(token &&
+				!leftCurrentStatement &&
+				END_TOKEN.includes(token.type)) ||
+			leftCurrentStatement;
+	}
+	const start = datas[0];
+	const end = datas[datas.length - 1];
+	return {
+		start: start ? start.pos : -1,
+		end: end ? end.pos + end.value.length : -1,
+	};
 }
 
 //#region commands
