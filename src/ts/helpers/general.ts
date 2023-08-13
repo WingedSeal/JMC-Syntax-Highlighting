@@ -433,7 +433,7 @@ export async function getCurrentStatement(
 export async function splitTokenString(text: string): Promise<string[]> {
 	return text
 		.split(
-			/(\/\/.*)|(-?\d*\.?\d+)|(["\'].*["\'])|(\s|\;|\{|\}|\[|\]|\(|\)|\|\||&&|==|!=|!|,|\.|\:|\=\>|\=)/m
+			/(\/\/.*)|(\`(?:.|\s)*\`)|(-?\d*\.?\d+)|(["\'].*["\'])|(\s|\;|\{|\}|\[|\]|\(|\)|\|\||&&|==|!=|!|,|\.|\:|\=\>|\=)/m
 		)
 		.filter((v) => v != undefined);
 }

@@ -183,6 +183,20 @@ describe("Tokenizing", () => {
 			const helper = new LexerHelper(text, expected);
 			expect(helper.tokens).toEqual(expected);
 		});
+
+		test("Multiline String", () => {
+			const text = `\`amogus 
+a\``;
+			const expected: TokenData[] = [
+				{
+					type: TokenType.MULTILINE_STRING,
+					pos: 0,
+					value: "`amogus \na`",
+				},
+			];
+			const helper = new LexerHelper(text, expected);
+			expect(helper.tokens).toEqual(expected);
+		});
 	});
 
 	describe.skip("Command", () => {

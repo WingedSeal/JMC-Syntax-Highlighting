@@ -18,6 +18,7 @@ export interface ErrorData {
 /**
  * All tokens avaliable
  */
+
 export enum TokenType {
 	COMMENT,
 	FUNCTION,
@@ -88,6 +89,7 @@ export enum TokenType {
 	COMMAND_VALUE,
 	COMMAND_NUMBER,
 	COMMAND_NAMESAPCE,
+	MULTILINE_STRING,
 }
 
 /**
@@ -172,6 +174,10 @@ const Tokens: Token[] = [
 	{
 		regex: /^\=\>$/,
 		token: TokenType.ARROW_FUNC,
+	},
+	{
+		regex: /^(\`(?:.|\s)*\`)$/,
+		token: TokenType.MULTILINE_STRING,
 	},
 	{
 		regex: /(^"([\w' *]|(\\"))*"$)|(^'([\w" *]|(\\'))*'$)/,
@@ -353,7 +359,7 @@ export class Lexer {
 			this.currentIndex = 0;
 			this.raw = text
 				.split(
-					/(\/\/.*)|(-?\d*\.?\d+)|(["\'].*["\'])|(\s|\;|\{|\}|\[|\]|\(|\)|\|\||&&|==|!=|!|,|\.|\:|\=\>|\=)/m
+					/(\/\/.*)|(\`(?:.|\s)*\`)|(-?\d*\.?\d+)|(["\'].*["\'])|(\s|\;|\{|\}|\[|\]|\(|\)|\|\||&&|==|!=|!|,|\.|\:|\=\>|\=)/m
 				)
 				.filter((v) => v != undefined);
 			this.trimmed = this.raw.map((v) => v.trim());

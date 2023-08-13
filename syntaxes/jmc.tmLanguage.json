@@ -22,6 +22,9 @@
 		},
 		{
 			"include": "#operators"
+		},
+		{
+			"include": "#multiline_string"
 		}
 	],
 	"repository": {
@@ -62,6 +65,17 @@
 				{
 					"name": "keyword.operator.jmc",
 					"match": "([=*\\-/+%.><!?,:^~]|\\|\\||&&|matches)"
+				}
+			]
+		},
+		"multiline_string": {
+			"name": "string.quoted.jmc",
+			"begin": "`",
+			"end": "`",
+			"patterns": [
+				{
+					"name": "constant.character.escape.jmc",
+					"match": "\\\\."
 				}
 			]
 		},

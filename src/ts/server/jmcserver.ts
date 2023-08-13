@@ -212,7 +212,10 @@ export class JMCServer extends ServerData implements BaseServer {
 									pos.character,
 									current.value.length,
 									0,
-									(settings.capitalizedClass && /^[A-Z]/.test(current.value)) ? 0b10000 : 0
+									settings.capitalizedClass &&
+										/^[A-Z]/.test(current.value)
+										? 0b10000
+										: 0
 								);
 							}
 							break;
@@ -229,11 +232,14 @@ export class JMCServer extends ServerData implements BaseServer {
 									pos.character,
 									current.value.length,
 									0,
-									(settings.capitalizedClass && /^[A-Z]/.test(current.value)) ? 0b10000 : 0
+									settings.capitalizedClass &&
+										/^[A-Z]/.test(current.value)
+										? 0b10000
+										: 0
 								);
 							}
-							if ( 
-								tokens[i + 2] && 
+							if (
+								tokens[i + 2] &&
 								tokens[i + 2].type === TokenType.DOT &&
 								tokens[i + 3] &&
 								tokens[i + 3].type === TokenType.LITERAL
@@ -245,7 +251,10 @@ export class JMCServer extends ServerData implements BaseServer {
 									pos.character,
 									current.value.length,
 									0,
-									(settings.capitalizedClass && /^[A-Z]/.test(current.value)) ? 0b10000 : 0
+									settings.capitalizedClass &&
+										/^[A-Z]/.test(current.value)
+										? 0b10000
+										: 0
 								);
 							}
 							break;
@@ -285,7 +294,10 @@ export class JMCServer extends ServerData implements BaseServer {
 									pos.character,
 									token.value.length,
 									0,
-									(settings.capitalizedClass && /^[A-Z]/.test(token.value)) ? 0b10000 : 0
+									settings.capitalizedClass &&
+										/^[A-Z]/.test(token.value)
+										? 0b10000
+										: 0
 								);
 							} else if (
 								tokens[i + 1] &&
@@ -298,7 +310,10 @@ export class JMCServer extends ServerData implements BaseServer {
 									pos.character,
 									token.value.length,
 									3,
-									(settings.capitalizedClass && /^[A-Z]/.test(token.value)) ? 0b10000 : 0
+									settings.capitalizedClass &&
+										/^[A-Z]/.test(token.value)
+										? 0b10000
+										: 0
 								);
 							}
 							break;
@@ -872,69 +887,74 @@ export class JMCServer extends ServerData implements BaseServer {
 			(v) => v.path === url.fileURLToPath(arg.textDocument.uri)
 		);
 
+		if (arg.context?.triggerCharacter == " " && doc && file) {
+			const offset = doc.offsetAt(arg.position);
+			const index = getIndexByOffset(file.lexer.tokens, offset - 1);
+			const token = file.lexer.tokens[index - 1];
+			if (token.type === TokenType.MULTILINE_STRING) return [];
+		}
+
 		//check if `$VARIABLE.get()` or `CLASS.METHOD`
-		if (arg.context?.triggerCharacter == ".") {
-			if (doc && file) {
-				const offset = doc.offsetAt(arg.position);
-				const index = getIndexByOffset(file.lexer.tokens, offset - 1);
-				const token = file.lexer.tokens[index - 1];
-				if (token && token.type == TokenType.VARIABLE) {
-					return [
-						{
-							label: "get",
+		if (arg.context?.triggerCharacter == "." && doc && file) {
+			const offset = doc.offsetAt(arg.position);
+			const index = getIndexByOffset(file.lexer.tokens, offset - 1);
+			const token = file.lexer.tokens[index - 1];
+			if (token && token.type == TokenType.VARIABLE) {
+				return [
+					{
+						label: "get",
+						kind: vscode.CompletionItemKind.Function,
+						insertText: "get()",
+					},
+				];
+			} else if (token && token.type == TokenType.LITERAL) {
+				const classResult = BuiltInFunctions.find(
+					(v) => v.class == token.value
+				);
+				if (classResult) {
+					return classResult.methods.map((v) => {
+						return {
+							label: v.name,
 							kind: vscode.CompletionItemKind.Function,
-							insertText: "get()",
-						},
-					];
-				} else if (token && token.type == TokenType.LITERAL) {
-					const classResult = BuiltInFunctions.find(
-						(v) => v.class == token.value
+						};
+					});
+				} else {
+					const statement = await getCurrentStatement(
+						file.lexer,
+						token
 					);
-					if (classResult) {
-						return classResult.methods.map((v) => {
-							return {
-								label: v.name,
-								kind: vscode.CompletionItemKind.Function,
-							};
-						});
-					} else {
-						const statement = await getCurrentStatement(
-							file.lexer,
+					if (statement) {
+						const literal = await getLiteralWithDot(
+							statement,
 							token
 						);
-						if (statement) {
-							const literal = await getLiteralWithDot(
-								statement,
-								token
+						if (literal) {
+							const splited = literal.split(".");
+							const query = await HirarchyHelper.getHirarchy(
+								oFuncs,
+								splited
 							);
-							if (literal) {
-								const splited = literal.split(".");
-								const query = await HirarchyHelper.getHirarchy(
-									oFuncs,
-									splited
+							if (query) {
+								const cls = query.classes.map(
+									(v): vscode.CompletionItem => {
+										return {
+											label: v,
+											kind: vscode.CompletionItemKind
+												.Class,
+										};
+									}
 								);
-								if (query) {
-									const cls = query.classes.map(
-										(v): vscode.CompletionItem => {
-											return {
-												label: v,
-												kind: vscode.CompletionItemKind
-													.Class,
-											};
-										}
-									);
-									const funcs = query.funcs.map(
-										(v): vscode.CompletionItem => {
-											return {
-												label: v,
-												kind: vscode.CompletionItemKind
-													.Function,
-												insertText: `${v}()`,
-											};
-										}
-									);
-									return cls.concat(funcs);
-								}
+								const funcs = query.funcs.map(
+									(v): vscode.CompletionItem => {
+										return {
+											label: v,
+											kind: vscode.CompletionItemKind
+												.Function,
+											insertText: `${v}()`,
+										};
+									}
+								);
+								return cls.concat(funcs);
 							}
 						}
 					}
