@@ -524,6 +524,7 @@ export class JMCServer extends ServerData implements BaseServer {
 				currFile.lexer,
 				currentToken
 			);
+			console.log(currentToken);
 
 			if (currentToken.type == TokenType.VARIABLE) {
 				for (const ev of await ExtractedTokensHelper.getAllVariables(
