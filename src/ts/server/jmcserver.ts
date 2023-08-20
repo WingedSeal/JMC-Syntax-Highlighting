@@ -755,11 +755,7 @@ export class JMCServer extends ServerData implements BaseServer {
 				for (let i = 0; i < splited.length; i++) {
 					const s = splited[i].trim();
 					const t = splited[i];
-					const token = file.lexer.tokenize(
-						s,
-						currentIndex,
-						file.lexer.tokens
-					);
+					const token = file.lexer.tokenize(s, currentIndex, tokens);
 					if (token) tokens.push(token);
 					currentIndex += t.length;
 				}

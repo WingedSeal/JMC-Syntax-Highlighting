@@ -1,3 +1,4 @@
+import { START_COMMAND } from "./data/commands";
 import { MacrosData, splitTokenArraySync } from "./helpers/general";
 import ExtensionLogger from "./server/extlogger";
 
@@ -90,6 +91,8 @@ export enum TokenType {
 	COMMAND_NUMBER,
 	COMMAND_NAMESAPCE,
 	MULTILINE_STRING,
+	COMMAND_START,
+	COMMAND_UNKNOWN,
 }
 
 /**
@@ -319,19 +322,6 @@ export const END_TOKEN: TokenType[] = [
 	TokenType.RCP,
 ];
 
-const TokenPatterns: TokenType[][] = [
-	//Function pattern
-	[
-		TokenType.FUNCTION,
-		TokenType.LITERAL,
-		TokenType.LPAREN,
-		TokenType.RPAREN,
-		TokenType.LCP,
-	],
-	[TokenType.VARIABLE, TokenType.OPERATION, TokenType.INT],
-	[TokenType.VARIABLE, TokenType.OPERATION, TokenType.BOOL],
-];
-
 /**
  * deprecated tokens
  */
@@ -403,38 +393,75 @@ export class Lexer {
 
 	/**
 	 * tokenize string
-	 * @param current the text going to tokenize
+	 * @param currentText the text going to tokenize
 	 * @param pos the offset of the text
-	 * @param datas the previous tokenized datas
+	 * @param parsedTokens the previous tokenized datas
 	 * @returns tokenzied data
 	 */
 	tokenize(
-		current: string,
+		currentText: string,
 		pos: number,
-		datas: TokenData[]
+		parsedTokens: TokenData[]
 	): TokenData | null {
-		const result = Tokens.find((v) => v.regex.test(current));
-		if (this.macros.includes(current)) {
+		const result = Tokens.find((v) => v.regex.test(currentText));
+		if (this.macros.includes(currentText)) {
 			return {
 				type: TokenType.MACROS,
 				pos: pos,
-				value: current,
+				value: currentText,
+			};
+		} else if (
+			result &&
+			result.token == TokenType.SWITCH &&
+			((parsedTokens[parsedTokens.length - 1] &&
+				parsedTokens[parsedTokens.length - 1].type == TokenType.DOT) ||
+				parsedTokens[parsedTokens.length - 1] === undefined)
+		) {
+			return {
+				type: TokenType.LITERAL,
+				pos: pos,
+				value: currentText,
+			};
+		} else if (
+			result &&
+			parsedTokens[parsedTokens.length - 1] &&
+			TokenType[parsedTokens[parsedTokens.length - 1].type].startsWith(
+				"COMMAND"
+			)
+		) {
+			return {
+				type: this.tokenizeCommand(result.token, currentText),
+				pos: pos,
+				value: currentText,
+			};
+		} else if (
+			result &&
+			result.token === TokenType.LITERAL &&
+			START_COMMAND.includes(currentText) &&
+			((parsedTokens[parsedTokens.length - 1] &&
+				![TokenType.CLASS, TokenType.FUNCTION].includes(
+					parsedTokens[parsedTokens.length - 1].type
+				)) ||
+				parsedTokens[parsedTokens.length - 1] === undefined)
+		) {
+			return {
+				type: TokenType.COMMAND_START,
+				pos: pos,
+				value: currentText,
 			};
 		} else if (result) {
-			if (
-				result.token == TokenType.SWITCH &&
-				datas[datas.length - 1] &&
-				datas[datas.length - 1].type == TokenType.DOT
-			) {
-				result.token = TokenType.LITERAL;
-			}
 			return {
 				type: result.token,
 				pos: pos,
-				value: current,
+				value: currentText,
 			};
 		}
 		return null;
+	}
+
+	private tokenizeCommand(token: TokenType, text: string): TokenType {
+		if (token === TokenType.SEMI) return token;
+		return TokenType.COMMAND_UNKNOWN;
 	}
 
 	/**
