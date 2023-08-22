@@ -595,221 +595,221 @@ export async function getNextStatement(lexer: Lexer, offset: number) {
 	};
 }
 
-//#region commands
-export function joinBrackets(tokens: TokenData[]): TokenData[] {
-	const datas: TokenData[] = [];
+// //#region commands
+// export function joinBrackets(tokens: TokenData[]): TokenData[] {
+// 	const datas: TokenData[] = [];
 
-	for (let i = 0; i < tokens.length; i++) {
-		const token = tokens[i];
-		if (token.type === TokenType.LCP) {
-			let counter = 0;
-			let text = "";
-			for (; i < tokens.length; i++) {
-				const c = tokens[i];
-				if (c.type === TokenType.LCP) counter++;
-				else if (c.type === TokenType.RCP) counter--;
-				if (counter === 0) {
-					text += c.value;
-					break;
-				}
-				text += c.value;
-			}
-			datas.push({
-				type: TokenType.MODIFIED_CP,
-				pos: token.pos,
-				value: text,
-			});
-		} else if (token.type === TokenType.LMP) {
-			let counter = 0;
-			let text = "";
-			for (; i < tokens.length; i++) {
-				const c = tokens[i];
-				if (c.type === TokenType.LMP) counter++;
-				else if (c.type === TokenType.RMP) counter--;
-				if (counter === 0) {
-					text += c.value;
-					break;
-				}
-				text += c.value;
-			}
-			datas.push({
-				type: TokenType.MODIFIED_MP,
-				pos: token.pos,
-				value: text,
-			});
-		} else datas.push(token);
-	}
+// 	for (let i = 0; i < tokens.length; i++) {
+// 		const token = tokens[i];
+// 		if (token.type === TokenType.LCP) {
+// 			let counter = 0;
+// 			let text = "";
+// 			for (; i < tokens.length; i++) {
+// 				const c = tokens[i];
+// 				if (c.type === TokenType.LCP) counter++;
+// 				else if (c.type === TokenType.RCP) counter--;
+// 				if (counter === 0) {
+// 					text += c.value;
+// 					break;
+// 				}
+// 				text += c.value;
+// 			}
+// 			datas.push({
+// 				type: TokenType.MODIFIED_CP,
+// 				pos: token.pos,
+// 				value: text,
+// 			});
+// 		} else if (token.type === TokenType.LMP) {
+// 			let counter = 0;
+// 			let text = "";
+// 			for (; i < tokens.length; i++) {
+// 				const c = tokens[i];
+// 				if (c.type === TokenType.LMP) counter++;
+// 				else if (c.type === TokenType.RMP) counter--;
+// 				if (counter === 0) {
+// 					text += c.value;
+// 					break;
+// 				}
+// 				text += c.value;
+// 			}
+// 			datas.push({
+// 				type: TokenType.MODIFIED_MP,
+// 				pos: token.pos,
+// 				value: text,
+// 			});
+// 		} else datas.push(token);
+// 	}
 
-	return datas;
-}
+// 	return datas;
+// }
 
-export function joinFunction(tokens: TokenData[]): TokenData[] {
-	for (let i = 0; i < tokens.length; i++) {
-		const token = tokens[i];
-		if (
-			token.type === TokenType.LITERAL &&
-			tokens[i + 1] &&
-			tokens[i + 2] &&
-			tokens[i + 1].type === TokenType.LPAREN &&
-			tokens[i + 2].type === TokenType.RPAREN
-		) {
-			token.value = `${token.value}()`;
-			token.type = TokenType.COMMAND_FC;
-			delete tokens[i + 1];
-			delete tokens[i + 2];
-			i += 2;
-		} else if (
-			token.type === TokenType.VARIABLE &&
-			tokens[i + 1].value === ".get" &&
-			tokens[i + 2].type === TokenType.LPAREN &&
-			tokens[i + 3].type === TokenType.RPAREN
-		) {
-			token.value = `${token.value}.get()`;
-			token.type = TokenType.COMMAND_FC;
-			delete tokens[i + 1];
-			delete tokens[i + 2];
-			delete tokens[i + 3];
-			i += 3;
-		}
-	}
+// export function joinFunction(tokens: TokenData[]): TokenData[] {
+// 	for (let i = 0; i < tokens.length; i++) {
+// 		const token = tokens[i];
+// 		if (
+// 			token.type === TokenType.LITERAL &&
+// 			tokens[i + 1] &&
+// 			tokens[i + 2] &&
+// 			tokens[i + 1].type === TokenType.LPAREN &&
+// 			tokens[i + 2].type === TokenType.RPAREN
+// 		) {
+// 			token.value = `${token.value}()`;
+// 			token.type = TokenType.COMMAND_FC;
+// 			delete tokens[i + 1];
+// 			delete tokens[i + 2];
+// 			i += 2;
+// 		} else if (
+// 			token.type === TokenType.VARIABLE &&
+// 			tokens[i + 1].value === ".get" &&
+// 			tokens[i + 2].type === TokenType.LPAREN &&
+// 			tokens[i + 3].type === TokenType.RPAREN
+// 		) {
+// 			token.value = `${token.value}.get()`;
+// 			token.type = TokenType.COMMAND_FC;
+// 			delete tokens[i + 1];
+// 			delete tokens[i + 2];
+// 			delete tokens[i + 3];
+// 			i += 3;
+// 		}
+// 	}
 
-	return tokens.filter((v) => v);
-}
+// 	return tokens.filter((v) => v);
+// }
 
-export function getTokensByRange(
-	tokens: TokenData[],
-	range: StatementRange
-): TokenData[] {
-	return tokens.filter((v) => v.pos <= range.end && v.pos >= range.start);
-}
+// export function getTokensByRange(
+// 	tokens: TokenData[],
+// 	range: StatementRange
+// ): TokenData[] {
+// 	return tokens.filter((v) => v.pos <= range.end && v.pos >= range.start);
+// }
 
-export function joinNBT(tokens: TokenData[]): TokenData[] {
-	const datas: TokenData[] = [];
-	for (let i = 0; i < tokens.length; i++) {
-		const current = tokens[i];
-		const next = tokens[i + 1];
-		if (
-			next &&
-			next.type == TokenType.MODIFIED_CP &&
-			current.type == TokenType.LITERAL
-		) {
-			datas.push({
-				type: TokenType.NBT,
-				pos: current.pos,
-				value: current.value + next.value,
-			});
-			i++;
-		} else if (
-			next &&
-			next.type == TokenType.MODIFIED_MP &&
-			current.type == TokenType.COMMAND_SELECTOR
-		) {
-			datas.push({
-				type: TokenType.SELECTOR_INFO,
-				pos: current.pos,
-				value: current.value + next.value,
-			});
-			i++;
-		} else datas.push(current);
-	}
-	return datas;
-}
+// export function joinNBT(tokens: TokenData[]): TokenData[] {
+// 	const datas: TokenData[] = [];
+// 	for (let i = 0; i < tokens.length; i++) {
+// 		const current = tokens[i];
+// 		const next = tokens[i + 1];
+// 		if (
+// 			next &&
+// 			next.type == TokenType.MODIFIED_CP &&
+// 			current.type == TokenType.LITERAL
+// 		) {
+// 			datas.push({
+// 				type: TokenType.NBT,
+// 				pos: current.pos,
+// 				value: current.value + next.value,
+// 			});
+// 			i++;
+// 		} else if (
+// 			next &&
+// 			next.type == TokenType.MODIFIED_MP &&
+// 			current.type == TokenType.SELECTOR
+// 		) {
+// 			datas.push({
+// 				type: TokenType.SELECTOR_INFO,
+// 				pos: current.pos,
+// 				value: current.value + next.value,
+// 			});
+// 			i++;
+// 		} else datas.push(current);
+// 	}
+// 	return datas;
+// }
 
-export function joinDot(tokens: TokenData[]): TokenData[] {
-	const datas: TokenData[] = [];
-	for (let i = 0; i < tokens.length; i++) {
-		const current = tokens[i];
-		const dLastIndex = datas.length - 1;
-		const dCurrent = datas[dLastIndex];
+// export function joinDot(tokens: TokenData[]): TokenData[] {
+// 	const datas: TokenData[] = [];
+// 	for (let i = 0; i < tokens.length; i++) {
+// 		const current = tokens[i];
+// 		const dLastIndex = datas.length - 1;
+// 		const dCurrent = datas[dLastIndex];
 
-		//continue if it is the start
-		if (dLastIndex === -1) {
-			datas.push(current);
-			continue;
-		}
+// 		//continue if it is the start
+// 		if (dLastIndex === -1) {
+// 			datas.push(current);
+// 			continue;
+// 		}
 
-		//join dots
-		if (dCurrent) {
-			if (
-				dCurrent.type === TokenType.LITERAL &&
-				current.type === TokenType.DOT
-			) {
-				datas[dLastIndex].value += ".";
-			} else if (
-				dCurrent.value.endsWith(".") &&
-				(current.type === TokenType.LITERAL ||
-					current.type === TokenType.COMMAND_LITERAL)
-			) {
-				datas[dLastIndex].value += current.value;
-			} else datas.push(current);
-		}
-	}
+// 		//join dots
+// 		if (dCurrent) {
+// 			if (
+// 				dCurrent.type === TokenType.LITERAL &&
+// 				current.type === TokenType.DOT
+// 			) {
+// 				datas[dLastIndex].value += ".";
+// 			} else if (
+// 				dCurrent.value.endsWith(".") &&
+// 				(current.type === TokenType.LITERAL ||
+// 					current.type === TokenType.COMMAND_LITERAL)
+// 			) {
+// 				datas[dLastIndex].value += current.value;
+// 			} else datas.push(current);
+// 		}
+// 	}
 
-	return datas;
-}
+// 	return datas;
+// }
 
-export function joinNamespace(tokens: TokenData[]): TokenData[] {
-	const datas: TokenData[] = [];
+// export function joinNamespace(tokens: TokenData[]): TokenData[] {
+// 	const datas: TokenData[] = [];
 
-	for (let i = 0; i < tokens.length; i++) {
-		const f = tokens[i];
-		const s = tokens[i + 1];
-		const t = tokens[i + 2];
-		if (s && t && f.value === "minecraft" && s.type === TokenType.COLON) {
-			datas.push({
-				type: TokenType.COMMAND_NAMESAPCE,
-				pos: f.pos,
-				value: `${f.value}${s.value}${t.value}`,
-			});
-			i += 2;
-		} else if (s && t && s.type === TokenType.COLON) {
-			datas.push({
-				type: TokenType.COMMAND_NAMESAPCE,
-				pos: f.pos,
-				value: `${f.value}${s.value}${t.value}`,
-			});
-			i += 2;
-		} else datas.push(f);
-	}
+// 	for (let i = 0; i < tokens.length; i++) {
+// 		const f = tokens[i];
+// 		const s = tokens[i + 1];
+// 		const t = tokens[i + 2];
+// 		if (s && t && f.value === "minecraft" && s.type === TokenType.COLON) {
+// 			datas.push({
+// 				type: TokenType.COMMAND_NAMESAPCE,
+// 				pos: f.pos,
+// 				value: `${f.value}${s.value}${t.value}`,
+// 			});
+// 			i += 2;
+// 		} else if (s && t && s.type === TokenType.COLON) {
+// 			datas.push({
+// 				type: TokenType.COMMAND_NAMESAPCE,
+// 				pos: f.pos,
+// 				value: `${f.value}${s.value}${t.value}`,
+// 			});
+// 			i += 2;
+// 		} else datas.push(f);
+// 	}
 
-	return datas;
-}
+// 	return datas;
+// }
 
-export function joinNumber(tokens: TokenData[]): TokenData[] {
-	const datas: TokenData[] = [];
+// export function joinNumber(tokens: TokenData[]): TokenData[] {
+// 	const datas: TokenData[] = [];
 
-	for (let i = 0; i < tokens.length; i++) {
-		const token = tokens[i];
-		if (
-			!isNaN(+token.value) &&
-			tokens[i + 1] &&
-			["l", "s", "b"].includes(tokens[i + 1].value)
-		) {
-			token.value += tokens[i + 1].value;
-			datas.push(token);
-			i++;
-		} else datas.push(token);
-	}
+// 	for (let i = 0; i < tokens.length; i++) {
+// 		const token = tokens[i];
+// 		if (
+// 			!isNaN(+token.value) &&
+// 			tokens[i + 1] &&
+// 			["l", "s", "b"].includes(tokens[i + 1].value)
+// 		) {
+// 			token.value += tokens[i + 1].value;
+// 			datas.push(token);
+// 			i++;
+// 		} else datas.push(token);
+// 	}
 
-	return datas;
-}
+// 	return datas;
+// }
 
-/**
- * turns tokens into a recognizable commands
- * @param tokens lexer tokens
- * @returns	tokens that parsed
- */
-export function joinCommandData(tokens: TokenData[]): TokenData[] {
-	logger.verbose(`parsing tokens ${JSON.stringify(tokens)}`);
+// /**
+//  * turns tokens into a recognizable commands
+//  * @param tokens lexer tokens
+//  * @returns	tokens that parsed
+//  */
+// export function joinCommandData(tokens: TokenData[]): TokenData[] {
+// 	logger.verbose(`parsing tokens ${JSON.stringify(tokens)}`);
 
-	const jd = joinDot(tokens);
-	const jb = joinBrackets(jd);
-	const jn = joinNBT(jb);
-	const jf = joinFunction(jn);
-	const jna = joinNamespace(jf);
-	const jnum = joinNumber(jna);
+// 	const jd = joinDot(tokens);
+// 	const jb = joinBrackets(jd);
+// 	const jn = joinNBT(jb);
+// 	const jf = joinFunction(jn);
+// 	const jna = joinNamespace(jf);
+// 	const jnum = joinNumber(jna);
 
-	//remove undefined
-	return jnum.filter((v) => v);
-}
-//#endregion
+// 	//remove undefined
+// 	return jnum.filter((v) => v);
+// }
+// //#endregion

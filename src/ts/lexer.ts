@@ -1,6 +1,7 @@
 import { START_COMMAND } from "./data/commands";
 import { MacrosData, splitTokenArraySync } from "./helpers/general";
 import ExtensionLogger from "./server/extlogger";
+import * as commandHelper from "./helpers/commandHelper";
 
 export enum ErrorType {
 	INVALID,
@@ -71,7 +72,7 @@ export enum TokenType {
 	IMPORT,
 	RMP,
 	LMP,
-	COMMAND_SELECTOR,
+	SELECTOR,
 	MODIFIED_CP,
 	MODIFIED_LPAREN,
 	MODIFIED_MP,
@@ -93,6 +94,14 @@ export enum TokenType {
 	MULTILINE_STRING,
 	COMMAND_START,
 	COMMAND_UNKNOWN,
+	COMMAND_LCP,
+	COMMAND_RCP,
+	COMMAND_SELECTOR,
+	COMMAND,
+	COMMAND_PARSE,
+	COMMAND_JSON,
+	COMMAND_VARIABLECALL,
+	COMMAND_FUNCCALL,
 }
 
 /**
@@ -120,7 +129,7 @@ const Tokens: Token[] = [
 	},
 	{
 		regex: /^@[parse]$/,
-		token: TokenType.COMMAND_SELECTOR,
+		token: TokenType.SELECTOR,
 	},
 	{
 		regex: /^class$/,
@@ -354,7 +363,7 @@ export class Lexer {
 				.filter((v) => v != undefined);
 			this.trimmed = this.raw.map((v) => v.trim());
 			this.macros = macros.map((v) => v.target);
-			this.tokens = this.init();
+			this.tokens = commandHelper.joinCommands(this.init());
 			// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		} catch (e: any) {
 			this.logger.fatal(e);
@@ -404,6 +413,8 @@ export class Lexer {
 		parsedTokens: TokenData[]
 	): TokenData | null {
 		const result = Tokens.find((v) => v.regex.test(currentText));
+		const previousToken = parsedTokens[parsedTokens.length - 1];
+
 		if (this.macros.includes(currentText)) {
 			return {
 				type: TokenType.MACROS,
@@ -413,9 +424,8 @@ export class Lexer {
 		} else if (
 			result &&
 			result.token == TokenType.SWITCH &&
-			((parsedTokens[parsedTokens.length - 1] &&
-				parsedTokens[parsedTokens.length - 1].type == TokenType.DOT) ||
-				parsedTokens[parsedTokens.length - 1] === undefined)
+			previousToken &&
+			previousToken.type == TokenType.DOT
 		) {
 			return {
 				type: TokenType.LITERAL,
@@ -424,25 +434,27 @@ export class Lexer {
 			};
 		} else if (
 			result &&
-			parsedTokens[parsedTokens.length - 1] &&
-			TokenType[parsedTokens[parsedTokens.length - 1].type].startsWith(
-				"COMMAND"
-			)
+			previousToken &&
+			TokenType[previousToken.type].startsWith("COMMAND")
 		) {
-			return {
-				type: this.tokenizeCommand(result.token, currentText),
+			const t = {
+				type: result.token,
 				pos: pos,
 				value: currentText,
 			};
+			t.type = this.tokenizeCommand(t);
+			return t;
 		} else if (
 			result &&
 			result.token === TokenType.LITERAL &&
 			START_COMMAND.includes(currentText) &&
-			((parsedTokens[parsedTokens.length - 1] &&
+			((previousToken &&
+				(END_TOKEN.includes(previousToken.type) ||
+					TOKEN_OPERATION.includes(previousToken.type)) &&
 				![TokenType.CLASS, TokenType.FUNCTION].includes(
-					parsedTokens[parsedTokens.length - 1].type
+					previousToken.type
 				)) ||
-				parsedTokens[parsedTokens.length - 1] === undefined)
+				previousToken === undefined)
 		) {
 			return {
 				type: TokenType.COMMAND_START,
@@ -459,9 +471,20 @@ export class Lexer {
 		return null;
 	}
 
-	private tokenizeCommand(token: TokenType, text: string): TokenType {
-		if (token === TokenType.SEMI) return token;
-		return TokenType.COMMAND_UNKNOWN;
+	private tokenizeCommand(token: TokenData): TokenType {
+		switch (token.type) {
+			case TokenType.SEMI:
+				return token.type;
+			case TokenType.LCP:
+				return TokenType.COMMAND_LCP;
+			case TokenType.RCP:
+				return TokenType.COMMAND_RCP;
+			case TokenType.SELECTOR:
+				return TokenType.COMMAND_SELECTOR;
+			default: {
+				return TokenType.COMMAND_UNKNOWN;
+			}
+		}
 	}
 
 	/**

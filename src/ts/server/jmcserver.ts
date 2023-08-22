@@ -36,6 +36,7 @@ import {
 	getNode,
 } from "../data/commands";
 import { URI } from "vscode-uri";
+import { joinCommands } from "../helpers/commandHelper";
 export class JMCServer extends ServerData implements BaseServer {
 	connection: vscode.Connection;
 	documents: vscode.TextDocuments<TextDocument>;
@@ -750,7 +751,7 @@ export class JMCServer extends ServerData implements BaseServer {
 				let currentIndex = startOffset;
 
 				//tokenize the text
-				const tokens: TokenData[] = [];
+				let tokens: TokenData[] = [];
 				const splited = await splitTokenString(text);
 				for (let i = 0; i < splited.length; i++) {
 					const s = splited[i].trim();
@@ -759,6 +760,7 @@ export class JMCServer extends ServerData implements BaseServer {
 					if (token) tokens.push(token);
 					currentIndex += t.length;
 				}
+				tokens = joinCommands(tokens);
 
 				//modify the tokens
 				if (file.text.length > fileText.length) {
