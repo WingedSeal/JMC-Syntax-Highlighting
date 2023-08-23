@@ -20,8 +20,8 @@ import {
 	getFunctions,
 	getIndexByOffset,
 	getLiteralWithDot,
-	getNextStatement,
-	getPreviousStatement,
+	getNextStatementEnd,
+	getPreviousStatementStart,
 	getVariablesDeclare,
 	offsetToPosition,
 	removeDuplicate,
@@ -262,6 +262,7 @@ export class JMCServer extends ServerData implements BaseServer {
 							}
 							break;
 						}
+						case TokenType.COMMAND_VARIABLE:
 						case TokenType.VARIABLE: {
 							const pos = doc.positionAt(token.pos);
 							builder.push(
@@ -340,6 +341,28 @@ export class JMCServer extends ServerData implements BaseServer {
 								token.value.length,
 								6,
 								0b0100
+							);
+							break;
+						}
+						case TokenType.COMMAND_LITERAL: {
+							const pos = doc.positionAt(token.pos);
+							builder.push(
+								pos.line,
+								pos.character,
+								token.value.length,
+								7,
+								0
+							);
+							break;
+						}
+						case TokenType.COMMAND_FUNCCALL: {
+							const pos = doc.positionAt(token.pos);
+							builder.push(
+								pos.line,
+								pos.character,
+								token.value.length,
+								3,
+								0
 							);
 							break;
 						}
@@ -527,7 +550,10 @@ export class JMCServer extends ServerData implements BaseServer {
 			);
 			console.log(currentToken);
 
-			if (currentToken.type == TokenType.VARIABLE) {
+			if (
+				currentToken.type == TokenType.VARIABLE ||
+				currentToken.type == TokenType.COMMAND_VARIABLE
+			) {
 				for (const ev of await ExtractedTokensHelper.getAllVariables(
 					this.jmcFiles
 				)) {
@@ -724,24 +750,24 @@ export class JMCServer extends ServerData implements BaseServer {
 			if (changedIndex) {
 				const lexerTokens = file.lexer.tokens;
 
-				const preStatement = await getPreviousStatement(
-					file.lexer,
+				const preStatement = await getPreviousStatementStart(
+					fileText,
 					changedIndex
 				);
-				const nextStatement = await getNextStatement(
-					file.lexer,
-					changedIndex + differenceLength
+				const nextStatement = await getNextStatementEnd(
+					fileText,
+					changedIndex + differenceLength + differenceLength
 				);
 
 				//get ranged text
-				const start = doc.positionAt(preStatement.start);
+				const start = doc.positionAt(preStatement);
 				const startOffset = doc.offsetAt(start);
 				const startIndex = getIndexByOffset(
 					file.lexer.tokens,
 					startOffset
 				);
 
-				const end = doc.positionAt(nextStatement.end);
+				const end = doc.positionAt(nextStatement);
 				const endIndex =
 					getIndexByOffset(file.lexer.tokens, doc.offsetAt(end)) - 1;
 

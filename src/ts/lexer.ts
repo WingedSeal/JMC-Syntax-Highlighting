@@ -102,6 +102,7 @@ export enum TokenType {
 	COMMAND_JSON,
 	COMMAND_VARIABLECALL,
 	COMMAND_FUNCCALL,
+	COMMAND_VARIABLE,
 }
 
 /**
@@ -415,6 +416,24 @@ export class Lexer {
 		const result = Tokens.find((v) => v.regex.test(currentText));
 		const previousToken = parsedTokens[parsedTokens.length - 1];
 
+		const startCommandTest = () => {
+			const currentTokenTest =
+				result &&
+				result.token === TokenType.LITERAL &&
+				START_COMMAND.includes(currentText);
+			const previousTokenTest =
+				(previousToken &&
+					(END_TOKEN.concat([TokenType.COMMENT]).includes(
+						previousToken.type
+					) ||
+						TOKEN_OPERATION.includes(previousToken.type)) &&
+					![TokenType.CLASS, TokenType.FUNCTION].includes(
+						previousToken.type
+					)) ||
+				previousToken === undefined;
+			return currentTokenTest && previousTokenTest;
+		};
+
 		if (this.macros.includes(currentText)) {
 			return {
 				type: TokenType.MACROS,
@@ -444,18 +463,7 @@ export class Lexer {
 			};
 			t.type = this.tokenizeCommand(t);
 			return t;
-		} else if (
-			result &&
-			result.token === TokenType.LITERAL &&
-			START_COMMAND.includes(currentText) &&
-			((previousToken &&
-				(END_TOKEN.includes(previousToken.type) ||
-					TOKEN_OPERATION.includes(previousToken.type)) &&
-				![TokenType.CLASS, TokenType.FUNCTION].includes(
-					previousToken.type
-				)) ||
-				previousToken === undefined)
-		) {
+		} else if (startCommandTest()) {
 			return {
 				type: TokenType.COMMAND_START,
 				pos: pos,

@@ -48,6 +48,23 @@ export function splitToken(token: TokenData): TokenData[] {
 			};
 			t.type = tokenizeCommand(t);
 			datas.push(t);
+			if (t.type === TokenType.COMMAND_VARIABLECALL) {
+				const s = current
+					.split(/(\.)|[()]/)
+					.filter((v) => v !== "" && v !== undefined);
+
+				datas.push({
+					type: TokenType.COMMAND_VARIABLE,
+					pos: pos,
+					value: s[0],
+				});
+
+				datas.push({
+					type: TokenType.COMMAND_FUNCCALL,
+					pos: pos + 1 + s[0].length,
+					value: s[2],
+				});
+			}
 		}
 		pos += current.length;
 	}
@@ -64,12 +81,14 @@ export function tokenizeCommand(token: TokenData): TokenType {
 		)
 	)
 		return TokenType.COMMAND_ITEM_STACK;
+	else if (value.includes(":")) return TokenType.COMMAND_NAMESAPCE;
 	else if (value.startsWith("{")) return TokenType.COMMAND_JSON;
 	else if (/^@[parse]/.test(value)) return TokenType.COMMAND_SELECTOR;
 	//jmc values
 	else if (/^\$\S+\.get\(\)$/.test(value))
 		return TokenType.COMMAND_VARIABLECALL;
 	else if (/^\S+\.\S+\(\)$/.test(value)) return TokenType.COMMAND_FUNCCALL;
+	else if (/^\$/.test(value)) return TokenType.COMMAND_VARIABLE;
 	//values
 	else if (/^-?(?:(\d*\.\d+)|\d+)[lsb]?$/.test(token.value))
 		return TokenType.COMMAND_NUMBER;
