@@ -434,11 +434,7 @@ export async function getCurrentStatement(
  * @returns splited string
  */
 export async function splitTokenString(text: string): Promise<string[]> {
-	return text
-		.split(
-			/(\/\/.*)|(\`(?:.|\s)*\`)|(-?\d*\.?\d+)|(["\'].*["\'])|(\s|\;|\{|\}|\[|\]|\(|\)|\|\||&&|==|!=|!|,|\.|\:|\=\>|\=)/m
-		)
-		.filter((v) => v != undefined);
+	return text.split(Lexer.splitPattern).filter((v) => v != undefined);
 }
 
 /**
@@ -556,7 +552,6 @@ export async function getPreviousStatementStart(
 		const c = text[i];
 
 		if (leftCurrentStatement && c === ";") {
-			console.log(i);
 			return i;
 		}
 
@@ -575,7 +570,6 @@ export async function getNextStatementEnd(
 		const c = text[i];
 
 		if (leftCurrentStatement && c === ";") {
-			console.log(i);
 			return i;
 		}
 
@@ -584,57 +578,6 @@ export async function getNextStatementEnd(
 	}
 	return -1;
 }
-
-// export async function getPreviousStatement(lexer: Lexer, offset: number) {
-// 	let leftCurrentStatement = false;
-// 	let startIndex = getIndexByOffset(lexer.tokens, offset);
-// 	const datas: TokenData[] = [];
-// 	if (
-// 		lexer.tokens[startIndex] &&
-// 		END_TOKEN.includes(lexer.tokens[startIndex].type)
-// 	)
-// 		startIndex--;
-
-// 	for (let i = startIndex; i != -1; i--) {
-// 		const token = lexer.tokens[i];
-// 		if (leftCurrentStatement && END_TOKEN.includes(token.type)) break;
-// 		leftCurrentStatement =
-// 			(token &&
-// 				!leftCurrentStatement &&
-// 				END_TOKEN.includes(token.type)) ||
-// 			leftCurrentStatement;
-// 		if (leftCurrentStatement) datas.push(token);
-// 	}
-// 	const start = datas[datas.length - 1];
-// 	const end = datas[0];
-// 	return {
-// 		start: start ? start.pos : -1,
-// 		end: end ? datas[0].pos + datas[0].value.length : -1,
-// 	};
-// }
-
-// export async function getNextStatement(lexer: Lexer, offset: number) {
-// 	let leftCurrentStatement = false;
-// 	const startIndex = getIndexByOffset(lexer.tokens, offset);
-// 	const datas: TokenData[] = [];
-
-// 	for (let i = startIndex; i < lexer.tokens.length; i++) {
-// 		const token = lexer.tokens[i];
-// 		if (leftCurrentStatement) datas.push(token);
-// 		if (leftCurrentStatement && END_TOKEN.includes(token.type)) break;
-// 		leftCurrentStatement =
-// 			(token &&
-// 				!leftCurrentStatement &&
-// 				END_TOKEN.includes(token.type)) ||
-// 			leftCurrentStatement;
-// 	}
-// 	const start = datas[0];
-// 	const end = datas[datas.length - 1];
-// 	return {
-// 		start: start ? start.pos : -1,
-// 		end: end ? end.pos + end.value.length : -1,
-// 	};
-// }
 
 // //#region commands
 // export function joinBrackets(tokens: TokenData[]): TokenData[] {

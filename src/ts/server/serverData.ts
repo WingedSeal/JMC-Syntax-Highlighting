@@ -46,7 +46,10 @@ export abstract class ServerData {
 						tokenTypes: SemanticTokenTypes,
 						tokenModifiers: SemanticTokenModifiers,
 					},
-					full: true,
+					full: {
+						delta: true,
+					},
+					range: true,
 				},
 				definitionProvider: true,
 				workspace: {
@@ -80,6 +83,12 @@ export interface BaseServer {
 	onSemanticHighlightFull(
 		params: vscode.SemanticTokensParams
 	): Promise<vscode.SemanticTokens>;
+	onSemanticHighlightRange(
+		params: vscode.SemanticTokensRangeParams
+	): Promise<vscode.SemanticTokens | null>;
+	onSemanticHighlightFullDelta(
+		params: vscode.SemanticTokensDeltaParams
+	): Promise<vscode.SemanticTokens | vscode.SemanticTokensDelta | null>;
 	onCompletionResolve(
 		item: vscode.CompletionItem
 	): Promise<vscode.CompletionItem>;

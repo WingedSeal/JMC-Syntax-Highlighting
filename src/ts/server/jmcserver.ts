@@ -24,17 +24,12 @@ import {
 	getPreviousStatementStart,
 	getVariablesDeclare,
 	offsetToPosition,
-	removeDuplicate,
 	splitTokenString,
 } from "../helpers/general";
 import { TextDocument } from "vscode-languageserver-textdocument";
 import { HEADERS } from "../data/headers";
 import { BuiltInFunctions, methodInfoToDoc } from "../data/builtinFuncs";
-import {
-	COMMAND_ENTITY_SELECTORS,
-	START_COMMAND,
-	getNode,
-} from "../data/commands";
+import { START_COMMAND } from "../data/commands";
 import { URI } from "vscode-uri";
 import { joinCommands } from "../helpers/commandHelper";
 export class JMCServer extends ServerData implements BaseServer {
@@ -72,8 +67,16 @@ export class JMCServer extends ServerData implements BaseServer {
 			this.onCompletionResolve.bind(this)
 		);
 		this.connection.onRequest(
-			"textDocument/semanticTokens/full",
+			vscode.SemanticTokensRequest.method,
 			this.onSemanticHighlightFull.bind(this)
+		);
+		this.connection.onRequest(
+			vscode.SemanticTokensDeltaRequest.method,
+			this.onSemanticHighlightFullDelta.bind(this)
+		);
+		this.connection.onRequest(
+			vscode.SemanticTokensRangeRequest.method,
+			this.onSemanticHighlightRange.bind(this)
 		);
 		this.connection.onSignatureHelp(this.onSignatureHelp.bind(this));
 		this.connection.onDefinition(this.onDefinition.bind(this));
@@ -179,10 +182,419 @@ export class JMCServer extends ServerData implements BaseServer {
 		}
 	}
 
+	/**
+	 * @todo
+	 */
 	async onDidChangeConfiguration(
 		change: vscode.DidChangeConfigurationParams
 	): Promise<void> {
 		this.documents.all().forEach(this.validateTextDocument);
+	}
+
+	/**
+	 * @todo
+	 */
+	async onSemanticHighlightFullDelta(
+		params: vscode.SemanticTokensDeltaParams
+	): Promise<vscode.SemanticTokens | vscode.SemanticTokensDelta | null> {
+		const doc = this.documents.get(params.textDocument.uri);
+		const builder = new vscode.SemanticTokensBuilder();
+		if (doc) {
+			const settings = (await this.connection.workspace.getConfiguration({
+				section: "jmc",
+				scopeUri: params.textDocument.uri,
+			})) as Settings;
+			const file = this.jmcFiles.find(
+				(v) => v.path == url.fileURLToPath(doc.uri)
+			);
+			if (file) {
+				const tokens = file.lexer.tokens;
+				for (let i = 0; i < tokens.length; i++) {
+					const token = tokens[i];
+					switch (token.type) {
+						case TokenType.CLASS: {
+							if (
+								tokens[i + 1] &&
+								tokens[i + 1].type === TokenType.LITERAL
+							) {
+								const current = tokens[i + 1];
+								const pos = doc.positionAt(current.pos);
+								builder.push(
+									pos.line,
+									pos.character,
+									current.value.length,
+									0,
+									settings.capitalizedClass &&
+										/^[A-Z]/.test(current.value)
+										? 0b10000
+										: 0
+								);
+							}
+							break;
+						}
+						case TokenType.NEW: {
+							if (
+								tokens[i + 1] &&
+								tokens[i + 1].type === TokenType.LITERAL
+							) {
+								const current = tokens[i + 1];
+								const pos = doc.positionAt(current.pos);
+								builder.push(
+									pos.line,
+									pos.character,
+									current.value.length,
+									0,
+									settings.capitalizedClass &&
+										/^[A-Z]/.test(current.value)
+										? 0b10000
+										: 0
+								);
+							}
+							if (
+								tokens[i + 2] &&
+								tokens[i + 2].type === TokenType.DOT &&
+								tokens[i + 3] &&
+								tokens[i + 3].type === TokenType.LITERAL
+							) {
+								const current = tokens[i + 3];
+								const pos = doc.positionAt(current.pos);
+								builder.push(
+									pos.line,
+									pos.character,
+									current.value.length,
+									0,
+									settings.capitalizedClass &&
+										/^[A-Z]/.test(current.value)
+										? 0b10000
+										: 0
+								);
+							}
+							break;
+						}
+						case TokenType.COMMAND_VARIABLE:
+						case TokenType.VARIABLE: {
+							const pos = doc.positionAt(token.pos);
+							builder.push(
+								pos.line,
+								pos.character,
+								token.value.length,
+								4,
+								0
+							);
+							break;
+						}
+						case TokenType.LITERAL: {
+							if (
+								tokens[i + 1] &&
+								tokens[i + 1].type == TokenType.LPAREN
+							) {
+								const pos = doc.positionAt(token.pos);
+								builder.push(
+									pos.line,
+									pos.character,
+									token.value.length,
+									3,
+									0
+								);
+							} else if (
+								tokens[i + 1] &&
+								tokens[i + 1].type == TokenType.DOT &&
+								!settings.rawFuncHighlight
+							) {
+								const pos = doc.positionAt(token.pos);
+								builder.push(
+									pos.line,
+									pos.character,
+									token.value.length,
+									0,
+									settings.capitalizedClass &&
+										/^[A-Z]/.test(token.value)
+										? 0b10000
+										: 0
+								);
+							} else if (
+								tokens[i + 1] &&
+								tokens[i + 1].type == TokenType.DOT &&
+								settings.rawFuncHighlight
+							) {
+								const pos = doc.positionAt(token.pos);
+								builder.push(
+									pos.line,
+									pos.character,
+									token.value.length,
+									3,
+									settings.capitalizedClass &&
+										/^[A-Z]/.test(token.value)
+										? 0b10000
+										: 0
+								);
+							}
+							break;
+						}
+						case TokenType.MACROS: {
+							const pos = doc.positionAt(token.pos);
+							builder.push(
+								pos.line,
+								pos.character,
+								token.value.length,
+								5,
+								0
+							);
+							break;
+						}
+						case TokenType.OLD_IMPORT: {
+							const pos = doc.positionAt(token.pos);
+							builder.push(
+								pos.line,
+								pos.character,
+								token.value.length,
+								6,
+								0b0100
+							);
+							break;
+						}
+						case TokenType.COMMAND_LITERAL: {
+							const pos = doc.positionAt(token.pos);
+							builder.push(
+								pos.line,
+								pos.character,
+								token.value.length,
+								7,
+								0
+							);
+							break;
+						}
+						case TokenType.COMMAND_FUNCCALL: {
+							const pos = doc.positionAt(token.pos);
+							builder.push(
+								pos.line,
+								pos.character,
+								token.value.length,
+								3,
+								0
+							);
+							break;
+						}
+						default: {
+							const pos = doc.positionAt(token.pos);
+							builder.push(
+								pos.line,
+								pos.character,
+								token.value.length,
+								-1,
+								0
+							);
+							break;
+						}
+					}
+				}
+			}
+		}
+		return builder.build();
+		return null;
+	}
+
+	/**
+	 * @todo
+	 */
+	async onSemanticHighlightRange(
+		params: vscode.SemanticTokensRangeParams
+	): Promise<vscode.SemanticTokens | null> {
+		const doc = this.documents.get(params.textDocument.uri);
+		const builder = new vscode.SemanticTokensBuilder();
+		if (doc) {
+			const settings = (await this.connection.workspace.getConfiguration({
+				section: "jmc",
+				scopeUri: params.textDocument.uri,
+			})) as Settings;
+			const file = this.jmcFiles.find(
+				(v) => v.path == url.fileURLToPath(doc.uri)
+			);
+			if (file) {
+				const tokens = file.lexer.tokens;
+				for (let i = 0; i < tokens.length; i++) {
+					const token = tokens[i];
+					switch (token.type) {
+						case TokenType.CLASS: {
+							if (
+								tokens[i + 1] &&
+								tokens[i + 1].type === TokenType.LITERAL
+							) {
+								const current = tokens[i + 1];
+								const pos = doc.positionAt(current.pos);
+								builder.push(
+									pos.line,
+									pos.character,
+									current.value.length,
+									0,
+									settings.capitalizedClass &&
+										/^[A-Z]/.test(current.value)
+										? 0b10000
+										: 0
+								);
+							}
+							break;
+						}
+						case TokenType.NEW: {
+							if (
+								tokens[i + 1] &&
+								tokens[i + 1].type === TokenType.LITERAL
+							) {
+								const current = tokens[i + 1];
+								const pos = doc.positionAt(current.pos);
+								builder.push(
+									pos.line,
+									pos.character,
+									current.value.length,
+									0,
+									settings.capitalizedClass &&
+										/^[A-Z]/.test(current.value)
+										? 0b10000
+										: 0
+								);
+							}
+							if (
+								tokens[i + 2] &&
+								tokens[i + 2].type === TokenType.DOT &&
+								tokens[i + 3] &&
+								tokens[i + 3].type === TokenType.LITERAL
+							) {
+								const current = tokens[i + 3];
+								const pos = doc.positionAt(current.pos);
+								builder.push(
+									pos.line,
+									pos.character,
+									current.value.length,
+									0,
+									settings.capitalizedClass &&
+										/^[A-Z]/.test(current.value)
+										? 0b10000
+										: 0
+								);
+							}
+							break;
+						}
+						case TokenType.COMMAND_VARIABLE:
+						case TokenType.VARIABLE: {
+							const pos = doc.positionAt(token.pos);
+							builder.push(
+								pos.line,
+								pos.character,
+								token.value.length,
+								4,
+								0
+							);
+							break;
+						}
+						case TokenType.LITERAL: {
+							if (
+								tokens[i + 1] &&
+								tokens[i + 1].type == TokenType.LPAREN
+							) {
+								const pos = doc.positionAt(token.pos);
+								builder.push(
+									pos.line,
+									pos.character,
+									token.value.length,
+									3,
+									0
+								);
+							} else if (
+								tokens[i + 1] &&
+								tokens[i + 1].type == TokenType.DOT &&
+								!settings.rawFuncHighlight
+							) {
+								const pos = doc.positionAt(token.pos);
+								builder.push(
+									pos.line,
+									pos.character,
+									token.value.length,
+									0,
+									settings.capitalizedClass &&
+										/^[A-Z]/.test(token.value)
+										? 0b10000
+										: 0
+								);
+							} else if (
+								tokens[i + 1] &&
+								tokens[i + 1].type == TokenType.DOT &&
+								settings.rawFuncHighlight
+							) {
+								const pos = doc.positionAt(token.pos);
+								builder.push(
+									pos.line,
+									pos.character,
+									token.value.length,
+									3,
+									settings.capitalizedClass &&
+										/^[A-Z]/.test(token.value)
+										? 0b10000
+										: 0
+								);
+							}
+							break;
+						}
+						case TokenType.MACROS: {
+							const pos = doc.positionAt(token.pos);
+							builder.push(
+								pos.line,
+								pos.character,
+								token.value.length,
+								5,
+								0
+							);
+							break;
+						}
+						case TokenType.OLD_IMPORT: {
+							const pos = doc.positionAt(token.pos);
+							builder.push(
+								pos.line,
+								pos.character,
+								token.value.length,
+								6,
+								0b0100
+							);
+							break;
+						}
+						case TokenType.COMMAND_LITERAL: {
+							const pos = doc.positionAt(token.pos);
+							builder.push(
+								pos.line,
+								pos.character,
+								token.value.length,
+								7,
+								0
+							);
+							break;
+						}
+						case TokenType.COMMAND_FUNCCALL: {
+							const pos = doc.positionAt(token.pos);
+							builder.push(
+								pos.line,
+								pos.character,
+								token.value.length,
+								3,
+								0
+							);
+							break;
+						}
+						default: {
+							const pos = doc.positionAt(token.pos);
+							builder.push(
+								pos.line,
+								pos.character,
+								token.value.length,
+								-1,
+								0
+							);
+							break;
+						}
+					}
+				}
+			}
+		}
+		return builder.build();
+		return null;
 	}
 
 	async onSemanticHighlightFull(
@@ -756,7 +1168,7 @@ export class JMCServer extends ServerData implements BaseServer {
 				);
 				const nextStatement = await getNextStatementEnd(
 					fileText,
-					changedIndex + differenceLength + differenceLength
+					changedIndex
 				);
 
 				//get ranged text
@@ -768,8 +1180,9 @@ export class JMCServer extends ServerData implements BaseServer {
 				);
 
 				const end = doc.positionAt(nextStatement);
+				const endOffset = doc.offsetAt(end);
 				const endIndex =
-					getIndexByOffset(file.lexer.tokens, doc.offsetAt(end)) - 1;
+					getIndexByOffset(file.lexer.tokens, endOffset) - 1;
 
 				const range = vscode.Range.create(start, end);
 				const text = doc.getText(range);

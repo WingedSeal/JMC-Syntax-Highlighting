@@ -341,6 +341,8 @@ export const DEPRECATED: TokenType[] = [TokenType.OLD_IMPORT];
  */
 export class Lexer {
 	tokens: TokenData[];
+	static splitPattern =
+		/(\/\/.*)|(\`(?:.|\s)*\`)|(\b-?\d*\.?\d+\b)|(["\'].*["\'])|(\s|\;|\{|\}|\[|\]|\(|\)|\|\||&&|==|!=|!|,|\.|\:|\=\>|\=)/m;
 
 	private logger: ExtensionLogger;
 	private raw: string[];
@@ -358,9 +360,7 @@ export class Lexer {
 		try {
 			this.currentIndex = 0;
 			this.raw = text
-				.split(
-					/(\/\/.*)|(\`(?:.|\s)*\`)|(\b-?\d*\.?\d+\b)|(["\'].*["\'])|(\s|\;|\{|\}|\[|\]|\(|\)|\|\||&&|==|!=|!|,|\.|\:|\=\>|\=)/m
-				)
+				.split(Lexer.splitPattern)
 				.filter((v) => v != undefined);
 			this.trimmed = this.raw.map((v) => v.trim());
 			this.macros = macros.map((v) => v.target);
