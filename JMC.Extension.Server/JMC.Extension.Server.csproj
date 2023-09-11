@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net7.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="Resource\1_20_1_commands.json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Resource\1_20_1_commands.json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="OmniSharp.Extensions.LanguageProtocol" Version="0.19.7" />
+    <PackageReference Include="OmniSharp.Extensions.LanguageProtocol.Proposals" Version="0.19.7" />
+    <PackageReference Include="OmniSharp.Extensions.LanguageServer" Version="0.19.7" />
+    <PackageReference Include="OmniSharp.Extensions.LanguageServer.Shared" Version="0.19.7" />
+    <PackageReference Include="Serilog.Extensions.Logging" Version="7.0.0" />
+    <PackageReference Include="Serilog.Sinks.Console" Version="4.1.0" />
+    <PackageReference Include="Serilog.Sinks.Debug" Version="2.0.0" />
+    <PackageReference Include="Serilog.Sinks.File" Version="5.0.0" />
+  </ItemGroup>
+
+</Project>
