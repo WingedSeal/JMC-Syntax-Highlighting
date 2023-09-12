@@ -1,10 +1,12 @@
-using System;
+ï»¿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
 using OmniSharp.Extensions.LanguageServer.Protocol;
+using OmniSharp.Extensions.LanguageServer.Protocol.Window;
 
 namespace JMC.Extension.Server.Datas.Workspace
 {
@@ -13,19 +15,19 @@ namespace JMC.Extension.Server.Datas.Workspace
         public List<JMCFile> JMCFiles { get; set; } = new();
         public List<HJMCFile> HJMCFiles { get; set; } = new();
         public JMCConfig Config { get; set; }
-        public string Path { get; set; }
+        public string Path { get; set; } = string.Empty;
         public DocumentUri DocumentUri { get; set; }
-#pragma warning disable CS8618 // ‘ÞoŒš\”ŸŽ®ŽžC•s‰Âˆ× Null “I—“ˆÊ•K{•ïŠÜ”ñ Null ?B¿l—¶éˆ×‰Âˆ× NullB
-#pragma warning disable CS8618 // ‘ÞoŒš\”ŸŽ®ŽžC•s‰Âˆ× Null “I—“ˆÊ•K{•ïŠÜ”ñ Null ?B¿l—¶éˆ×‰Âˆ× NullB
         public Workspace(DocumentUri Uri)
-#pragma warning restore CS8618 // ‘ÞoŒš\”ŸŽ®ŽžC•s‰Âˆ× Null “I—“ˆÊ•K{•ïŠÜ”ñ Null ?B¿l—¶éˆ×‰Âˆ× NullB
-#pragma warning restore CS8618 // ‘ÞoŒš\”ŸŽ®ŽžC•s‰Âˆ× Null “I—“ˆÊ•K{•ïŠÜ”ñ Null ?B¿l—¶éˆ×‰Âˆ× NullB
         {
             var fspath = DocumentUri.GetFileSystemPath(Uri);
             if (fspath == null)
+            {
+                DocumentUri = DocumentUri.From(Path);
                 return;
+            }
             Path = fspath;
             DocumentUri = Uri;
+
 
             var jmcfiles = Directory.GetFiles(fspath, "*.jmc", SearchOption.AllDirectories);
             JMCFiles = jmcfiles.Select(v => new JMCFile(v)).ToList();
@@ -33,7 +35,12 @@ namespace JMC.Extension.Server.Datas.Workspace
             var hjmcfiles = Directory.GetFiles(fspath, "*.hjmc", SearchOption.AllDirectories);
             HJMCFiles = hjmcfiles.Select(v => new HJMCFile(v)).ToList();
 
-            var config = Directory.GetFiles(fspath, "jmc_config.json");
+            var configs = Directory.GetFiles(fspath, "jmc_config.json");
+            if (configs.Length > 1)
+            {
+                JMCLanguageServer.Server.ShowWarning("jmc_config.json must only contains one in each workspace!");
+            }
+            Config = JsonConvert.DeserializeObject<JMCConfig>(File.ReadAllText(configs.First()));
         }
 
         /// <summary>

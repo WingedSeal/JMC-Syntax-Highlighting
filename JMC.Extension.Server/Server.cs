@@ -53,8 +53,9 @@ namespace JMC.Extension.Server
                                 .SetMinimumLevel(LogLevel.Debug)
                         )
                        .WithHandler<TextDocumentHandler>()
-                       .WithHandler<DefinitionHandler>()
+                       .WithHandler<JMCDefinitionHandler>()
                        .WithHandler<JMCCompletionHandler>()
+                       .WithHandler<JMCDidChangedWatchFilesHandler>()
                        .WithServices(x => x.AddLogging(b => b.SetMinimumLevel(LogLevel.Trace)))
                        .WithServices(
                             services =>

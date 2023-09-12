@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace JMC.Extension.Server.Handlers
 {
-    internal class SemanticTokensHandler
+    internal class JMCSemanticTokensHandler
     {
     }
 }

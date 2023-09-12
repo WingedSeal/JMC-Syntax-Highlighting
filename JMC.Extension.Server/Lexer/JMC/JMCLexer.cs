@@ -242,10 +242,10 @@ namespace JMC.Extension.Server.Lexer.JMC
             if (r == null)
                 return;
 
-            var start = PositionToOffset(r.Start, RawText) + 1;
-            var length = change.RangeLength;
+            var start = PositionToOffset(r.Start, RawText);
+            var end = PositionToOffset(r.End, RawText);
 
-            RawText = RawText.Remove(start, length).Insert(start, change.Text);
+            RawText = RawText.Remove(start, end - start).Insert(start, change.Text);
         }
 
         /// <summary>
@@ -305,6 +305,14 @@ namespace JMC.Extension.Server.Lexer.JMC
             for (var i = 0; i < Tokens.Count; i++)
             {
                 ref var c = ref arr[i];
+                if (i + 1 >= Tokens.Count)
+                {
+                    var range = new Range(c.Range.Start, c.Range.End);
+                    if (range.Contains(pos))
+                    {
+                        return c;
+                    }
+                }
                 var next = Tokens[i + 1];
                 if (next != null)
                 {
@@ -330,16 +338,27 @@ namespace JMC.Extension.Server.Lexer.JMC
             var currentLine = 0;
             var offset = 0;
 
+
             var chars = text.ToCharArray().AsSpan();
             for (; offset < text.Length; offset++)
             {
                 ref var c = ref chars[offset];
-                if (c == '\r')
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                 {
-                    offset++;
-                    currentLine++;
+                    if (c == '\r')
+                    {
+                        offset++;
+                        currentLine++;
+                    }
                 }
-                else if (c == '\n') currentLine++;
+                else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+                {
+                    if (c == '\n') currentLine++;
+                }
+                else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+                {
+                    if (c == '\r') currentLine++;
+                }
                 if (currentLine == line) break;
             }
 

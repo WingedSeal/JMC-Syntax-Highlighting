@@ -61,6 +61,7 @@ export function activate(context: ExtensionContext) {
     documentSelector: [
       {
         pattern: "**/*.jmc",
+        language: "jmc",
       },
     ],
     progressOnInitialization: true,
