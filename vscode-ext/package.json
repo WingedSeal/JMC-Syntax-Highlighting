@@ -1,189 +1,193 @@
 {
-    "name": "language-client-example",
-    "description": "VSCode part of a language server",
-    "author": "Microsoft Corporation",
-    "license": "MIT",
-    "version": "0.0.1",
-    "publisher": "vscode",
-    "engines": {
-        "vscode": "^1.8.0"
-    },
-    "categories": [
-        "Other"
+  "name": "jmc",
+  "displayName": "JMC",
+  "description": "language support for jmc",
+  "author": "WingedSeal, bdke",
+  "license": "MIT",
+  "version": "4.0.0",
+  "publisher": "WingedSeal",
+  "engines": {
+    "vscode": "^1.8.0"
+  },
+  "categories": [
+    "Programming Languages",
+    "Snippets"
+  ],
+  "activationEvents": [
+    "onLanguage:plaintext"
+  ],
+  "main": "./out/src/extension",
+  "repository": {
+    "url": "https://github.com/WingedSeal/JMC-Syntax-Highlighting"
+  },
+  "contributes": {
+    "languages": [
+      {
+        "id": "jmc",
+        "aliases": [
+          "JMC",
+          "jmc"
+        ],
+        "extensions": [
+          ".jmc"
+        ],
+        "configuration": "./language-configuration.json",
+        "icon": {
+          "dark": "./images/jmc_icon.png",
+          "light": "./images/jmc_icon.png"
+        }
+      },
+      {
+        "id": "hjmc",
+        "aliases": [
+          "HJMC",
+          "hjmc"
+        ],
+        "extensions": [
+          ".hjmc"
+        ],
+        "configuration": "./language-configuration.json",
+        "icon": {
+          "dark": "./images/hjmc_icon.ico",
+          "light": "./images/hjmc_icon.ico"
+        }
+      }
     ],
-    "activationEvents": [
-        "onLanguage:plaintext"
+    "grammars": [
+      {
+        "language": "jmc",
+        "scopeName": "source.jmc",
+        "path": "./syntaxes/jmc.tmLanguage.json"
+      },
+      {
+        "language": "hjmc",
+        "scopeName": "source.hjmc",
+        "path": "./syntaxes/hjmc.tmLanguage.json"
+      }
     ],
-    "main": "./out/src/extension",
-    "enableProposedApi": true,
-	"contributes": {
-		"languages": [
-			{
-				"id": "jmc",
-				"aliases": [
-					"JMC",
-					"jmc"
-				],
-				"extensions": [
-					".jmc"
-				],
-				"configuration": "./language-configuration.json",
-				"icon": {
-					"dark": "./images/jmc_icon.png",
-					"light": "./images/jmc_icon.png"
-				}
-			},
-			{
-				"id": "hjmc",
-				"aliases": [
-					"HJMC",
-					"hjmc"
-				],
-				"extensions": [
-					".hjmc"
-				],
-				"configuration": "./language-configuration.json",
-				"icon": {
-					"dark": "./images/hjmc_icon.ico",
-					"light": "./images/hjmc_icon.ico"
-				}
-			}
-		],
-		"grammars": [
-			{
-				"language": "jmc",
-				"scopeName": "source.jmc",
-				"path": "./syntaxes/jmc.tmLanguage.json"
-			},
-			{
-				"language": "hjmc",
-				"scopeName": "source.hjmc",
-				"path": "./syntaxes/hjmc.tmLanguage.json"
-			}
-		],
-		"snippets": [
-			{
-				"language": "jmc",
-				"path": "./snippets/snippets.json"
-			}
-		],
-		"configurationDefaults": {
-			"[jmc]": {
-				"editor.semanticHighlighting.enabled": true
-			},
-			"editor.semanticTokenColorCustomizations": {
-				"rules": {
-					"commandKeyword": {
-						"foreground": "#ffbfec"
-					},
-					"*.deprecated": {
-						"strikethrough": true
-					},
-					"*.commandStart": {
-						"bold": true
-					},
-					"*.classCamel": {
-						"foreground": "#ffb300"
-					}
-				}
-			}
-		},
-		"semanticTokenModifiers": [
-			{
-				"id": "commandStart",
-				"description": "start of the command"
-			},
-			{
-				"id": "classCamel",
-				"description": "camel case of the class"
-			}
-		],
-		"semanticTokenScopes": [
-			{
-				"scopes": {
-					"command_keyword": [
-						"keyword.other.jmc"
-					],
-					"command_number": [
-						"constant.numeric.jmc"
-					]
-				}
-			}
-		],
-		"semanticTokenTypes": [
-			{
-				"id": "command_keyword",
-				"superType": "commandKeyword",
-				"description": "keyword for the commands"
-			},
-			{
-				"id": "command_number",
-				"superType": "commandNumber",
-				"description": "number for the commands"
-			}
-		],
-		"configuration": {
-			"title": "JMC",
-			"properties": {
-				"jmc.executable": {
-					"type": "string",
-					"default": "",
-					"description": "Specifies JMC.exe path for debugging",
-					"scope": "resource",
-					"editPresentation": "singlelineText"
-				},
-				"jmc.rawFuncHighlight": {
-					"type": "boolean",
-					"default": false,
-					"description": "It will highlight functions without classes",
-					"scope": "resource"
-				},
-				"jmc.boldFirstCommand": {
-					"type": "boolean",
-					"default": true,
-					"description": "Bold the first token of the command",
-					"scope": "resource"
-				},
-				"jmc.capitalizedClass": {
-					"type": "boolean",
-					"default": false,
-					"description": "change the capitalized class color",
-					"scope": "resource"
-				}
-			}
-		},
-		"commands": [
-			{
-				"command": "jmc.compileCode",
-				"title": "Compile JMC File",
-				"category": "JMC",
-				"icon": "$(play)"
-			}
-		],
-		"menus": {
-			"editor/title": [
-				{
-					"command": "jmc.compileCode",
-					"when": "editorLangId == jmc",
-					"group": "navigation"
-				}
-			]
-		}
-	},
-    "scripts": {
-        "vscode:prepublish": "tsc -p ./",
-        "compile": "tsc -p ./",
-        "update-vscode": "node ./node_modules/vscode/bin/install",
-        "postinstall": "node ./node_modules/vscode/bin/install"
+    "snippets": [
+      {
+        "language": "jmc",
+        "path": "./snippets/snippets.json"
+      }
+    ],
+    "configurationDefaults": {
+      "[jmc]": {
+        "editor.semanticHighlighting.enabled": true
+      },
+      "editor.semanticTokenColorCustomizations": {
+        "rules": {
+          "commandKeyword": {
+            "foreground": "#ffbfec"
+          },
+          "*.deprecated": {
+            "strikethrough": true
+          },
+          "*.commandStart": {
+            "bold": true
+          },
+          "*.classCamel": {
+            "foreground": "#ffb300"
+          }
+        }
+      }
     },
-    "devDependencies": {
-        "@types/mocha": "8.0.0",
-        "@types/node": "14.0.25",
-        "typescript": "3.9.10",
-        "vscode": "1.1.37"
+    "semanticTokenModifiers": [
+      {
+        "id": "commandStart",
+        "description": "start of the command"
+      },
+      {
+        "id": "classCamel",
+        "description": "camel case of the class"
+      }
+    ],
+    "semanticTokenScopes": [
+      {
+        "scopes": {
+          "command_keyword": [
+            "keyword.other.jmc"
+          ],
+          "command_number": [
+            "constant.numeric.jmc"
+          ]
+        }
+      }
+    ],
+    "semanticTokenTypes": [
+      {
+        "id": "command_keyword",
+        "superType": "commandKeyword",
+        "description": "keyword for the commands"
+      },
+      {
+        "id": "command_number",
+        "superType": "commandNumber",
+        "description": "number for the commands"
+      }
+    ],
+    "configuration": {
+      "title": "JMC",
+      "properties": {
+        "jmc.executable": {
+          "type": "string",
+          "default": "",
+          "description": "Specifies JMC.exe path for debugging",
+          "scope": "resource",
+          "editPresentation": "singlelineText"
+        },
+        "jmc.rawFuncHighlight": {
+          "type": "boolean",
+          "default": false,
+          "description": "It will highlight functions without classes",
+          "scope": "resource"
+        },
+        "jmc.boldFirstCommand": {
+          "type": "boolean",
+          "default": true,
+          "description": "Bold the first token of the command",
+          "scope": "resource"
+        },
+        "jmc.capitalizedClass": {
+          "type": "boolean",
+          "default": false,
+          "description": "change the capitalized class color",
+          "scope": "resource"
+        }
+      }
     },
-    "dependencies": {
-        "vscode-languageclient": "^7.0.0-next.8",
-        "vscode-languageserver-protocol": "^3.16.0-next.6"
+    "commands": [
+      {
+        "command": "jmc.compileCode",
+        "title": "Compile JMC File",
+        "category": "JMC",
+        "icon": "$(play)"
+      }
+    ],
+    "menus": {
+      "editor/title": [
+        {
+          "command": "jmc.compileCode",
+          "when": "editorLangId == jmc",
+          "group": "navigation"
+        }
+      ]
     }
+  },
+  "scripts": {
+    "vscode:prepublish": "tsc -p ./",
+    "compile": "tsc -p ./",
+    "update-vscode": "node ./node_modules/vscode/bin/install",
+    "postinstall": "node ./node_modules/vscode/bin/install"
+  },
+  "devDependencies": {
+    "@types/mocha": "8.0.0",
+    "@types/node": "14.0.25",
+    "typescript": "3.9.10",
+    "vscode": "1.1.37"
+  },
+  "dependencies": {
+    "vscode-languageclient": "^7.0.0-next.8",
+    "vscode-languageserver-protocol": "^3.16.0-next.6"
+  }
 }

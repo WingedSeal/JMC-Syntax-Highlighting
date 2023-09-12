@@ -15,25 +15,16 @@ import {
 } from "vscode-languageclient/node";
 import { Trace } from "vscode-jsonrpc/node";
 import path = require("path");
+import * as os from "os";
 
 export function activate(context: ExtensionContext) {
-  // The server is implemented in node
-  let serverExe = "dotnet";
+  var serverExe = os.platform() == "win32" ? "JMCServer.exe" : "JMCServer";
 
-  // let serverExe = "D:\\Development\\Omnisharp\\csharp-language-server-protocol\\sample\\SampleServer\\bin\\Debug\\netcoreapp2.0\\win7-x64\\SampleServer.exe";
-  // let serverExe = "D:/Development/Omnisharp/omnisharp-roslyn/artifacts/publish/OmniSharp.Stdio.Driver/win7-x64/OmniSharp.exe";
-  // The debug options for the server
-  // let debugOptions = { execArgv: ['-lsp', '-d' };5
-
-  // If the extension is launched in debug mode then the debug server options are used
-  // Otherwise the run options are used
   let serverOptions: ServerOptions = {
     // run: { command: serverExe, args: ['-lsp', '-d'] },
     run: {
-      command: serverExe,
-      args: [
-        "C:\\Users\\User\\Documents\\Github\\JMC-Syntax-Highlighting-cslsp\\server\\jmcserver\\bin\\Debug\\net6.0\\win7-x64\\JMCLSP.exe",
-      ],
+      command: path.join(__dirname, "server", serverExe),
+      args: ["-lsp", "-d"],
       transport: TransportKind.pipe,
     },
     // debug: { command: serverExe, args: ['-lsp', '-d'] }
@@ -47,7 +38,7 @@ export function activate(context: ExtensionContext) {
         "bin",
         "Debug",
         "net7.0",
-        "JMC.Extension.Server.exe"
+        serverExe
       ),
       args: ["-lsp", "-d"],
       transport: TransportKind.pipe,
