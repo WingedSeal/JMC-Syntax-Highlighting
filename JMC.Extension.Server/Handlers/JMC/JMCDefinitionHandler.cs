@@ -28,13 +28,15 @@ namespace JMC.Extension.Server.Handlers.JMC
             if (currentToken == null) return link;
 
             var tokenIndex = file.Lexer.Tokens.IndexOf(currentToken);
+            var workspace = ExtensionData.Workspaces.GetWorkspaceByDocument(request.TextDocument.Uri);
+            if (workspace == null) return link;
 
             //function defines
             if (currentToken.TokenType == JMCTokenType.LITERAL &&
                 tokenIndex - 1 != -1 &&
                 lexerTokens[tokenIndex - 1].TokenType == JMCTokenType.FUNCTION)
             {
-                var funcs = ExtensionData.Workspaces.GetJMCFunctionCalls();
+                var funcs = workspace.GetJMCFunctionCalls();
                 var query = currentToken.Value.Split(' ').Last();
                 foreach (var func in funcs)
                 {
@@ -60,7 +62,7 @@ namespace JMC.Extension.Server.Handlers.JMC
                 tokenIndex + 1 < lexerTokens.Count &&
                 lexerTokens[tokenIndex + 1].TokenType == JMCTokenType.LPAREN)
             {
-                var defines = ExtensionData.Workspaces.GetJMCFunctionDefines();
+                var defines = workspace.GetJMCFunctionDefines();
                 foreach (var define in defines)
                 {
                     var result = define.Tokens.Find(v => v.Value.Split(' ').Last() == currentToken.Value);
@@ -87,7 +89,7 @@ namespace JMC.Extension.Server.Handlers.JMC
                     var newOffset = currentToken.Offset + currentToken.Value.Length - 4;
                     var end = JMCLexer.OffsetToPosition(newOffset, lexer.RawText);
                     var range = new Range(start, end);
-                    var vars = ExtensionData.Workspaces.GetJMCVariables();
+                    var vars = workspace.GetJMCVariables();
                     vars.ForEach(v =>
                     {
                         var matches = v.Tokens.Where(x => x.Value.Split('.').ElementAt(0) == currentToken.Value[..^4]);
@@ -129,7 +131,7 @@ namespace JMC.Extension.Server.Handlers.JMC
                 }
                 else
                 {
-                    var vars = ExtensionData.Workspaces.GetJMCVariables();
+                    var vars = workspace.GetJMCVariables();
                     vars.ForEach(v =>
                     {
                         var matches = v.Tokens.Where(v => v.Value.Split('.').ElementAt(0) == currentToken.Value);

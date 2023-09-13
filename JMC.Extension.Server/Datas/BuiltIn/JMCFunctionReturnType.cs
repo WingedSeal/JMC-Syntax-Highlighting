@@ -2,6 +2,6 @@
 {
     internal enum JMCFunctionReturnType
     {
-        LoadOnly, LoadOnce, JMCFunction
+        BoolFunction, ExecuteExcluded, JMCFunction, LoadOnce, LoadOnly, VariableOperation
     }
 }

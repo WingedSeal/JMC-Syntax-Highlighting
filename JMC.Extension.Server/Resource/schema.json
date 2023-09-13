@@ -27,7 +27,7 @@
                   "type": "string"
                 },
                 "ArgumentType": {
-                  "type": "integer"
+                  "type": "string"
                 },
                 "Summary": {
                   "type": "string",

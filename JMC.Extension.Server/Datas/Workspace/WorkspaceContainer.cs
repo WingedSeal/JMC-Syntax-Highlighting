@@ -140,10 +140,26 @@ namespace JMC.Extension.Server.Datas.Workspace
         }
 
         /// <summary>
+        /// Get a <see cref="Workspace"/> by <see cref="DocumentUri"/>
+        /// </summary>
+        /// <param name="uri"></param>
+        /// <returns></returns>
+        public Workspace? GetWorkspaceByDocument(DocumentUri uri)
+        {
+            return Find(v =>
+            {
+                var w = v.DocumentUri.GetFileSystemPath();
+                var d = uri.GetFileSystemPath();
+                if (w != null && d != null && d.IsSubDirectoryOf(w) ) return true;
+                return false;
+            });
+        }
+
+        /// <summary>
         /// Get all variables of all <see cref="JMCFile"/>
         /// </summary>
         /// <returns></returns>
-        public List<JMCTokenQueryResult> GetJMCVariables()
+        public List<JMCTokenQueryResult> GetAllJMCVariables()
         {
             var tokens = new List<JMCTokenQueryResult>();
             var items = ToArray().AsSpan();
@@ -165,7 +181,7 @@ namespace JMC.Extension.Server.Datas.Workspace
         /// Get all function calls of all <see cref="JMCFile"/>
         /// </summary>
         /// <returns></returns>
-        public List<JMCTokenQueryResult> GetJMCFunctionCalls()
+        public List<JMCTokenQueryResult> GetAllJMCFunctionCalls()
         {
             var tokens = new List<JMCTokenQueryResult>();
             var items = ToArray().AsSpan();
@@ -187,7 +203,7 @@ namespace JMC.Extension.Server.Datas.Workspace
         /// Get all function defines of all <see cref="JMCFile"/>
         /// </summary>
         /// <returns></returns>
-        public List<JMCTokenQueryResult> GetJMCFunctionDefines()
+        public List<JMCTokenQueryResult> GetAllJMCFunctionDefines()
         {
             var tokens = new List<JMCTokenQueryResult>();
             var items = ToArray().AsSpan();

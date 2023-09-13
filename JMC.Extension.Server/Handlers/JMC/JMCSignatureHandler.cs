@@ -14,6 +14,7 @@ namespace JMC.Extension.Server.Handlers.JMC
     {
         public override async Task<SignatureHelp?> Handle(SignatureHelpParams request, CancellationToken cancellationToken)
         {
+            var doc = ExtensionData.Workspaces.GetJMCFile(request.TextDocument.Uri);
             return null;
         }
 

@@ -35,7 +35,9 @@ namespace JMC.Extension.Server.Handlers.JMC
             var list = new List<CompletionItem>();
 
             var lexer = file.Lexer;
-            var funcs = ExtensionData.Workspaces.GetJMCFunctionDefines()
+            var workspace = ExtensionData.Workspaces.GetWorkspaceByDocument(request.TextDocument.Uri);
+            if (workspace == null) return list;
+            var funcs = workspace.GetJMCFunctionDefines()
                 .SelectMany(v => v.Tokens)
                 .DistinctBy(v => v.Value);
 
@@ -74,7 +76,7 @@ namespace JMC.Extension.Server.Handlers.JMC
                     }
                 }
             }
-            var vars = ExtensionData.Workspaces.GetJMCVariables()
+            var vars = workspace.GetJMCVariables()
                 .SelectMany(v => v.Tokens)
                 .Where(v => !v.Value.EndsWith(".get", StringComparison.CurrentCulture))
                 .DistinctBy(v => v.Value);

@@ -1,6 +1,5 @@
 using JMC.Extension.Server.Lexer.JMC.Types;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
-using System.Collections.Frozen;
 using System.Collections.Immutable;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
@@ -11,7 +10,7 @@ namespace JMC.Extension.Server.Lexer.JMC
     public partial class JMCLexer
     {
         public static Regex SPLIT_PATTERN =
-            new(@"(\/\/.*)|(\`(?:.|\s)*\`)|(-?\d*\.?\b\d+[lbs]?\b)|(\.\.\d+)|([""\'].*[""\'])|(\s|\;|\{|\}|\[|\]|\(|\)|\|\||&&|==|!=|[\<\>]\=|[\<\>]|!|,|:|\=\>|[\+\-\*\%\/]\=|[\+\-\*\%\/]|\=)");
+            SplitPatternRegex();
 
         /// <summary>
         /// Tokens of the <see cref="JMCLexer"/>
@@ -579,5 +578,8 @@ namespace JMC.Extension.Server.Lexer.JMC
         /// <returns></returns>
         public async Task InitTokensAsync() => await Task.Run(InitTokens);
         #endregion
+
+        [GeneratedRegex(@"(\/\/.*)|(\`(?:.|\s)*\`)|(-?\d*\.?\b\d+[lbs]?\b)|(\.\.\d+)|([""\'].*[""\'])|(\s|\;|\{|\}|\[|\]|\(|\)|\|\||&&|==|!=|[\<\>]\=|[\<\>]|!|,|:|\=\>|[\+\-\*\%\/]\=|[\+\-\*\%\/]|\=)")]
+        private static partial Regex SplitPatternRegex();
     }
 }

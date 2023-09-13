@@ -26,7 +26,7 @@ namespace JMC.Extension.Server
         {
             MinecraftVersion = "1.20.1";
             CommandData = new(GetCommandNodes(MinecraftVersion));
-            JMCBuiltInFunctions = (JMCBuiltInFunctionContainer)GetJMCBuiltInFunctions().ToList();
+            JMCBuiltInFunctions = new JMCBuiltInFunctionContainer(GetJMCBuiltInFunctions());
         }
 
         /// <summary>

@@ -1,12 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Text.Json;
-using System.Threading.Tasks;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using OmniSharp.Extensions.LanguageServer.Protocol;
 using OmniSharp.Extensions.LanguageServer.Protocol.Window;
+using static JMC.Extension.Server.Datas.Workspace.WorkspaceContainer;
 
 namespace JMC.Extension.Server.Datas.Workspace
 {
@@ -41,6 +36,59 @@ namespace JMC.Extension.Server.Datas.Workspace
                 JMCLanguageServer.Server.ShowWarning("jmc_config.json must only contains one in each workspace!");
             }
             Config = JsonConvert.DeserializeObject<JMCConfig>(File.ReadAllText(configs.First()));
+        }
+
+        /// <summary>
+        /// Get all variables of all <see cref="JMCFile"/>
+        /// </summary>
+        /// <returns></returns>
+        public List<JMCTokenQueryResult> GetJMCVariables()
+        {
+            var tokens = new List<JMCTokenQueryResult>();
+            var files = JMCFiles.ToArray().AsSpan();
+            for (var j = 0; j < files.Length; j++)
+            {
+                ref var file = ref files[j];
+                var result = new JMCTokenQueryResult(this, file.DocumentUri, file.Lexer.Variables.ToList());
+                tokens.Add(result);
+            }
+
+            return tokens;
+        }
+
+        /// <summary>
+        /// Get all function calls of all <see cref="JMCFile"/>
+        /// </summary>
+        /// <returns></returns>
+        public List<JMCTokenQueryResult> GetJMCFunctionCalls()
+        {
+            var tokens = new List<JMCTokenQueryResult>();
+            var files = JMCFiles.ToArray().AsSpan();
+            for (var j = 0; j < files.Length; j++)
+            {
+                ref var file = ref files[j];
+                var result = new JMCTokenQueryResult(this, file.DocumentUri, file.Lexer.FunctionCalls.ToList());
+                tokens.Add(result);
+            }
+            return tokens;
+        }
+
+        /// <summary>
+        /// Get all function defines of all <see cref="JMCFile"/>
+        /// </summary>
+        /// <returns></returns>
+        public List<JMCTokenQueryResult> GetJMCFunctionDefines()
+        {
+            var tokens = new List<JMCTokenQueryResult>();
+            var files = JMCFiles.ToArray().AsSpan();
+            for (var j = 0; j < files.Length; j++)
+            {
+                ref var file = ref files[j];
+                var result = new JMCTokenQueryResult(this, file.DocumentUri, file.Lexer.FunctionDefines.ToList());
+                tokens.Add(result);
+            }
+
+            return tokens;
         }
 
         /// <summary>

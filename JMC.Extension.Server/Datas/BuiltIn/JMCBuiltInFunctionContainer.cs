@@ -11,5 +11,6 @@ namespace JMC.Extension.Server.Datas.BuiltIn
     internal class JMCBuiltInFunctionContainer : List<JMCBuiltInFunction>
     {
         //TODO
+        public JMCBuiltInFunctionContainer(IEnumerable<JMCBuiltInFunction> list) : base(list) { }
     }
 }

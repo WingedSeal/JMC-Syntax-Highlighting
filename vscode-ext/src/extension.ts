@@ -37,7 +37,7 @@ export function activate(context: ExtensionContext) {
         "JMC.Extension.Server",
         "bin",
         "Debug",
-        "net7.0",
+        "net8.0",
         serverExe
       ),
       args: ["-lsp", "-d"],
