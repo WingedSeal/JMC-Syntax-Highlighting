@@ -20,6 +20,66 @@ namespace JMC.Extension.Server.Datas.Workspace
         }
 
         /// <summary>
+        /// Get a <see cref="HJMCFile"/>
+        /// </summary>
+        /// <param name="uri"></param>
+        /// <returns></returns>
+        public HJMCFile? GetHJMCFile(DocumentUri uri)
+        {
+            var items = ToArray().AsSpan();
+            for (var i = 0; i < items.Length; i++)
+            {
+                ref var item = ref items[i];
+                var f = item.FindHJMCFile(uri);
+                if (f != null)
+                {
+                    return f;
+                }
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// Add a <see cref="HJMCFile"/>
+        /// </summary>
+        /// <param name="uri"></param>
+        public void AddHJMCFile(DocumentUri uri)
+        {
+            var workspaces = ToArray().AsSpan();
+            for (var i = 0; i < workspaces.Length; i++)
+            {
+                ref var workspace = ref workspaces[i];
+                var wsPath = workspace.DocumentUri.GetFileSystemPath();
+                var filePath = uri.GetFileSystemPath();
+                if (filePath == null || wsPath == null) continue;
+                if (!filePath.IsSubDirectoryOf(wsPath)) continue;
+
+                var hjmcFile = new HJMCFile(uri);
+                this[i].HJMCFiles.Add(hjmcFile);
+            }
+        }
+
+        /// <summary>
+        /// Remove a <see cref="HJMCFile"/>
+        /// </summary>
+        /// <param name="uri"></param>
+        public void RemoveHJMCFile(DocumentUri uri)
+        {
+            var workspaces = ToArray().AsSpan();
+            for (var i = 0; i < workspaces.Length; i++)
+            {
+                ref var workspace = ref workspaces[i];
+                var wsPath = workspace.DocumentUri.GetFileSystemPath();
+                var filePath = uri.GetFileSystemPath();
+                if (filePath == null || wsPath == null) continue;
+
+                var item = this[i].HJMCFiles.FirstOrDefault(v => v.DocumentUri.Equals(uri));
+                if (item == null) continue;
+                this[i].HJMCFiles.Remove(item);
+            }
+        }
+
+        /// <summary>
         /// Get a <see cref="JMCFile"/>
         /// </summary>
         /// <param name="uri"></param>

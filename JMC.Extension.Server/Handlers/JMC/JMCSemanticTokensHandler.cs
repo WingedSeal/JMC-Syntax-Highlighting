@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace JMC.Extension.Server.Handlers
+namespace JMC.Extension.Server.Handlers.JMC
 {
     internal class JMCSemanticTokensHandler
     {

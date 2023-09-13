@@ -1,10 +1,13 @@
 ﻿using JMC.Extension.Server.Handlers;
+using JMC.Extension.Server.Handlers.HJMC;
+using JMC.Extension.Server.Handlers.JMC;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 using OmniSharp.Extensions.LanguageServer.Protocol.Server;
 using OmniSharp.Extensions.LanguageServer.Protocol.Server.Capabilities;
 using OmniSharp.Extensions.LanguageServer.Protocol.Window;
+using OmniSharp.Extensions.LanguageServer.Protocol.Workspace;
 using OmniSharp.Extensions.LanguageServer.Server;
 using Serilog;
 using System.Diagnostics;
@@ -52,10 +55,13 @@ namespace JMC.Extension.Server
                                 .AddLanguageProtocolLogging()
                                 .SetMinimumLevel(LogLevel.Debug)
                         )
-                       .WithHandler<TextDocumentHandler>()
+                       .WithHandler<JMCTextDocumentHandler>()
                        .WithHandler<JMCDefinitionHandler>()
                        .WithHandler<JMCCompletionHandler>()
                        .WithHandler<JMCDidChangedWatchFilesHandler>()
+                       .WithHandler<JMCSignatureHandler>()
+                       .WithHandler<HJMCTextDocumentHandler>()
+                       .WithHandler<DidChangeConfigHandler>()
                        .WithServices(x => x.AddLogging(b => b.SetMinimumLevel(LogLevel.Trace)))
                        .WithServices(
                             services =>

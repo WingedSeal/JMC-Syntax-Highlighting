@@ -1,0 +1,48 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "array",
+  "items": 
+    {
+      "type": "object",
+      "properties": {
+        "Class": {
+          "type": "string"
+        },
+        "Function": {
+          "type": "string"
+        },
+        "Summary": {
+          "type": "string"
+        },
+        "Arguments": {
+          "type": "array",
+          "items": 
+            {
+              "type": "object",
+              "properties": {
+                "Name": {
+                  "type": "string"
+                },
+                "DefaultValue": {
+                  "type": "string"
+                },
+                "ArgumentType": {
+                  "type": "integer"
+                },
+                "Summary": {
+                  "type": "string",
+                  "default": ""
+                }
+              },
+              "required": [ "Name", "ArgumentType"]
+            }
+          
+        },
+        "ReturnType": {
+          "type": "integer"
+        }
+      },
+      "required": [ "Class", "Function", "Summary", "Arguments", "ReturnType" ],
+    }
+  
+}

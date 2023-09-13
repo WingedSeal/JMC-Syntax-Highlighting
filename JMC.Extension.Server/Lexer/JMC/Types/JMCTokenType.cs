@@ -68,6 +68,7 @@ namespace JMC.Extension.Server.Lexer.JMC.Types
         COMMAND_VARIABLE_CALL,
         COMMAND_VARIABLE,
         CONDITION_LITERAL,
-        CONDITION_UNKNOWN
+        CONDITION_UNKNOWN,
+        CONDITION_VARIABLE
     }
 }

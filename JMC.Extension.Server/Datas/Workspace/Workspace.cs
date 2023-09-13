@@ -49,5 +49,6 @@ namespace JMC.Extension.Server.Datas.Workspace
         /// <param name="uri"></param>
         /// <returns></returns>
         public JMCFile? FindJMCFile(DocumentUri uri) => JMCFiles.Find(v => v.DocumentUri == uri);
+        public HJMCFile? FindHJMCFile(DocumentUri uri) => HJMCFiles.Find(v => v.DocumentUri == uri);
     }
 }

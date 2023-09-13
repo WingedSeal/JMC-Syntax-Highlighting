@@ -1,0 +1,260 @@
+[
+  {
+    "Class": "Player",
+    "Function": "onEvent",
+    "Summary": "Run commands on positive change of scoreboard and reset the score.",
+    "Arguments": [
+      {
+        "ArgumentType": 0,
+        "Name": "criteria"
+      },
+      {
+        "ArgumentType": 1,
+        "Name": "function"
+      }
+    ],
+    "ReturnType": 0
+  },
+  {
+    "Class": "Player",
+    "Function": "firstJoin",
+    "Summary": "Run commands as player and at player when joining the World for the first time. <br/> #Revoking all advancements will cause this to be called again.",
+    "Arguments": [
+      {
+        "ArgumentType": 1,
+        "Name": "function"
+      }
+    ],
+    "ReturnType": 1
+  },
+  {
+    "Class": "Player",
+    "Function": "die",
+    "Summary": "Run onDeath as player and at player's last position when the player die <br/>Run onRespawn as player and at player spawn location when the player respawn",
+    "Arguments": [
+      {
+        "Name": "onDeath",
+        "ArgumentType": 1,
+        "DefaultValue": "()=>{}"
+      },
+      {
+        "Name": "onRespawn",
+        "ArgumentType": 1,
+        "DefaultValue": "()=>{}"
+      }
+    ],
+    "ReturnType": 1
+  },
+  {
+    "Class": "Item",
+    "Function": "create",
+    "Summary": "Create a custom item and save it for further use.",
+    "Arguments": [
+      {
+        "ArgumentType": 2,
+        "Name": "itemId",
+        "Summary": "the unique name of this item so that it can be referenced in other Item function."
+      },
+      {
+        "ArgumentType": 3,
+        "Name": "itemType"
+      },
+      {
+        "ArgumentType": 4,
+        "Name": "displayName",
+        "DefaultValue": "\"\""
+      },
+      {
+        "ArgumentType": 5,
+        "Name": "lore",
+        "DefaultValue": "[]"
+      },
+      {
+        "ArgumentType": 6,
+        "Name": "nbt",
+        "DefaultValue": "{}"
+      },
+      {
+        "ArgumentType": 1,
+        "Name": "onClick",
+        "DefaultValue": "()=>{}",
+        "Summary": "can only be used with \"carrot_on_a_stick\" or \"warped_fungus_on_a_stick\" itemType."
+      }
+    ],
+    "ReturnType": 0
+  },
+  {
+    "Class": "Item",
+    "Function": "createSign",
+    "Summary": "Create a custom sign and save it for further use.",
+    "Arguments": [
+      {
+        "Name": "itemId",
+        "ArgumentType": 2,
+        "Summary": "unique name of this item so that it can be referenced in other Item function."
+      },
+      {
+        "Name": "variant",
+        "ArgumentType": 2,
+        "Summary": "wood variant of the sign such as oak, spruce, etc."
+      },
+      {
+        "Name": "displayName",
+        "ArgumentType": 4,
+        "DefaultValue": "\"\""
+      },
+      {
+        "Name": "lore",
+        "ArgumentType": 5,
+        "DefaultValue": "[]"
+      },
+      {
+        "Name": "texts",
+        "ArgumentType": 5,
+        "DefaultValue": "[]"
+      },
+      {
+        "Name": "nbt",
+        "ArgumentType": 6,
+        "DefaultValue": "{}"
+      },
+      {
+        "Name": "onClick",
+        "ArgumentType": 1,
+        "DefaultValue": "()=>{}"
+      }
+    ],
+    "ReturnType": 0
+  },
+  {
+    "Class": "Item",
+    "Function": "createSpawnEgg",
+    "Summary": "Create a custom spawn egg and save it for further use. <br/> The spawn egg will not summon any mob unless specified in `onPlace`",
+    "Arguments": [
+      {
+        "ArgumentType": 2,
+        "Name": "itemId"
+      },
+      {
+        "ArgumentType": 2,
+        "Name": "mobType"
+      },
+      {
+        "ArgumentType": 4,
+        "Name": "displayName",
+        "DefaultValue": "\"\""
+      },
+      {
+        "ArgumentType": 1,
+        "Name": "onPlace",
+        "DefaultValue": "()=>{}"
+      },
+      {
+        "ArgumentType": 5,
+        "Name": "lore",
+        "DefaultValue": "[]"
+      },
+      {
+        "ArgumentType": 6,
+        "Name": "nbt",
+        "DefaultValue": "{}"
+      }
+    ],
+    "ReturnType": 0
+  },
+  {
+    "Class": "Item",
+    "Function": "give",
+    "Summary": "Give item created from `Item.create` to a player",
+    "Arguments": [
+      {
+        "ArgumentType": 2,
+        "Name": "itemId"
+      },
+      {
+        "ArgumentType": 7,
+        "Name": "selector",
+        "DefaultValue": "@s"
+      },
+      {
+        "ArgumentType": 8,
+        "Name": "amount",
+        "DefaultValue": "1"
+      }
+    ],
+    "ReturnType": 2
+  },
+  {
+    "Class": "Item",
+    "Function": "clear",
+    "Summary": "Clear item created from `Item.create` from a player. amount at -1 means to clear all.",
+    "Arguments": [
+      {
+        "ArgumentType": 2,
+        "Name": "itemId"
+      },
+      {
+        "ArgumentType": 7,
+        "Name": "selector",
+        "DefaultValue": "@s"
+      },
+      {
+        "ArgumentType": 8,
+        "Name": "amount",
+        "DefaultValue": "-1"
+      }
+    ],
+    "ReturnType": 2
+  },
+  {
+    "Class": "Item",
+    "Function": "summon",
+    "Summary": "Spawn item entity from `Item.create`.",
+    "Arguments": [
+      {
+        "ArgumentType": 2,
+        "Name": "itemId"
+      },
+      {
+        "ArgumentType": 9,
+        "Name": "pos"
+      },
+      {
+        "ArgumentType": 8,
+        "Name": "amount",
+        "DefaultValue": "1"
+      },
+      {
+        "ArgumentType": 6,
+        "Name": "nbt",
+        "DefaultValue": "{}"
+      }
+    ],
+    "ReturnType": 2
+  },
+  {
+    "Class": "Item",
+    "Function": "replaceEntity",
+    "Summary": "Use `/item replace entity` with item from `Item.create`.",
+    "Arguments": [
+      {
+        "ArgumentType": 2,
+        "Name": "itemId"
+      },
+      {
+        "ArgumentType": 7,
+        "Name": "selector"
+      },
+      {
+        "ArgumentType": 9,
+        "Name": "slot"
+      },
+      {
+        "ArgumentType": 8,
+        "Name": "count",
+        "DefaultValue": "1"
+      }
+    ],
+    "ReturnType": 2
+  }
+]

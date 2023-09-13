@@ -1,8 +1,8 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net7.0</TargetFramework>
+    <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <AssemblyName>JMCServer</AssemblyName>
@@ -10,10 +10,12 @@
 
   <ItemGroup>
     <None Remove="Resource\1_20_1_commands.json" />
+    <None Remove="Resource\BuiltInFunctions.json" />
   </ItemGroup>
 
   <ItemGroup>
     <EmbeddedResource Include="Resource\1_20_1_commands.json" />
+    <EmbeddedResource Include="Resource\BuiltInFunctions.json" />
   </ItemGroup>
 
   <ItemGroup>
@@ -26,5 +28,7 @@
     <PackageReference Include="Serilog.Sinks.Debug" Version="2.0.0" />
     <PackageReference Include="Serilog.Sinks.File" Version="5.0.0" />
   </ItemGroup>
+
+  <ProjectExtensions><VisualStudio><UserProperties resource_4builtinfunctions_1json__JsonSchema="schema.json" /></VisualStudio></ProjectExtensions>
 
 </Project>

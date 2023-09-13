@@ -8,7 +8,7 @@ using OmniSharp.Extensions.LanguageServer.Protocol.Document;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 using Range = OmniSharp.Extensions.LanguageServer.Protocol.Models.Range;
 
-namespace JMC.Extension.Server.Handlers
+namespace JMC.Extension.Server.Handlers.JMC
 {
     internal sealed class JMCDefinitionHandler : DefinitionHandlerBase
     {

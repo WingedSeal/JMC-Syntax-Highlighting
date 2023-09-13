@@ -1,12 +1,9 @@
-using System;
-using System.Collections;
-using System.Diagnostics;
-using System.Runtime.InteropServices;
-using System.Text.RegularExpressions;
-using JMC.Extension.Server.Helper;
 using JMC.Extension.Server.Lexer.JMC.Types;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
-using Serilog;
+using System.Collections.Frozen;
+using System.Collections.Immutable;
+using System.Runtime.InteropServices;
+using System.Text.RegularExpressions;
 using Range = OmniSharp.Extensions.LanguageServer.Protocol.Models.Range;
 
 namespace JMC.Extension.Server.Lexer.JMC
@@ -17,7 +14,7 @@ namespace JMC.Extension.Server.Lexer.JMC
             new(@"(\/\/.*)|(\`(?:.|\s)*\`)|(-?\d*\.?\b\d+[lbs]?\b)|(\.\.\d+)|([""\'].*[""\'])|(\s|\;|\{|\}|\[|\]|\(|\)|\|\||&&|==|!=|[\<\>]\=|[\<\>]|!|,|:|\=\>|[\+\-\*\%\/]\=|[\+\-\*\%\/]|\=)");
 
         /// <summary>
-        /// Tokens of the lexer
+        /// Tokens of the <see cref="JMCLexer"/>
         /// </summary>
         /// <remarks>
         /// DO NOT use this for accessing Variables or Functions,
@@ -31,7 +28,7 @@ namespace JMC.Extension.Server.Lexer.JMC
         /// <summary>
         /// Pattern for general tokens
         /// </summary>
-        private static readonly Dictionary<JMCTokenType, Regex> TokenPatterns = new()
+        private static readonly ImmutableDictionary<JMCTokenType, Regex> TokenPatterns = new Dictionary<JMCTokenType, Regex>()
         {
             [JMCTokenType.COMMENT] = new Regex(@"^\/\/.*$", _regexOptions),
             [JMCTokenType.NUMBER] = new Regex(@"^(\b-?\d*\.?\d+\b)$", _regexOptions),
@@ -40,12 +37,12 @@ namespace JMC.Extension.Server.Lexer.JMC
             [JMCTokenType.VARIABLE] = new Regex(@"^\$[a-zA-Z_][0-9a-zA-Z_]*$", _regexOptions),
             [JMCTokenType.VARIABLE_CALL] = new Regex(@"^\$[a-zA-Z_][0-9a-zA-Z_]*\s*\.", _regexOptions),
             [JMCTokenType.LITERAL] = new Regex(@"^(?![0-9])\S+$", _regexOptions)
-        };
+        }.ToImmutableDictionary();
 
         /// <summary>
         /// Pattern for command tokens
         /// </summary>
-        private static readonly Dictionary<JMCTokenType, Regex> CommandTokenPatterns = new()
+        private static readonly ImmutableDictionary<JMCTokenType, Regex> CommandTokenPatterns = new Dictionary<JMCTokenType, Regex>()
         {
             [JMCTokenType.COMMAND_VARIABLE] = new Regex(@"^\$[a-zA-Z_][0-9a-zA-Z_]*$", _regexOptions),
             [JMCTokenType.COMMAND_VARIABLE_CALL] = new Regex(@"^\$[a-zA-Z_][0-9a-zA-Z_]*\s*\.", _regexOptions),
@@ -53,7 +50,7 @@ namespace JMC.Extension.Server.Lexer.JMC
             [JMCTokenType.COMMAND_FLOAT_OR_DOUBLE] = new Regex(@"^-?\d*\.?\d+[lbs]?$", _regexOptions),
             [JMCTokenType.COMMAND_LITERAL] = new Regex(@"^\w+$", _regexOptions),
             [JMCTokenType.COMMAND_VALUE] = new Regex(@"^\S+$", _regexOptions)
-        };
+        }.ToImmutableDictionary();
 
         private const string CONDITION_TOKEN = "CONDITION";
         private const string COMMAND_TOKEN = "COMMAND";
@@ -67,7 +64,8 @@ namespace JMC.Extension.Server.Lexer.JMC
         public static readonly JMCTokenType[] VariableTypes = new JMCTokenType[]
         {
             JMCTokenType.VARIABLE, JMCTokenType.VARIABLE_CALL,
-            JMCTokenType.COMMAND_VARIABLE, JMCTokenType.COMMAND_VARIABLE_CALL
+            JMCTokenType.COMMAND_VARIABLE, JMCTokenType.COMMAND_VARIABLE_CALL,
+            JMCTokenType.CONDITION_VARIABLE
         };
 
         /// <summary>
@@ -83,7 +81,7 @@ namespace JMC.Extension.Server.Lexer.JMC
         /// </summary>
         public static readonly JMCTokenType[] NormalVariableTypes = new JMCTokenType[]
         {
-            JMCTokenType.VARIABLE, JMCTokenType.COMMAND_VARIABLE
+            JMCTokenType.VARIABLE, JMCTokenType.COMMAND_VARIABLE, JMCTokenType.CONDITION_VARIABLE
         };
 
         /// <summary>
@@ -97,7 +95,7 @@ namespace JMC.Extension.Server.Lexer.JMC
         }
 
         #region Query
-        
+
         public IEnumerable<JMCToken> Variables => Tokens.FindAll(v => VariableTypes.Contains(v.TokenType));
         public IEnumerable<JMCToken> FunctionCalls
         {
@@ -153,7 +151,7 @@ namespace JMC.Extension.Server.Lexer.JMC
             var currentPos = 0;
 
             var arr = trimmedText.AsSpan();
-            for (var i = 0; i < arr.Length;i++)
+            for (var i = 0; i < arr.Length; i++)
             {
                 ref var value = ref arr[i];
                 if (string.IsNullOrEmpty(value))
@@ -172,7 +170,7 @@ namespace JMC.Extension.Server.Lexer.JMC
         }
 
         /// <summary>
-        /// make function in a class to have a seperator for its value,
+        /// make function in a class to have a separator for its value,
         /// <code>
         /// "test class.test"
         /// </code>
@@ -183,7 +181,7 @@ namespace JMC.Extension.Server.Lexer.JMC
             {
                 if (i - 1 == -1) continue;
                 var token = Tokens[i];
-                if (token.TokenType == JMCTokenType.LITERAL && 
+                if (token.TokenType == JMCTokenType.LITERAL &&
                     Tokens[i - 1].TokenType == JMCTokenType.FUNCTION)
                 {
                     foreach (var range in GetClassRanges())
@@ -206,14 +204,14 @@ namespace JMC.Extension.Server.Lexer.JMC
         /// </returns>
         public IEnumerable<KeyValuePair<string, Range>> GetClassRanges()
         {
-            for (var i = 0;i < Tokens.Count;i++)
+            for (var i = 0; i < Tokens.Count; i++)
             {
                 var token = Tokens[i];
                 if (token.TokenType == JMCTokenType.CLASS)
                 {
                     var parenCount = 0;
                     var className = Tokens[i + 1].Value;
-                    for (i += 2; i < Tokens.Count ;i++)
+                    for (i += 2; i < Tokens.Count; i++)
                     {
                         var c = Tokens[i];
                         if (c.TokenType == JMCTokenType.LCP) parenCount++;
@@ -224,7 +222,7 @@ namespace JMC.Extension.Server.Lexer.JMC
                             var startPos = token.Offset;
                             var end = OffsetToPosition(endPos, RawText);
                             var start = OffsetToPosition(startPos, RawText);
-                            yield return new(className ,new Range(start, end));
+                            yield return new(className, new Range(start, end));
                             break;
                         }
                     }
@@ -233,7 +231,7 @@ namespace JMC.Extension.Server.Lexer.JMC
         }
 
         /// <summary>
-        /// modify the text of the lexer
+        /// modify the text of the <see cref="JMCLexer"/>
         /// </summary>
         /// <param name="change"></param>
         public void ChangeRawText(TextDocumentContentChangeEvent change)
@@ -264,11 +262,11 @@ namespace JMC.Extension.Server.Lexer.JMC
             {
                 var preType = Tokens[^1].TokenType;
                 var type = GetTokenType(text);
-                if (Tokens[^2].TokenType == JMCTokenType.IF || 
+                if (Tokens[^2].TokenType == JMCTokenType.IF ||
                     preType.ToString().StartsWith(CONDITION_TOKEN, StringComparison.CurrentCulture))
                 {
                     type = GetIfTokenType(type);
-                } 
+                }
                 else if (preType.ToString().StartsWith(COMMAND_TOKEN, StringComparison.CurrentCulture))
                 {
                     type = GetCommandTokenType(text);
@@ -280,7 +278,7 @@ namespace JMC.Extension.Server.Lexer.JMC
                     TokenType = type,
                     Value = text,
                 };
-            } 
+            }
             catch (ArgumentOutOfRangeException)
             {
                 var type = GetTokenType(text);
@@ -403,7 +401,7 @@ namespace JMC.Extension.Server.Lexer.JMC
         {
             switch (text)
             {
-                case "{": return JMCTokenType.COMMAND_LCP; 
+                case "{": return JMCTokenType.COMMAND_LCP;
                 case "}": return JMCTokenType.COMMAND_RCP;
                 case "[": return JMCTokenType.COMMAND_LMP;
                 case "]": return JMCTokenType.COMMAND_RMP;
@@ -557,6 +555,10 @@ namespace JMC.Extension.Server.Lexer.JMC
             {
                 case JMCTokenType.RPAREN:
                     return JMCTokenType.RPAREN;
+                case JMCTokenType.VARIABLE: 
+                    return JMCTokenType.CONDITION_VARIABLE;
+                case JMCTokenType.LITERAL:
+                    return JMCTokenType.CONDITION_LITERAL;
                 default:
                     break;
             }

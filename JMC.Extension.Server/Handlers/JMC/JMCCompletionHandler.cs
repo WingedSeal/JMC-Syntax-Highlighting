@@ -13,7 +13,7 @@ using OmniSharp.Extensions.LanguageServer.Protocol.Client.Capabilities;
 using OmniSharp.Extensions.LanguageServer.Protocol.Document;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 
-namespace JMC.Extension.Server.Handlers
+namespace JMC.Extension.Server.Handlers.JMC
 {
     internal class JMCCompletionHandler : CompletionHandlerBase
     {
@@ -58,7 +58,7 @@ namespace JMC.Extension.Server.Handlers
                         return CompletionList.From(result.Select(value => new CompletionItem()
                         {
                             Label = value.FuncName,
-                            Kind = ( value.Type == FunctionHierarchyType.CLASS ) ? CompletionItemKind.Class : CompletionItemKind.Function,
+                            Kind = value.Type == FunctionHierarchyType.CLASS ? CompletionItemKind.Class : CompletionItemKind.Function,
                             InsertText = value.Type == FunctionHierarchyType.CLASS ? value.FuncName : $"{value.FuncName}()",
                         }));
                     }
@@ -86,17 +86,17 @@ namespace JMC.Extension.Server.Handlers
                 list.Add(new()
                 {
                     Label = value.FuncName,
-                    Kind = (value.Type == FunctionHierarchyType.CLASS) ? CompletionItemKind.Class : CompletionItemKind.Function,
+                    Kind = value.Type == FunctionHierarchyType.CLASS ? CompletionItemKind.Class : CompletionItemKind.Function,
                     InsertText = value.Type == FunctionHierarchyType.CLASS ? value.FuncName : $"{value.FuncName}()",
                 });
             }
 
-            foreach ( var v in vars )
+            foreach (var v in vars)
             {
-                list.Add(new() 
-                { 
+                list.Add(new()
+                {
                     Label = v.Value[1..],
-                    Kind = CompletionItemKind.Variable, 
+                    Kind = CompletionItemKind.Variable,
                     InsertText = v.Value
                 });
             }
@@ -105,7 +105,7 @@ namespace JMC.Extension.Server.Handlers
         }
 
 
-        protected override CompletionRegistrationOptions CreateRegistrationOptions(CompletionCapability capability, ClientCapabilities clientCapabilities) => new() 
+        protected override CompletionRegistrationOptions CreateRegistrationOptions(CompletionCapability capability, ClientCapabilities clientCapabilities) => new()
         {
             ResolveProvider = true,
             TriggerCharacters = new string[]

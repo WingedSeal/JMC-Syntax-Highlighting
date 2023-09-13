@@ -2,14 +2,9 @@
 using OmniSharp.Extensions.LanguageServer.Protocol.Client.Capabilities;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 using OmniSharp.Extensions.LanguageServer.Protocol.Workspace;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using FileSystemWatcher = OmniSharp.Extensions.LanguageServer.Protocol.Models.FileSystemWatcher;
 
-namespace JMC.Extension.Server.Handlers
+namespace JMC.Extension.Server.Handlers.JMC
 {
     internal class JMCDidChangedWatchFilesHandler : DidChangeWatchedFilesHandlerBase
     {
@@ -35,7 +30,13 @@ namespace JMC.Extension.Server.Handlers
             {
                 new FileSystemWatcher()
                 {
-                    GlobPattern = "**/*.jmc"
+                    GlobPattern = "**/*.jmc",
+                    Kind = WatchKind.Create
+                },
+                new FileSystemWatcher()
+                {
+                    GlobPattern = "**/*.jmc",
+                    Kind = WatchKind.Delete
                 }
             })
         };
