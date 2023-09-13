@@ -56,6 +56,20 @@ namespace JMC.Extension.Server.Handlers.JMC
                             .Last()
                             .Split('.')
                             .Where(v => !string.IsNullOrWhiteSpace(v));
+                        if (splited.Count() == 1)
+                        {
+                            var builtinFuncs = ExtensionData.JMCBuiltInFunctions.GetFunctions(splited.ElementAt(0));
+                            if (builtinFuncs.Any())
+                            {
+                                return CompletionList.From(builtinFuncs.Select(v => new CompletionItem()
+                                {
+                                    Label = v.Function,
+                                    Kind = CompletionItemKind.Function,
+                                    InsertText = $"{v.Function}"
+                                }));
+                            }
+                        }
+
                         var result = FunctionHierarchy.GetHierachy(funcs.Select(v => v.Value), splited);
                         return CompletionList.From(result.Select(value => new CompletionItem()
                         {
@@ -90,6 +104,17 @@ namespace JMC.Extension.Server.Handlers.JMC
                     Label = value.FuncName,
                     Kind = value.Type == FunctionHierarchyType.CLASS ? CompletionItemKind.Class : CompletionItemKind.Function,
                     InsertText = value.Type == FunctionHierarchyType.CLASS ? value.FuncName : $"{value.FuncName}()",
+                });
+            }
+
+            var jmcFuncs = ExtensionData.JMCBuiltInFunctions.Select(v => v.Class).Distinct();
+            foreach (var jmcFunc in jmcFuncs)
+            {
+                list.Add(new()
+                {
+                    Label = jmcFunc,
+                    Kind = CompletionItemKind.Class,
+                    InsertText = jmcFunc,
                 });
             }
 
