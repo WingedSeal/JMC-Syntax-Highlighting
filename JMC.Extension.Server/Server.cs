@@ -60,6 +60,7 @@ namespace JMC.Extension.Server
                        .WithHandler<JMCCompletionHandler>()
                        .WithHandler<JMCDidChangedWatchFilesHandler>()
                        .WithHandler<JMCSignatureHandler>()
+                       .WithHandler<JMCHoverHandler>()
                        .WithHandler<HJMCTextDocumentHandler>()
                        .WithHandler<DidChangeConfigHandler>()
                        .WithServices(x => x.AddLogging(b => b.SetMinimumLevel(LogLevel.Trace)))
@@ -131,7 +132,8 @@ namespace JMC.Extension.Server
                                             {
                                                 Supported = true
                                             },
-                                        }
+                                        },
+                                        HoverProvider = true
                                     }
                                 };
                             }
