@@ -9092,10 +9092,6 @@
         }
       }
     },
-    "stop": {
-      "type": "literal",
-      "executable": true
-    },
     "stopsound": {
       "type": "literal",
       "children": {

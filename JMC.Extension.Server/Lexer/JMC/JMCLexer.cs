@@ -165,6 +165,31 @@ namespace JMC.Extension.Server.Lexer.JMC
                 }
                 currentPos += splitedText[i].Length;
             }
+            //var result = Parallel.For(0, trimmedText.Length - 1, (i) =>
+            //{
+            //    var v = trimmedText[i];
+            //    var token = Tokenize(v, -1);
+            //    if (token == null) return;
+            //    temp.TryAdd(i, token);
+            //});
+            //var dict = temp.OrderBy(x => x.Key).ToDictionary();
+            //var tokens = dict.Values.ToArray().AsSpan();
+            //var tempTokens = new List<JMCToken>();
+            //for (int i = 0; i < tokens.Length; i++)
+            //{
+            //    ref var token = ref tokens[i];
+            //    var value = token.Value;
+            //    if (string.IsNullOrEmpty(value))
+            //    {
+            //        currentPos += splitedText[i].Length;
+            //        continue;
+            //    }
+            //    token.Offset = currentPos;
+            //    currentPos += splitedText[i].Length;
+            //    tempTokens.Add(token);
+            //}
+            //Tokens = tempTokens;
+
             FormatFunctions();
         }
 
@@ -222,6 +247,38 @@ namespace JMC.Extension.Server.Lexer.JMC
                             var end = OffsetToPosition(endPos, RawText);
                             var start = OffsetToPosition(startPos, RawText);
                             yield return new(className, new Range(start, end));
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+        public IEnumerable<KeyValuePair<string, Range>> GetFunctionRanges()
+        {
+            for (var i = 0; i < Tokens.Count - 1; i++)
+            {
+                if (i - 1 == -1) continue;
+                if (i + 1 == Tokens.Count) yield break;
+
+                var current = Tokens[i];
+                var pre = Tokens[i - 1];
+                var next = Tokens[i + 1];
+
+                if (current.TokenType == JMCTokenType.LITERAL && 
+                    pre.TokenType != JMCTokenType.FUNCTION && 
+                    next.TokenType == JMCTokenType.LPAREN)
+                {
+                    i += 2;
+                    var count = 1;
+                    for (; i < Tokens.Count - 1; i++)
+                    {
+                        var c = Tokens[i];
+                        if (c.TokenType == JMCTokenType.LPAREN) count++;
+                        else if (c.TokenType == JMCTokenType.RPAREN) count--;
+                        if (count == 0)
+                        {
+                            yield return new KeyValuePair<string, Range>(current.Value, new Range(next.Range.Start, c.Range.End));
                             break;
                         }
                     }
@@ -518,6 +575,10 @@ namespace JMC.Extension.Server.Lexer.JMC
                 //others
                 case "=>":
                     return JMCTokenType.ARROW_FUNC;
+                case ",":
+                    return JMCTokenType.COMMA;
+                case "":
+                    return JMCTokenType.EMPTY;
 
                 default:
                     break;
@@ -554,7 +615,7 @@ namespace JMC.Extension.Server.Lexer.JMC
             {
                 case JMCTokenType.RPAREN:
                     return JMCTokenType.RPAREN;
-                case JMCTokenType.VARIABLE: 
+                case JMCTokenType.VARIABLE:
                     return JMCTokenType.CONDITION_VARIABLE;
                 case JMCTokenType.LITERAL:
                     return JMCTokenType.CONDITION_LITERAL;

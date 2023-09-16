@@ -10,7 +10,6 @@ namespace JMC.Extension.Server.Datas.BuiltIn
 {
     internal class JMCBuiltInFunctionContainer : List<JMCBuiltInFunction>
     {
-        //TODO
         public JMCBuiltInFunctionContainer(IEnumerable<JMCBuiltInFunction> list) : base(list) { }
         public IEnumerable<JMCBuiltInFunction> GetFunctions(string @class) => this.Where(v => v.Class == @class);
         public JMCBuiltInFunction? GetFunction(string @class, string func) => Find(v => v.Class == @class && v.Function == func);

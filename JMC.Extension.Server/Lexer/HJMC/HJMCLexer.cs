@@ -10,7 +10,7 @@ namespace JMC.Extension.Server.Lexer.HJMC
         public static readonly Regex SplitPattern = new(@"(#\S+)|("".*"")|(\s)", RegexOptions.Compiled);
 
         public List<HJMCToken> Tokens = new();
-        private string RawText { get; set; }
+        public string RawText { get; set; }
         public HJMCLexer(string text)
         {
             RawText = text;

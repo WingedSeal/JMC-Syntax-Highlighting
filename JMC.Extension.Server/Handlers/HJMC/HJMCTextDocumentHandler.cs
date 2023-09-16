@@ -21,7 +21,7 @@ namespace JMC.Extension.Server.Handlers.HJMC
             }
         );
 
-        public TextDocumentSyncKind Change { get; } = TextDocumentSyncKind.Incremental;
+        public TextDocumentSyncKind Change { get; } = TextDocumentSyncKind.Full;
 
         public HJMCTextDocumentHandler(ILogger<HJMCTextDocumentHandler> logger)
         {
@@ -43,7 +43,7 @@ namespace JMC.Extension.Server.Handlers.HJMC
 
                 var stopwatch = new Stopwatch();
                 stopwatch.Start();
-                lexer.ChangeRawText(change);
+                lexer.RawText = change.Text;
                 lexer.InitTokens();
                 stopwatch.Stop();
 
