@@ -54,6 +54,10 @@ export function activate(context: ExtensionContext) {
         pattern: "**/*.jmc",
         language: "jmc",
       },
+      {
+        pattern: "**/*.hjmc",
+        language: "hjmc",
+      },
     ],
     progressOnInitialization: true,
     synchronize: {

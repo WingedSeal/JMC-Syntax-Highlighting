@@ -1,9 +1,9 @@
+using JMC.Extension.Server.Datas.Minecraft.Command.Types;
 using JMC.Extension.Server.Lexer.JMC.Types;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 using System.Collections.Immutable;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
-using Range = OmniSharp.Extensions.LanguageServer.Protocol.Models.Range;
 
 namespace JMC.Extension.Server.Lexer.JMC
 {
@@ -41,8 +41,9 @@ namespace JMC.Extension.Server.Lexer.JMC
         /// <summary>
         /// Pattern for command tokens
         /// </summary>
-        private static readonly ImmutableDictionary<JMCTokenType, Regex> CommandTokenPatterns = new Dictionary<JMCTokenType, Regex>()
+        public static readonly ImmutableDictionary<JMCTokenType, Regex> CommandTokenPatterns = new Dictionary<JMCTokenType, Regex>()
         {
+            [JMCTokenType.COMMAND_SELECTOR] = new Regex(@"^\@[parse]$", _regexOptions),
             [JMCTokenType.COMMAND_VARIABLE] = new Regex(@"^\$[a-zA-Z_][0-9a-zA-Z_]*$", _regexOptions),
             [JMCTokenType.COMMAND_VARIABLE_CALL] = new Regex(@"^\$[a-zA-Z_][0-9a-zA-Z_]*\s*\.", _regexOptions),
             [JMCTokenType.COMMAND_INT_OR_LONG] = new Regex(@"^-?\d+$", _regexOptions),
@@ -54,6 +55,7 @@ namespace JMC.Extension.Server.Lexer.JMC
         private const string CONDITION_TOKEN = "CONDITION";
         private const string COMMAND_TOKEN = "COMMAND";
 
+        #region VariableType
         /// <summary>
         /// all type of variable tokens
         /// </summary>
@@ -82,6 +84,7 @@ namespace JMC.Extension.Server.Lexer.JMC
         {
             JMCTokenType.VARIABLE, JMCTokenType.COMMAND_VARIABLE, JMCTokenType.CONDITION_VARIABLE
         };
+        #endregion
 
         /// <summary>
         /// initialize the JMC lexer
@@ -165,31 +168,6 @@ namespace JMC.Extension.Server.Lexer.JMC
                 }
                 currentPos += splitedText[i].Length;
             }
-            //var result = Parallel.For(0, trimmedText.Length - 1, (i) =>
-            //{
-            //    var v = trimmedText[i];
-            //    var token = Tokenize(v, -1);
-            //    if (token == null) return;
-            //    temp.TryAdd(i, token);
-            //});
-            //var dict = temp.OrderBy(x => x.Key).ToDictionary();
-            //var tokens = dict.Values.ToArray().AsSpan();
-            //var tempTokens = new List<JMCToken>();
-            //for (int i = 0; i < tokens.Length; i++)
-            //{
-            //    ref var token = ref tokens[i];
-            //    var value = token.Value;
-            //    if (string.IsNullOrEmpty(value))
-            //    {
-            //        currentPos += splitedText[i].Length;
-            //        continue;
-            //    }
-            //    token.Offset = currentPos;
-            //    currentPos += splitedText[i].Length;
-            //    tempTokens.Add(token);
-            //}
-            //Tokens = tempTokens;
-
             FormatFunctions();
         }
 
@@ -217,6 +195,44 @@ namespace JMC.Extension.Server.Lexer.JMC
                     }
                 }
             }
+        }
+
+        public static bool IsCommandMatchParser(JMCToken token, string commandNodeType)
+        {
+            switch (commandNodeType)
+            {
+                case CommandNodeParserType.ENTITY:
+                    return CommandTokenPatterns[JMCTokenType.COMMAND_SELECTOR].IsMatch(token.Value);
+                default:
+                    break;
+            }
+
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Merge tokens after the index
+        /// </summary>
+        /// <param name="index"></param>
+        /// <param name="length"></param>
+        /// <returns></returns>
+        public bool MergeTokens(int index, int length)
+        {
+            try
+            {
+                var tokens = Tokens.GetRange(index + 1, length);
+                var start = Tokens[index];
+                var arr = CollectionsMarshal.AsSpan(tokens);
+                for (var i = 0; i < arr.Length; i++)
+                {
+                    ref var item = ref arr[i];
+                    start.Value += $" {item.Value}";
+                }
+                start.Range = new Range(start.Range.Start, tokens.Last().Range.End);
+                Tokens.RemoveRange(index + 1, length);
+                return true;
+            }
+            catch { return false; }
         }
 
         /// <summary>
@@ -254,6 +270,10 @@ namespace JMC.Extension.Server.Lexer.JMC
             }
         }
 
+        /// <summary>
+        /// Get functions' <see cref="JMCToken"/> in the lexer
+        /// </summary>
+        /// <returns></returns>
         public IEnumerable<KeyValuePair<string, Range>> GetFunctionRanges()
         {
             for (var i = 0; i < Tokens.Count - 1; i++)
@@ -265,8 +285,8 @@ namespace JMC.Extension.Server.Lexer.JMC
                 var pre = Tokens[i - 1];
                 var next = Tokens[i + 1];
 
-                if (current.TokenType == JMCTokenType.LITERAL && 
-                    pre.TokenType != JMCTokenType.FUNCTION && 
+                if (current.TokenType == JMCTokenType.LITERAL &&
+                    pre.TokenType != JMCTokenType.FUNCTION &&
                     next.TokenType == JMCTokenType.LPAREN)
                 {
                     i += 2;
@@ -282,6 +302,29 @@ namespace JMC.Extension.Server.Lexer.JMC
                             break;
                         }
                     }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Get commands in the lexer
+        /// </summary>
+        /// <returns></returns>
+        public IEnumerable<IEnumerable<JMCToken>> GetCommands()
+        {
+            for (var i = 0; i < Tokens.Count - 1; i++)
+            {
+                var token = Tokens[i];
+                if (token.TokenType.ToString().StartsWith("COMMAND"))
+                {
+                    var list = new List<JMCToken>();
+                    for (; i < Tokens.Count - 1; i++)
+                    {
+                        var c = Tokens[i];
+                        if (c.TokenType == JMCTokenType.SEMI) break;
+                        list.Add(c);
+                    }
+                    yield return list;
                 }
             }
         }
@@ -318,7 +361,7 @@ namespace JMC.Extension.Server.Lexer.JMC
             {
                 var preType = Tokens[^1].TokenType;
                 var type = GetTokenType(text);
-                if (Tokens[^2].TokenType == JMCTokenType.IF ||
+                if (Tokens.Count - 2 > -1 && Tokens[^2].TokenType == JMCTokenType.IF ||
                     preType.ToString().StartsWith(CONDITION_TOKEN, StringComparison.CurrentCulture))
                 {
                     type = GetIfTokenType(type);
@@ -589,7 +632,7 @@ namespace JMC.Extension.Server.Lexer.JMC
             {
                 var result = TokenPatterns.First(v => v.Value.IsMatch(text)).Key;
                 return result == JMCTokenType.LITERAL
-                    && ExtensionData.CommandData.RootCommands.Contains(text)
+                    && ExtensionData.CommandTree.RootCommands.Contains(text)
                     ? JMCTokenType.COMMAND_LITERAL
                     : result;
             }

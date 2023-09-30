@@ -23,6 +23,7 @@ namespace JMC.Extension.Server.Handlers.JMC
             var token = lexer.GetJMCToken(request.Position);
             if (token == null) return null;
             var splited = token.Value.Split('.');
+            if (splited.Length != 2) return null;
             var @class = splited[0];
             var func = splited[1];
 
@@ -30,7 +31,8 @@ namespace JMC.Extension.Server.Handlers.JMC
             if (query == null) return null;
             return new()
             {
-                Contents = new(query.ToDocumentFormat())
+                Contents = new(query.ToDocumentFormat()),
+                Range = token.Range
             };
         }
 

@@ -17,7 +17,8 @@ namespace JMC.Extension.Server.Handlers.JMC
         private readonly DocumentSelector _documentSelector = new(
             new DocumentFilter
             {
-                Pattern = "**/*.jmc"
+                Pattern = "**/*.jmc",
+                Language = "jmc"
             }
         );
 

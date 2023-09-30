@@ -131,7 +131,6 @@ namespace JMC.Extension.Server.Handlers.JMC
                 };
                 return signatureHelp;
             }
-            //TODO support for "=" "," for trigger and retrigger
             return null;
         }
 

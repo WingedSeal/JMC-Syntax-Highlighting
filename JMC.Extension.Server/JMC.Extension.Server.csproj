@@ -19,6 +19,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="NBrigadier" Version="1.0.17.5" />
     <PackageReference Include="OmniSharp.Extensions.LanguageProtocol" Version="0.19.7" />
     <PackageReference Include="OmniSharp.Extensions.LanguageProtocol.Proposals" Version="0.19.7" />
     <PackageReference Include="OmniSharp.Extensions.LanguageServer" Version="0.19.7" />

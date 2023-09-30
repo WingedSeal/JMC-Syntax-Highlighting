@@ -1,28 +1,17 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading.Tasks;
 using JMC.Extension.Server.Datas;
-using JMC.Extension.Server.Helper;
 using JMC.Extension.Server.Lexer.JMC;
+using JMC.Extension.Server.Lexer.JMC.Types;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json.Linq;
 using OmniSharp.Extensions.LanguageServer.Protocol.Client.Capabilities;
 using OmniSharp.Extensions.LanguageServer.Protocol.Document;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 
 namespace JMC.Extension.Server.Handlers.JMC
 {
-    internal class JMCCompletionHandler : CompletionHandlerBase
+    internal class JMCCompletionHandler(ILogger<JMCCompletionHandler> logger) : CompletionHandlerBase
     {
-        private readonly ILogger<JMCCompletionHandler> _logger;
+        private readonly ILogger<JMCCompletionHandler> _logger = logger;
 
-        public JMCCompletionHandler(ILogger<JMCCompletionHandler> logger)
-        {
-            _logger = logger;
-        }
         public override async Task<CompletionItem> Handle(CompletionItem request, CancellationToken cancellationToken) => request;
         public override async Task<CompletionList> Handle(CompletionParams request, CancellationToken cancellationToken)
         {
@@ -42,14 +31,35 @@ namespace JMC.Extension.Server.Handlers.JMC
                 .DistinctBy(v => v.Value);
 
             //function completion
-            if (request.Context?.TriggerCharacter == ".")
+            if (request.Context?.TriggerCharacter == " ")
             {
                 var requestToken = lexer.GetJMCToken(request.Position);
                 if (requestToken != null)
                 {
                     var index = lexer.Tokens.IndexOf(requestToken);
                     var token = lexer.Tokens[index];
-                    if (token.TokenType == Lexer.JMC.Types.JMCTokenType.LITERAL)
+                    if (token.TokenType.ToString().StartsWith("COMMAND"))
+                    {
+                        var command = lexer.GetCommands().FirstOrDefault(v =>
+                        {
+                            var range = new Range(v.First().Range.Start, v.Last().Range.End);
+                            return range.Contains(request.Position);
+                        });
+                        if (command != null && command.Any())
+                        {
+                            //TODO
+                        }
+                    }
+                }
+            }
+            else if (request.Context?.TriggerCharacter == ".")
+            {
+                var requestToken = lexer.GetJMCToken(request.Position);
+                if (requestToken != null)
+                {
+                    var index = lexer.Tokens.IndexOf(requestToken);
+                    var token = lexer.Tokens[index];
+                    if (token.TokenType == JMCTokenType.LITERAL)
                     {
                         var splited = token.Value
                             .Split(' ')

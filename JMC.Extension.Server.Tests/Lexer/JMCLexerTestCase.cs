@@ -62,6 +62,16 @@ namespace JMC.Extension.Server.Tests.Lexer
             //    }
             //}
         };
-
+        public static IEnumerable<object[]> FormatCommandsTest = new List<object[]>()
+        {
+            new object[]
+            {
+                "teleport @s ~ ~ ~;",
+                new JMCTokenType[]
+                {
+                    JMCTokenType.COMMAND_LITERAL,JMCTokenType.COMMAND_SELECTOR ,JMCTokenType.COMMAND_VEC2, JMCTokenType.SEMI
+                }
+            }
+        };
     }
 }

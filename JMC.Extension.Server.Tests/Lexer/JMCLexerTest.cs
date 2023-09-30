@@ -58,5 +58,14 @@ namespace JMC.Extension.Server.Tests.Lexer
             var functionDefine = lexer.FunctionDefines.ElementAt(1);
             functionDefine.Value.Should().Be(expected);
         }
+
+        [Theory]
+        [MemberData(nameof(JMCLexerTestCase.FormatCommandsTest), MemberType = typeof(JMCLexerTestCase))]
+        public void FormatCommands_Tests(string text, IEnumerable<JMCTokenType> expected)
+        {
+            var extData = new ExtensionData();
+            var lexer = new JMCLexer(text);
+            lexer.Tokens.Select(v => v.TokenType).Should().Equal(expected);
+        }
     }
 }

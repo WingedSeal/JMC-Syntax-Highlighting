@@ -52,9 +52,6 @@ namespace JMC.Extension.Server.Lexer.JMC.Types
         NUMBER,
         STRING,
         CLASS,
-        COMMAND_LITERAL,
-        COMMAND_UNKNOWN,
-        COMMAND_VALUE,
         COMMAND_LCP,
         COMMAND_RCP,
         COMMAND_LMP,
@@ -71,6 +68,12 @@ namespace JMC.Extension.Server.Lexer.JMC.Types
         CONDITION_UNKNOWN,
         CONDITION_VARIABLE,
         COMMA,
-        EMPTY
+        EMPTY,
+        COMMAND_VEC2,
+        COMMAND_VEC3,
+        COMMAND_SELECTOR,
+        COMMAND_LITERAL,
+        COMMAND_UNKNOWN,
+        COMMAND_VALUE,
     }
 }
