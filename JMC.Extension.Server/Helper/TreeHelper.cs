@@ -1,7 +1,7 @@
-﻿using JMC.Extension.Server.Lexer;
-using JMC.Extension.Server.Lexer.Error;
+﻿using JMC.Extension.Server.Lexer.Error;
+using JMC.Extension.Server.Lexer.JMC;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
-using static JMC.Extension.Server.Lexer.SyntaxTree;
+using static JMC.Extension.Server.Lexer.JMC.JMCSyntaxTree;
 
 namespace JMC.Extension.Server.Helper
 {
@@ -29,7 +29,29 @@ namespace JMC.Extension.Server.Helper
 
             return new Position(line, col);
         }
-        public static SyntaxError? ExpectToken(this ParseResult parseResult, SyntaxNodeType nodeType)
+
+        public static async Task<Position> ToPositionAsync(this int offset, string text)
+        {
+            var line = 0;
+            var col = 0;
+
+            for (var i = 0; i < offset; i++)
+            {
+                if (text[i] == '\n')
+                {
+                    line++;
+                    col = 0;
+                }
+                else
+                {
+                    col++;
+                }
+            }
+
+            return new Position(line, col);
+        }
+
+        public static SyntaxError? ExpectToken(this JMCParseResult parseResult, SyntaxNodeType nodeType)
         {
             if (parseResult.Node == null) 
                 return new(parseResult.Position, nodeType.ToTokenString(), "");
@@ -38,8 +60,7 @@ namespace JMC.Extension.Server.Helper
             return null;
         }
 
-        public static ParseQuery AsParseQuery(this SyntaxTree syntaxTree, int index = 0) => new(syntaxTree, index);
-        
+        public static JMCParseQuery AsParseQuery(this JMCSyntaxTree syntaxTree, int index = 0) => new(syntaxTree, index);
 
         public static string ToTokenString(this SyntaxNodeType nodeType)
         {
@@ -48,7 +69,7 @@ namespace JMC.Extension.Server.Helper
                 SyntaxNodeType.LCP => "{",
                 SyntaxNodeType.RCP => "}",
                 SyntaxNodeType.LITERAL => "literal",
-                _ => "",
+                _ => nodeType.ToString(),
             };
         }
     }
