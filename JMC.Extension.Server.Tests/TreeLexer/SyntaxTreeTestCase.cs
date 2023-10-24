@@ -1,4 +1,4 @@
-﻿using JMC.Extension.Server.Lexer.JMC;
+﻿using JMC.Parser.JMC;
 
 namespace JMC.Extension.Server.Tests.TreeLexer
 {
@@ -9,9 +9,9 @@ namespace JMC.Extension.Server.Tests.TreeLexer
             [
                 //import & start spaces
                 " import \"test/test\\*\";", 
-                new SyntaxNodeType[]
+                new JMCSyntaxNodeType[]
                 {
-                    SyntaxNodeType.IMPORT, SyntaxNodeType.STRING
+                    JMCSyntaxNodeType.IMPORT, JMCSyntaxNodeType.STRING
                 },
                 new Range[]
                 {
@@ -21,9 +21,9 @@ namespace JMC.Extension.Server.Tests.TreeLexer
             [
                 //class
                 "class test {}",
-                new SyntaxNodeType[]
+                new JMCSyntaxNodeType[]
                 {
-                    SyntaxNodeType.CLASS
+                    JMCSyntaxNodeType.CLASS
                 },
                 new Range[]
                 {
@@ -33,9 +33,9 @@ namespace JMC.Extension.Server.Tests.TreeLexer
             [
                 //function
                 "function test() {}",
-                new SyntaxNodeType[]
+                new JMCSyntaxNodeType[]
                 {
-                    SyntaxNodeType.FUNCTION
+                    JMCSyntaxNodeType.FUNCTION
                 },
                 new Range[]
                 {
@@ -45,9 +45,9 @@ namespace JMC.Extension.Server.Tests.TreeLexer
             [
                 //class & function
                 "class test {function test(){}}",
-                new SyntaxNodeType[]
+                new JMCSyntaxNodeType[]
                 {
-                    SyntaxNodeType.CLASS ,SyntaxNodeType.FUNCTION
+                    JMCSyntaxNodeType.CLASS ,JMCSyntaxNodeType.FUNCTION
                 },
                 new Range[]
                 {

@@ -10,25 +10,15 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="Resource\1_20_1_commands.json" />
-    <None Remove="Resource\BuiltInFunctions.json" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <EmbeddedResource Include="Resource\1_20_1_commands.json" />
-    <EmbeddedResource Include="Resource\BuiltInFunctions.json" />
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="NBrigadier" Version="1.0.17.5" />
-    <PackageReference Include="OmniSharp.Extensions.LanguageProtocol" Version="0.19.7" />
-    <PackageReference Include="OmniSharp.Extensions.LanguageProtocol.Proposals" Version="0.19.7" />
-    <PackageReference Include="OmniSharp.Extensions.LanguageServer" Version="0.19.7" />
-    <PackageReference Include="OmniSharp.Extensions.LanguageServer.Shared" Version="0.19.7" />
     <PackageReference Include="Serilog.Extensions.Logging" Version="7.0.0" />
     <PackageReference Include="Serilog.Sinks.Console" Version="4.1.0" />
     <PackageReference Include="Serilog.Sinks.Debug" Version="2.0.0" />
     <PackageReference Include="Serilog.Sinks.File" Version="5.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\JMC.Parser\JMC.Parser.csproj" />
   </ItemGroup>
 
   <ProjectExtensions><VisualStudio><UserProperties resource_4builtinfunctions_1json__JsonSchema="schema.json" /></VisualStudio></ProjectExtensions>

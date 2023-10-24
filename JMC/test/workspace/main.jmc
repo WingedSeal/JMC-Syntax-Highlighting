@@ -1,0 +1,12 @@
+﻿ import "amogus"; 
+function test() {
+		$test += 1;
+}
+class test {
+	function test() {
+	
+	}
+}
+class test2 {
+
+}

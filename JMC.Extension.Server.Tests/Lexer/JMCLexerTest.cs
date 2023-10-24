@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using FluentAssertions;
 using JMC.Extension.Server.Lexer.JMC;
 using JMC.Extension.Server.Lexer.JMC.Types;
+using JMC.Shared;
 using Xunit;
 
 namespace JMC.Extension.Server.Tests.Lexer

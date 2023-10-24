@@ -1,0 +1,22 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+  
+  <ItemGroup>
+    <EmbeddedResource Include="Resource\1_20_1_commands.json" />
+    <EmbeddedResource Include="Resource\BuiltInFunctions.json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageReference Include="OmniSharp.Extensions.LanguageProtocol" Version="0.19.7" />
+    <PackageReference Include="OmniSharp.Extensions.LanguageProtocol.Proposals" Version="0.19.7" />
+    <PackageReference Include="OmniSharp.Extensions.LanguageServer" Version="0.19.7" />
+    <PackageReference Include="OmniSharp.Extensions.LanguageServer.Shared" Version="0.19.7" />
+  </ItemGroup>
+
+</Project>

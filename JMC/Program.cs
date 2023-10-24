@@ -1,4 +1,6 @@
-﻿using JMC.Extension.Server.Lexer.JMC;
+﻿using JMC.Extension.Server;
+using JMC.Parser.JMC;
+using JMC.Shared;
 
 namespace JMC
 {
@@ -7,12 +9,11 @@ namespace JMC
         static void Main(string[] args)
         {
             GeneralDebug();
-            //Testing();
-        }
-
         static void GeneralDebug()
         {
-            var tree = new JMCSyntaxTree(" import \"amogus\"; function test() {do {} while(1 == 1)} class test {function test() {}} class test2 {}");
+            var extensionData = new ExtensionData();
+            var content = File.ReadAllText("test/workspace/main.jmc");
+            var tree = new JMCSyntaxTree(content);
             tree.PrintPretty();
             Console.WriteLine($"Error Count: {tree.Errors.Count}");
             tree.Errors.ForEach(v => Console.WriteLine($"{v.Message}"));
@@ -21,6 +22,9 @@ namespace JMC
         static void Testing()
         {
             var tree = new JMCSyntaxTree(" import \"amogus\"; function test() {do {} while ()} class test {function test() {}} class test2 {}");
+            //Testing();
+        }
+
         }
     }
 }

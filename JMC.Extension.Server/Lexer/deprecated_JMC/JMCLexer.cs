@@ -1,5 +1,6 @@
-using JMC.Extension.Server.Datas.Minecraft.Command.Types;
 using JMC.Extension.Server.Lexer.JMC.Types;
+using JMC.Shared;
+using JMC.Shared.Datas.Minecraft.Command.Types;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 using System.Collections.Immutable;
 using System.Runtime.InteropServices;

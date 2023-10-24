@@ -1,4 +1,4 @@
-﻿using JMC.Extension.Server.Datas.Minecraft.Command;
+﻿using JMC.Shared.Datas.Minecraft.Command;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 
 namespace JMC.Extension.Server.Lexer.JMC

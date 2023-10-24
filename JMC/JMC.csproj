@@ -15,4 +15,10 @@
     <ProjectReference Include="..\JMC.Extension.Server\JMC.Extension.Server.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="test\workspace\main.jmc">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>

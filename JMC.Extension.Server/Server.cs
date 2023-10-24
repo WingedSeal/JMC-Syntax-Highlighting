@@ -1,13 +1,10 @@
-﻿using JMC.Extension.Server.Handlers;
-using JMC.Extension.Server.Handlers.HJMC;
-using JMC.Extension.Server.Handlers.JMC;
+﻿using JMC.Shared;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 using OmniSharp.Extensions.LanguageServer.Protocol.Server;
 using OmniSharp.Extensions.LanguageServer.Protocol.Server.Capabilities;
 using OmniSharp.Extensions.LanguageServer.Protocol.Window;
-using OmniSharp.Extensions.LanguageServer.Protocol.Workspace;
 using OmniSharp.Extensions.LanguageServer.Server;
 using Serilog;
 using System.Diagnostics;
@@ -55,14 +52,6 @@ namespace JMC.Extension.Server
                                 .AddLanguageProtocolLogging()
                                 .SetMinimumLevel(LogLevel.Debug)
                         )
-                       .WithHandler<JMCTextDocumentHandler>()
-                       .WithHandler<JMCDefinitionHandler>()
-                       .WithHandler<JMCCompletionHandler>()
-                       .WithHandler<JMCDidChangedWatchFilesHandler>()
-                       .WithHandler<JMCSignatureHandler>()
-                       .WithHandler<JMCHoverHandler>()
-                       .WithHandler<HJMCTextDocumentHandler>()
-                       .WithHandler<DidChangeConfigHandler>()
                        .WithServices(x => x.AddLogging(b => b.SetMinimumLevel(LogLevel.Trace)))
                        .WithServices(
                             services =>
@@ -142,11 +131,6 @@ namespace JMC.Extension.Server
                             async (server, request, response, token) =>
                             {
                                 var folders = request.WorkspaceFolders;
-                                foreach (var folder in folders)
-                                {
-                                    var workspace = new Datas.Workspace.Workspace(folder.Uri);
-                                    ExtensionData.Workspaces.Add(workspace);
-                                }
                             }
                         )
                        .OnStarted(
