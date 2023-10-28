@@ -50,7 +50,7 @@ namespace JMC.Parser.JMC
             return new Position(line, col);
         }
 
-        public static SyntaxError? ExpectToken(this JMCParseResult parseResult, JMCSyntaxNodeType nodeType)
+        public static JMCSyntaxError? ExpectToken(this JMCParseResult parseResult, JMCSyntaxNodeType nodeType)
         {
             if (parseResult.Node == null)
                 return new(parseResult.Position, nodeType.ToTokenString(), "");
@@ -60,6 +60,8 @@ namespace JMC.Parser.JMC
         }
 
         public static JMCParseQuery AsParseQuery(this JMCSyntaxTree syntaxTree, int index = 0) => new(syntaxTree, index);
+        
+
 
         public static string ToTokenString(this JMCSyntaxNodeType nodeType)
         {

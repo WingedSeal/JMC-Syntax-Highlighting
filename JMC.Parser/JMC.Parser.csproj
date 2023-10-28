@@ -10,8 +10,4 @@
     <ProjectReference Include="..\JMC.Shared\JMC.Shared.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Datas\" />
-  </ItemGroup>
-
 </Project>

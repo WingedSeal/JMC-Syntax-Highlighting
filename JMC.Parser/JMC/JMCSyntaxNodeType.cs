@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace JMC.Parser.JMC
+﻿namespace JMC.Parser.JMC
 {
     public enum JMCSyntaxNodeType
     {
@@ -20,6 +14,10 @@ namespace JMC.Parser.JMC
         VARIABLE,
         VARIABLE_CALL,
         SELECTOR,
+        VEC2,
+        VEC3,
+        TILDE,
+        CARET,
         LPAREN,
         RPAREN,
         IMPORT,
@@ -53,5 +51,8 @@ namespace JMC.Parser.JMC
         LESS_THAN_EQ,
         EQUAL_TO,
         EQUAL,
+        EXPRESSION,
+        SCOREBOARD,
+        EXPRESSION_COMMAND,
     }
 }

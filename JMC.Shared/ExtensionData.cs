@@ -1,3 +1,4 @@
+using Brigadier.NET;
 using JMC.Shared.Datas.BuiltIn;
 using JMC.Shared.Datas.Minecraft.Command;
 using Newtonsoft.Json;
@@ -11,14 +12,20 @@ namespace JMC.Shared
         public static string MinecraftVersion = string.Empty;
 #pragma warning disable CS8618
         public static CommandTree CommandTree { get; set; }
-
-        public static JMCBuiltInFunctionContainer JMCBuiltInFunctions { get; private set; }
 #pragma warning restore CS8618
-        public ExtensionData()
+        public static JMCBuiltInFunctionContainer JMCBuiltInFunctions { get; private set; } = 
+            new JMCBuiltInFunctionContainer(GetJMCBuiltInFunctions());
+        public static CommandDispatcher<object> CommandDispatcher { get; set; } = new();
+        public ExtensionData() => UpdateVersion("1.20.1");
+
+        //TODO
+        public static void RegisterCommands()
         {
-            MinecraftVersion = "1.20.1";
-            CommandTree = new(GetCommandNodes(MinecraftVersion));
-            JMCBuiltInFunctions = new JMCBuiltInFunctionContainer(GetJMCBuiltInFunctions());
+            var nodes = CommandTree.Nodes.ToArray().AsSpan();
+            for (int i = 0; i < nodes.Length; i++)
+            {
+                ref var node = ref nodes[i];
+            }
         }
 
         /// <summary>
@@ -29,6 +36,7 @@ namespace JMC.Shared
         {
             MinecraftVersion = version;
             CommandTree = new(GetCommandNodes(MinecraftVersion));
+            RegisterCommands();
         }
 
         /// <summary>
@@ -38,16 +46,16 @@ namespace JMC.Shared
         /// <returns></returns>
         private static Dictionary<string, CommandNode> GetCommandNodes(string version)
         {
-            var v = version.Replace(".", "_");
+            var v = version.Replace(".", "_") ?? throw new NotImplementedException();
             var asm = Assembly.GetExecutingAssembly();
-            var resouceStream = asm.GetManifestResourceStream($"JMC.Shared.Resource.{v}_commands.json");
+            var resouceStream = asm.GetManifestResourceStream($"JMC.Shared.Resource.{v}_commands.json") ?? throw new NotImplementedException();
             var reader = new StreamReader(resouceStream);
             var jsonText = reader.ReadToEnd();
 
             reader.Dispose();
 
-            var root = JsonConvert.DeserializeObject<CommandNode>(jsonText);
-            return root.Children;
+            var root = JsonConvert.DeserializeObject<CommandNode>(jsonText) ?? throw new NotImplementedException(); ;
+            return root.Children ?? throw new NotImplementedException(); ;
         }
 
         /// <summary>
@@ -57,12 +65,12 @@ namespace JMC.Shared
         private static JMCBuiltInFunction[] GetJMCBuiltInFunctions()
         {
             var asm = Assembly.GetExecutingAssembly();
-            var resouceStream = asm.GetManifestResourceStream($"JMC.Shared.Resource.BuiltInFunctions.json");
+            var resouceStream = asm.GetManifestResourceStream($"JMC.Shared.Resource.BuiltInFunctions.json") ?? throw new NotImplementedException();
             var reader = new StreamReader(resouceStream);
             var jsonText = reader.ReadToEnd();
             reader.Dispose();
 
-            var data = JsonConvert.DeserializeObject<JMCBuiltInFunction[]>(jsonText);
+            var data = JsonConvert.DeserializeObject<JMCBuiltInFunction[]>(jsonText) ?? throw new NotImplementedException();
             return data;
         }
     }

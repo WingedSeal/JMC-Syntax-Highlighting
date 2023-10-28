@@ -1,12 +1,12 @@
 ﻿namespace JMC.Parser.JMC
 {
-    internal class JMCSyntaxNode(JMCSyntaxNodeType nodeType = JMCSyntaxNodeType.UNKNOWN, string key = "", IEnumerable<JMCSyntaxNode>? previous = null, IEnumerable<JMCSyntaxNode>? next = null, Range? range = null)
+    internal class JMCSyntaxNode(JMCSyntaxNodeType nodeType = JMCSyntaxNodeType.UNKNOWN, string value = "", IEnumerable<JMCSyntaxNode>? previous = null, IEnumerable<JMCSyntaxNode>? next = null, Range? range = null)
     {
         public Range? Range { get; set; } = range;
         public JMCSyntaxNodeType NodeType { get; set; } = nodeType;
         public IEnumerable<JMCSyntaxNode>? Previous { get; set; } = previous;
         public IEnumerable<JMCSyntaxNode>? Next { get; set; } = next;
-        public string? Key { get; set; } = key;
+        public string? Value { get; set; } = value;
 
         public void PrintPretty(string indent, bool last)
         {
@@ -21,7 +21,7 @@
                 Console.Write("|-");
                 indent += "| ";
             }
-            Console.WriteLine($"{NodeType} {Key}");
+            Console.WriteLine($"{NodeType} {Value} {Range}");
 
             if (Next != null)
                 for (int i = 0; i < Next.Count(); i++)

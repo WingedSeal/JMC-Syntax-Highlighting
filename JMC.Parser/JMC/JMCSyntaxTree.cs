@@ -1,4 +1,6 @@
 ﻿using JMC.Parser.Error.Base;
+using JMC.Shared;
+using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 
 namespace JMC.Parser.JMC
 {
@@ -65,7 +67,7 @@ namespace JMC.Parser.JMC
             var value = TrimmedText[index];
             var nextIndex = NextIndex(index);
 
-            var range = new Range(ToOffset(index).ToPosition(RawText), (ToOffset(index) + value.Length).ToPosition(RawText));
+            var range = new Range(IndexToPosition(index), (ToOffset(index) + value.Length).ToPosition(RawText));
 
             switch (value)
             {
@@ -75,133 +77,150 @@ namespace JMC.Parser.JMC
                         return await ParseClassAsync(index);
                     else
                     {
-                        return new(new JMCSyntaxNode(), index, ToOffset(index).ToPosition(RawText));
+                        return new(new JMCSyntaxNode(), index, IndexToPosition(index));
                     }
                 case "function":
                     if (!noNext)
                         return await ParseFunctionAsync(index);
                     else
                     {
-                        return new(new JMCSyntaxNode(), index, ToOffset(index).ToPosition(RawText));
+                        return new(new JMCSyntaxNode(), index, IndexToPosition(index));
                     }
                 case "import":
                     if (!noNext)
                         return await ParseImportAsync(index);
                     else
                     {
-                        return new(new JMCSyntaxNode(), index, ToOffset(index).ToPosition(RawText));
+                        return new(new JMCSyntaxNode(), index, IndexToPosition(index));
                     }
                 case "true":
                     return new(new JMCSyntaxNode
                     {
-                        NodeType = JMCSyntaxNodeType.TRUE
+                        NodeType = JMCSyntaxNodeType.TRUE,
+                        Range = range
                     },
-                    nextIndex, ToOffset(nextIndex).ToPosition(RawText));
+                    nextIndex, IndexToPosition(nextIndex));
                 case "false":
                     return new(new JMCSyntaxNode
                     {
-                        NodeType = JMCSyntaxNodeType.FALSE
+                        NodeType = JMCSyntaxNodeType.FALSE,
+                        Range = range
                     },
-                    nextIndex, ToOffset(nextIndex).ToPosition(RawText));
+                    nextIndex, IndexToPosition(nextIndex));
                 case "while":
                     return new(new JMCSyntaxNode
                     {
-                        NodeType = JMCSyntaxNodeType.WHILE
+                        NodeType = JMCSyntaxNodeType.WHILE,
+                        Range = range
                     },
-                    nextIndex, ToOffset(nextIndex).ToPosition(RawText));
+                    nextIndex, IndexToPosition(nextIndex));
                 case "do":
                     return new(new JMCSyntaxNode
                     {
-                        NodeType = JMCSyntaxNodeType.DO
+                        NodeType = JMCSyntaxNodeType.DO,
+                        Range = range
                     },
-                    nextIndex, ToOffset(nextIndex).ToPosition(RawText));
+                    nextIndex, IndexToPosition(nextIndex));
                 case "for":
                     return new(new JMCSyntaxNode
                     {
-                        NodeType = JMCSyntaxNodeType.FOR
+                        NodeType = JMCSyntaxNodeType.FOR,
+                        Range = range
                     },
-                    nextIndex, ToOffset(nextIndex).ToPosition(RawText));
+                    nextIndex, IndexToPosition(nextIndex));
                 #endregion
 
                 #region Ops
                 case "++":
                     return new(new JMCSyntaxNode
                     {
-                        NodeType = JMCSyntaxNodeType.OP_INCREMENT
+                        NodeType = JMCSyntaxNodeType.OP_INCREMENT,
+                        Range = range
                     },
-                    nextIndex, ToOffset(nextIndex).ToPosition(RawText));
+                    nextIndex, IndexToPosition(nextIndex));
                 case "--":
                     return new(new JMCSyntaxNode
                     {
-                        NodeType = JMCSyntaxNodeType.OP_DECREMENT
+                        NodeType = JMCSyntaxNodeType.OP_DECREMENT,
+                        Range = range
                     },
-                    nextIndex, ToOffset(nextIndex).ToPosition(RawText));
+                    nextIndex, IndexToPosition(nextIndex));
                 case "+":
                     return new(new JMCSyntaxNode
                     {
-                        NodeType = JMCSyntaxNodeType.OP_PLUS
+                        NodeType = JMCSyntaxNodeType.OP_PLUS,
+                        Range = range
                     },
-                    nextIndex, ToOffset(nextIndex).ToPosition(RawText));
+                    nextIndex, IndexToPosition(nextIndex));
                 case "-":
                     return new(new JMCSyntaxNode
                     {
-                        NodeType = JMCSyntaxNodeType.OP_SUBSTRACT
+                        NodeType = JMCSyntaxNodeType.OP_SUBSTRACT,
+                        Range = range
                     },
-                    nextIndex, ToOffset(nextIndex).ToPosition(RawText));
+                    nextIndex, IndexToPosition(nextIndex));
                 case "*":
                     return new(new JMCSyntaxNode
                     {
-                        NodeType = JMCSyntaxNodeType.OP_MULTIPLY
+                        NodeType = JMCSyntaxNodeType.OP_MULTIPLY,
+                        Range = range
                     },
-                    nextIndex, ToOffset(nextIndex).ToPosition(RawText));
+                    nextIndex, IndexToPosition(nextIndex));
                 case "/":
                     return new(new JMCSyntaxNode
                     {
-                        NodeType = JMCSyntaxNodeType.OP_DIVIDE
+                        NodeType = JMCSyntaxNodeType.OP_DIVIDE,
+                        Range = range
                     },
-                    nextIndex, ToOffset(nextIndex).ToPosition(RawText));
+                    nextIndex, IndexToPosition(nextIndex));
                 case "+=":
                     return new(new JMCSyntaxNode
                     {
-                        NodeType = JMCSyntaxNodeType.OP_PLUSEQ
+                        NodeType = JMCSyntaxNodeType.OP_PLUSEQ,
+                        Range = range
                     },
-                    nextIndex, ToOffset(nextIndex).ToPosition(RawText));
+                    nextIndex, IndexToPosition(nextIndex));
                 case "-=":
                     return new(new JMCSyntaxNode
                     {
-                        NodeType = JMCSyntaxNodeType.OP_SUBSTRACTEQ
+                        NodeType = JMCSyntaxNodeType.OP_SUBSTRACTEQ,
+                        Range = range
                     },
-                    nextIndex, ToOffset(nextIndex).ToPosition(RawText));
+                    nextIndex, IndexToPosition(nextIndex));
                 case "*=":
                     return new(new JMCSyntaxNode
                     {
-                        NodeType = JMCSyntaxNodeType.OP_MULTIPLYEQ
+                        NodeType = JMCSyntaxNodeType.OP_MULTIPLYEQ,
+                        Range = range
                     },
-                    nextIndex, ToOffset(nextIndex).ToPosition(RawText));
+                    nextIndex, IndexToPosition(nextIndex));
                 case "/=":
                     return new(new JMCSyntaxNode
                     {
                         NodeType = JMCSyntaxNodeType.OP_DIVIDEEQ
                     },
-                    nextIndex, ToOffset(nextIndex).ToPosition(RawText));
+                    nextIndex, IndexToPosition(nextIndex));
                 case "??=":
                     return new(new JMCSyntaxNode
                     {
-                        NodeType = JMCSyntaxNodeType.OP_NULLCOALE
+                        NodeType = JMCSyntaxNodeType.OP_NULLCOALE,
+                        Range = range
                     },
-                    nextIndex, ToOffset(nextIndex).ToPosition(RawText));
+                    nextIndex, IndexToPosition(nextIndex));
                 case "?=":
                     return new(new JMCSyntaxNode
                     {
-                        NodeType = JMCSyntaxNodeType.OP_SUCCESS
+                        NodeType = JMCSyntaxNodeType.OP_SUCCESS,
+                        Range = range
                     },
-                    nextIndex, ToOffset(nextIndex).ToPosition(RawText));
+                    nextIndex, IndexToPosition(nextIndex));
                 case "><":
                     return new(new JMCSyntaxNode
                     {
-                        NodeType = JMCSyntaxNodeType.OP_SWAP
+                        NodeType = JMCSyntaxNodeType.OP_SWAP,
+                        Range = range
                     },
-                    nextIndex, ToOffset(nextIndex).ToPosition(RawText));
+                    nextIndex, IndexToPosition(nextIndex));
                 #endregion
 
                 #region Comps
@@ -210,91 +229,109 @@ namespace JMC.Parser.JMC
                     {
                         NodeType = JMCSyntaxNodeType.COMP_OR
                     },
-                    nextIndex, ToOffset(nextIndex).ToPosition(RawText));
+                    nextIndex, IndexToPosition(nextIndex));
                 case "&&":
                     return new(new JMCSyntaxNode
                     {
                         NodeType = JMCSyntaxNodeType.COMP_NOT
                     },
-                    nextIndex, ToOffset(nextIndex).ToPosition(RawText));
+                    nextIndex, IndexToPosition(nextIndex));
                 case "!":
                     return new(new JMCSyntaxNode
                     {
                         NodeType = JMCSyntaxNodeType.COMP_NOT
                     },
-                    nextIndex, ToOffset(nextIndex).ToPosition(RawText));
+                    nextIndex, IndexToPosition(nextIndex));
                 #endregion
 
                 #region Chars
                 case "{":
                     return new(new JMCSyntaxNode
                     {
-                        NodeType = JMCSyntaxNodeType.LCP
+                        NodeType = JMCSyntaxNodeType.LCP,
+                        Range = range
                     },
-                    nextIndex, ToOffset(nextIndex).ToPosition(RawText));
+                    nextIndex, IndexToPosition(nextIndex));
                 case "}":
                     return new(new JMCSyntaxNode
                     {
-                        NodeType = JMCSyntaxNodeType.RCP
+                        NodeType = JMCSyntaxNodeType.RCP,
+                        Range = range
                     },
-                    nextIndex, ToOffset(nextIndex).ToPosition(RawText));
+                    nextIndex, IndexToPosition(nextIndex));
                 case "(":
                     return new(new JMCSyntaxNode
                     {
-                        NodeType = JMCSyntaxNodeType.LPAREN
+                        NodeType = JMCSyntaxNodeType.LPAREN,
+                        Range = range
                     },
-                    nextIndex, ToOffset(nextIndex).ToPosition(RawText));
+                    nextIndex, IndexToPosition(nextIndex));
                 case ")":
                     return new(new JMCSyntaxNode
                     {
-                        NodeType = JMCSyntaxNodeType.RPAREN
+                        NodeType = JMCSyntaxNodeType.RPAREN,
+                        Range = range
                     },
-                    nextIndex, ToOffset(nextIndex).ToPosition(RawText));
+                    nextIndex, IndexToPosition(nextIndex));
                 case ";":
                     return new(new JMCSyntaxNode
                     {
-                        NodeType = JMCSyntaxNodeType.SEMI
+                        NodeType = JMCSyntaxNodeType.SEMI,
+                        Range = range
                     },
-                    nextIndex, ToOffset(nextIndex).ToPosition(RawText));
+                    nextIndex, IndexToPosition(nextIndex));
+                case ":":
+                    return new(new JMCSyntaxNode
+                    {
+                        NodeType = JMCSyntaxNodeType.COLON,
+                        Range = range
+                    },
+                    nextIndex, IndexToPosition(nextIndex));
                 #endregion
 
                 #region Misc
                 case ">":
                     return new(new JMCSyntaxNode
                     {
-                        NodeType = JMCSyntaxNodeType.GREATER_THAN
+                        NodeType = JMCSyntaxNodeType.GREATER_THAN,
+                        Range = range
                     },
-                    nextIndex, ToOffset(nextIndex).ToPosition(RawText));
+                    nextIndex, IndexToPosition(nextIndex));
                 case "<":
                     return new(new JMCSyntaxNode
                     {
-                        NodeType = JMCSyntaxNodeType.LESS_THAN
+                        NodeType = JMCSyntaxNodeType.LESS_THAN,
+                        Range = range
                     },
-                    nextIndex, ToOffset(nextIndex).ToPosition(RawText));
+                    nextIndex, IndexToPosition(nextIndex));
                 case ">=":
                     return new(new JMCSyntaxNode
                     {
-                        NodeType = JMCSyntaxNodeType.GREATER_THAN_EQ
+                        NodeType = JMCSyntaxNodeType.GREATER_THAN_EQ,
+                        Range = range
                     },
-                    nextIndex, ToOffset(nextIndex).ToPosition(RawText));
+                    nextIndex, IndexToPosition(nextIndex));
                 case "<=":
                     return new(new JMCSyntaxNode
                     {
-                        NodeType = JMCSyntaxNodeType.LESS_THAN_EQ
+                        NodeType = JMCSyntaxNodeType.LESS_THAN_EQ,
+                        Range = range
                     },
-                    nextIndex, ToOffset(nextIndex).ToPosition(RawText));
+                    nextIndex, IndexToPosition(nextIndex));
                 case "=":
                     return new(new JMCSyntaxNode
                     {
-                        NodeType = JMCSyntaxNodeType.EQUAL_TO
+                        NodeType = JMCSyntaxNodeType.EQUAL_TO,
+                        Range = range
                     },
-                    nextIndex, ToOffset(nextIndex).ToPosition(RawText));
+                    nextIndex, IndexToPosition(nextIndex));
                 case "==":
                     return new(new JMCSyntaxNode
                     {
-                        NodeType = JMCSyntaxNodeType.EQUAL
+                        NodeType = JMCSyntaxNodeType.EQUAL,
+                        Range = range
                     },
-                    nextIndex, ToOffset(nextIndex).ToPosition(RawText));
+                    nextIndex, IndexToPosition(nextIndex));
                 #endregion
                 default:
                     break;
@@ -302,11 +339,10 @@ namespace JMC.Parser.JMC
 
             var result = TokenPatterns.FirstOrDefault(v => v.Value.IsMatch(value)).Key;
             if (result != default)
-            {
-                return new(new(result, range: range), nextIndex, nextIndex.ToPosition(RawText));
-            }
+                return new(new(result, range: range, value: value), nextIndex, IndexToPosition(nextIndex));
+            
 
-            return new(null, nextIndex, ToOffset(nextIndex).ToPosition(RawText));
+            return new(null, nextIndex, IndexToPosition(nextIndex));
         }
 
 
@@ -332,7 +368,7 @@ namespace JMC.Parser.JMC
 
             //get start pos
             index = SkipToValue(query.Index);
-            var start = ToOffset(index).ToPosition(RawText);
+            var start = IndexToPosition(index);
 
             //parse functions
             query.Reset(this, index);
@@ -344,22 +380,24 @@ namespace JMC.Parser.JMC
                     var result = await ParseFunctionAsync(query.Index);
                     if (result.Node != null) next.Add(result.Node);
                     index = result.EndIndex;
+                    query.Reset(this, index);
                 }
                 else
                 {
                     index = NextIndex(index);
                     if (TrimmedText[index] == "}") break;
+                    query.Reset(this, index);
                 }
             }
-            var end = ToOffset(index).ToPosition(RawText);
+            var end = IndexToPosition(index);
 
             //set next
             node.NodeType = JMCSyntaxNodeType.CLASS;
             node.Next = next.Count != 0 ? next : null;
             node.Range = new Range(start, end);
-            node.Key = literal;
+            node.Value = literal;
 
-            return new(node, index, ToOffset(index).ToPosition(RawText));
+            return new(node, index, IndexToPosition(index));
         }
 
         /// <summary>
@@ -374,7 +412,7 @@ namespace JMC.Parser.JMC
             var query = this.AsParseQuery(index);
             var match = await query.ExpectListAsync(JMCSyntaxNodeType.STRING, JMCSyntaxNodeType.SEMI);
 
-            var start = ToOffset(index).ToPosition(RawText);
+            var start = IndexToPosition(index);
 
             //get path
             var str = await ParseAsync(NextIndex(index));
@@ -382,14 +420,14 @@ namespace JMC.Parser.JMC
             //move next
             index = SkipToValue(query.Index);
 
-            var end = ToOffset(index).ToPosition(RawText);
+            var end = IndexToPosition(index);
 
             //set node
             node.NodeType = JMCSyntaxNodeType.IMPORT;
             node.Next = match ? [str.Node] : null;
             node.Range = new Range(start, end);
 
-            return new(node, index, ToOffset(index).ToPosition(RawText));
+            return new(node, index, IndexToPosition(index));
         }
 
         /// <summary>
@@ -413,7 +451,7 @@ namespace JMC.Parser.JMC
             var literal = TrimmedText[NextIndex(index)];
             index = query.Index;
 
-            var start = ToOffset(index).ToPosition(RawText);
+            var start = IndexToPosition(index);
 
             //parse expressions
             while (index < TrimmedText.Length && match)
@@ -424,14 +462,14 @@ namespace JMC.Parser.JMC
                 if (TrimmedText[index] == "}") break;
             }
 
-            var end = ToOffset(index).ToPosition(RawText);
+            var end = IndexToPosition(index);
             //set next
             node.NodeType = JMCSyntaxNodeType.FUNCTION;
             node.Next = next.Count != 0 ? next : null;
             node.Range = new Range(start, end);
-            node.Key = literal;
+            node.Value = literal;
 
-            return new(node, index, ToOffset(index).ToPosition(RawText));
+            return new(node, index, IndexToPosition(index));
         }
 
         private async Task<JMCParseResult> ParseFunctionCallAsync(int index)
@@ -446,7 +484,7 @@ namespace JMC.Parser.JMC
 
             node.Next = next.Count != 0 ? next : null;
 
-            return new(node, index, ToOffset(index).ToPosition(RawText));
+            return new(node, index, IndexToPosition(index));
         }
 
         private async Task<JMCParseResult> ParseParameterAsync(int index)
@@ -456,27 +494,7 @@ namespace JMC.Parser.JMC
 
             node.Next = next.Count != 0 ? next : null;
 
-            return new(node, index, ToOffset(index).ToPosition(RawText));
-        }
-
-        private async Task<JMCParseResult> ParseCommandAsync(int index)
-        {
-            var node = new JMCSyntaxNode();
-            var next = new List<JMCSyntaxNode>();
-
-            node.Next = next.Count != 0 ? next : null;
-
-            return new(node, index, ToOffset(index).ToPosition(RawText));
-        }
-
-        private async Task<JMCParseResult> ParseAssignmentAsync(int index)
-        {
-            var node = new JMCSyntaxNode();
-            var next = new List<JMCSyntaxNode>();
-
-            node.Next = next.Count != 0 ? next : null;
-
-            return new(node, index, ToOffset(index).ToPosition(RawText));
+            return new(node, index, IndexToPosition(index));
         }
 
         internal int SkipToValue(int index)
@@ -497,7 +515,7 @@ namespace JMC.Parser.JMC
 
         internal int NextIndex(int index) => SkipToValue(index + 1);
 
-        private int ToOffset(int index)
+        internal int ToOffset(int index)
         {
             var offset = 0;
 
@@ -511,5 +529,6 @@ namespace JMC.Parser.JMC
             return offset;
         }
 
+        internal Position IndexToPosition(int index) => ToOffset(index).ToPosition(RawText);
     }
 }

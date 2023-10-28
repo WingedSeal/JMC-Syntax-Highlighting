@@ -1,12 +1,36 @@
 ﻿ import "amogus"; 
-function test() {
-		$test += 1;
+function test.vars.bools() {
+	$true += true;
+	$false += false;
+	true:@s += true;
+	false:@s += false;
 }
-class test {
-	function test() {
-	
-	}
-}
-class test2 {
 
+function cmd() {
+	data get @s;
+}
+
+class test {
+	function vars.assigns() {
+		$num = 3;
+		$single_assign = $a1;
+		$multiple_assign_num = $a1 = $a2 = 5;
+		$multiple_assign = $a1 = $a2;
+		$increment++;
+	}
+
+	function obj.assigns() {
+		num:@p = 3;
+		single_assign:@a = a1:@s;
+		multiple_assign_num:@r = a1:@r = a2:@s = 5;
+		multiple_assign:@s = a1:@r = a2:@p;
+		increment:@s++;
+	}
+
+	function assigns() {
+		$var = obj:@s;
+		obj:@s = $var;
+		$var = obj:@p = $a1;
+		obj:@s = obj:@e = $a1 = 5;
+	}
 }
