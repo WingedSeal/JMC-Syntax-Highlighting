@@ -1,6 +1,5 @@
-﻿using JMC.Parser.Helper;
+﻿
 using JMC.Shared;
-using JMC.Shared.Datas.Minecraft.Command.Types;
 
 namespace JMC.Parser.JMC
 {
@@ -104,7 +103,7 @@ namespace JMC.Parser.JMC
 
             var query = this.AsParseQuery(index);
             var match = await query.ExpectListAsync(JMCSyntaxNodeType.COLON, JMCSyntaxNodeType.SELECTOR);
-            var value = string.Join("", TrimmedText[index..(query.Index+1)].Where(v => !string.IsNullOrEmpty(v)));
+            var value = string.Join("", TrimmedText[index..(query.Index + 1)].Where(v => !string.IsNullOrEmpty(v)));
             index = query.Index;
             var startPos = IndexToPosition(index);
             //parse assignment
@@ -163,23 +162,6 @@ namespace JMC.Parser.JMC
                     next.Add(r.Node!);
                     index = r.EndIndex;
                 }
-            }
-
-            //set next
-            node.Next = next.Count != 0 ? next : null;
-
-            return new(node, index, IndexToPosition(index));
-        }
-
-        private async Task<JMCParseResult> ParseCommandExpressionAsync(int index)
-        {
-            var node = new JMCSyntaxNode();
-            var next = new List<JMCSyntaxNode>();
-            var exp = "";
-            while (TrimmedText[index] != ";")
-            {
-                exp += SplitText[index];
-                index++;
             }
 
             //set next

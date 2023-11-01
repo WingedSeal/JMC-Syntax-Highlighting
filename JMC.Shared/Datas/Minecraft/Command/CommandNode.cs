@@ -17,8 +17,10 @@ namespace JMC.Shared.Datas.Minecraft.Command
         [JsonProperty("parser")]
         public string? Parser { get; set; }
 
-        [JsonProperty("propeties")]
-        public Propety? Propeties { get; set; }
+        [JsonProperty("properties")]
+        public Propety? Properties { get; set; }
+        [JsonProperty("redirect")]
+        public string[]? Redirect {  get; set; }
 
         public class Propety
         {
@@ -29,9 +31,9 @@ namespace JMC.Shared.Datas.Minecraft.Command
             [JsonProperty("amount")]
             public string? Amount { get; set; }
             [JsonProperty("min")]
-            public int? Min { get; set; }
+            public double? Min { get; set; }
             [JsonProperty("max")]
-            public int? Max { get; set; }
+            public double? Max { get; set; }
         }
 
         private Regex NumberPattern = NumberRegex();

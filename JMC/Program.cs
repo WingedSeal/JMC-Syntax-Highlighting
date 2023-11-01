@@ -1,4 +1,5 @@
 ﻿using JMC.Parser.JMC;
+using JMC.Parser.JMC.Command;
 using JMC.Shared;
 using System.Diagnostics;
 
@@ -8,15 +9,15 @@ namespace JMC
     {
         static void Main(string[] args)
         {
+            var ext = new ExtensionData();
             var sw = new Stopwatch();
             sw.Start();
-            GeneralDebug();
+            Testing();
             sw.Stop();
             Console.WriteLine($"Time escalped: {sw.ElapsedMilliseconds}ms");
         }
         static void GeneralDebug()
         {
-            var extensionData = new ExtensionData();
             var content = File.ReadAllText("test/workspace/main.jmc");
             var sw = new Stopwatch();
             sw.Start();
@@ -30,9 +31,9 @@ namespace JMC
 
         static void Testing()
         {
-            var tree = new JMCSyntaxTree("~ 3 3");
-            var query = tree.AsParseQuery();
-            var r = query.ExpectAsync(JMCSyntaxNodeType.VEC2).Result;
+            var text = "execute as @s at @s run test.t()";
+            var parser = new CommandParser(text, 0, text);
+            var r = parser.ParseCommand();
         }
     }
 }

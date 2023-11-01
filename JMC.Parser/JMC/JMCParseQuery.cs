@@ -20,80 +20,19 @@ namespace JMC.Parser.JMC
         {
             try
             {
-                if (syntaxNodeType != JMCSyntaxNodeType.VEC2 && syntaxNodeType != JMCSyntaxNodeType.VEC3)
+                //parse token
+                var text = SyntaxTree.TrimmedText[Index];
+                var node = await GetCurrentNodeAsync();
+                if (node == null) return false;
+                var isMatch = node.NodeType == syntaxNodeType;
+
+                if (!isMatch && throwError)
                 {
-                    //parse token
-                    var text = SyntaxTree.TrimmedText[Index];
-                    var node = await GetCurrentNodeAsync();
-                    if (node == null) return false;
-                    var isMatch = node.NodeType == syntaxNodeType;
-
-                    if (!isMatch && throwError)
-                    {
-                        SyntaxTree.Errors.Add(new JMCSyntaxError(SyntaxTree.IndexToPosition(Index), syntaxNodeType.ToTokenString(), node.NodeType.ToTokenString()));
-                    }
-
-                    return isMatch;
+                    SyntaxTree.Errors.Add(new JMCSyntaxError(SyntaxTree.IndexToPosition(Index), syntaxNodeType.ToTokenString(), node.NodeType.ToTokenString()));
                 }
-                else
-                {
-                    var node = await GetCurrentNodeAsync();
-                    if (node == null) return false;
-                    var startType = node.NodeType;
 
-                    var counter = syntaxNodeType == JMCSyntaxNodeType.VEC2 ? 1 : 0;
-                    var loop = syntaxNodeType == JMCSyntaxNodeType.VEC2 ? 2 : 0;
-                    var previousNode = node;
-                    while (counter != 2)
-                    {
-                        if (loop >= 6) break;
-                        Next();
-                        var currentNode = await GetCurrentNodeAsync();
-                        if (currentNode == null) return false;
-                        var nodeType = currentNode.NodeType;
-                        if (nodeType == JMCSyntaxNodeType.NUMBER && (startType == JMCSyntaxNodeType.TILDE || startType == JMCSyntaxNodeType.CARET))
-                            counter--;
-                        var result = true;
-                        //~
-                        if (startType == JMCSyntaxNodeType.TILDE && previousNode.NodeType != JMCSyntaxNodeType.TILDE)
-                            result = await ExpectAsync(JMCSyntaxNodeType.TILDE);
+                return isMatch;
 
-                        else if (startType == JMCSyntaxNodeType.TILDE && previousNode.NodeType == JMCSyntaxNodeType.TILDE)
-                            result = await ExpectOrAsync(JMCSyntaxNodeType.TILDE, JMCSyntaxNodeType.NUMBER);
-
-                        //^
-                        else if (startType == JMCSyntaxNodeType.CARET && previousNode.NodeType != JMCSyntaxNodeType.CARET)
-                            result = await ExpectAsync(JMCSyntaxNodeType.CARET);
-
-                        else if (startType == JMCSyntaxNodeType.CARET && previousNode.NodeType == JMCSyntaxNodeType.CARET)
-                            result = await ExpectOrAsync(JMCSyntaxNodeType.CARET, JMCSyntaxNodeType.NUMBER);
-
-                        //number
-                        else if (startType == JMCSyntaxNodeType.NUMBER)
-                            result = await ExpectAsync(JMCSyntaxNodeType.NUMBER);
-
-                        if (!result) break;
-
-                        counter++;
-                        loop++;
-                        previousNode = currentNode;
-                    }
-
-                    //parse if next is number
-                    if (startType == JMCSyntaxNodeType.TILDE || startType == JMCSyntaxNodeType.CARET)
-                    {
-                        var c = Index;
-                        Next();
-                        var n = await GetCurrentNodeAsync();
-                        if (n == null || n.NodeType != JMCSyntaxNodeType.NUMBER)
-                            Index = c;
-                    }
-
-                    if (loop >= 6)
-                        SyntaxTree.Errors.Add(new JMCSyntaxError(previousNode.Range.Start, "VECTOR", previousNode.Value));
-
-                    return true;
-                }
 
             }
             catch
