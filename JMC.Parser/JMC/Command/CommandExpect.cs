@@ -1,4 +1,5 @@
 ﻿using JMC.Shared;
+using System.Collections.Immutable;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using static JMC.Shared.Datas.Minecraft.Command.CommandNode;
@@ -229,14 +230,214 @@ namespace JMC.Parser.JMC.Command
             var head = nums.First();
             var tail = nums.Last();
 
-            return 
-                float.TryParse(head, out float h) && 
-                float.TryParse(tail, out float t) && 
+            return
+                float.TryParse(head, out float h) &&
+                float.TryParse(tail, out float t) &&
                 h >= 0.1 && t <= 1;
         }
-        
+
         private static bool ExpectFunction(string value) => FunctionCallRegex().IsMatch(value);
-        [GeneratedRegex(@"^(\S+)+\([^\(]*\)$", RegexOptions.Compiled)]
+        [GeneratedRegex(@"^(?:([^().]+)\s*(?:\.\s*)?)+\(([^\)]*)\)$", RegexOptions.Compiled)]
         private static partial Regex FunctionCallRegex();
+        private static bool ExpectGameProfile(string value) => ExpectEntity(value, new()
+        {
+            Type = "players",
+            Amount = "multiple"
+        });
+        private static readonly ImmutableArray<string> Gamemodes = [
+            "survival",
+            "creative",
+            "adventure",
+            "spectator"
+        ];
+        private static bool ExpectGamemode(string value) => Gamemodes.Contains(value);
+        private static readonly ImmutableArray<string> Heightmaps = [
+            "world_surface",
+            "motion_blocking",
+            "motion_blocking_no_leaves",
+            "ocean_floor"
+        ];
+        private static bool ExpectHeightmap(string value) => Heightmaps.Contains(value);
+        private static bool ExpectIntRange(string value)
+        {
+            var split = value.Split("..");
+            var head = split.First();
+            var tail = split.Last();
+
+            var h = int.TryParse(head, out _);
+            var t = int.TryParse(tail, out _);
+
+            return h && t;
+        }
+        private static bool ExpectItemPredicate(string value) => ExtensionData.ItemDatas.IsExists(value);
+        private bool ExpectItemSlot(string value)
+        {
+            if (int.TryParse(value, out int v))
+            {
+                if (!(v == -106 || v <= 514))
+                    Errors.Add(StartReadIndex, $"Invalid slot id {v}");
+
+                return true;
+            }
+            var split = value.Split('.');
+            var slot = split.First();
+            var id = split.Last();
+            var isIdNum = int.TryParse(id, out int num);
+
+            switch (slot)
+            {
+                case "weapon":
+                    if (split.Length == 1 || id == "mainhand" || id == "offhand")
+                        return true;
+                    break;
+                case "container":
+                    if (split.Length > 1 && isIdNum && num >= 0 && num <= 53)
+                        return true;
+                    break;
+                case "inventory":
+                case "enderchest":
+                    if (split.Length > 1 && isIdNum && num >= 0 && num <= 26)
+                        return true;
+                    break;
+                case "hotbar":
+                    if (split.Length > 1 && isIdNum && num >= 0 && num <= 53)
+                        return true;
+                    break;
+                case "horse":
+                    if (split.Length > 1 && isIdNum && num >= 0 && num <= 14)
+                        return true;
+                    else if (id == "saddle" || id == "chest" || id == "armor")
+                        return true;
+                    break;
+                case "villager":
+                    if (split.Length > 1 && isIdNum && num >= 0 && num <= 7)
+                        return true;
+                    break;
+                case "armor":
+                    if (id == "chest" || id == "feet" || id == "head" || id == "legs")
+                        return true;
+                    break;
+                default:
+                    break;
+            }
+            Errors.Add(StartReadIndex, $"Invalid slot id {value}");
+            return false;
+        }
+        private static bool ExpectNBT(string value) => value.StartsWith('{') && value.EndsWith('}');
+        private static bool ExpectObjective(string value) => NonSpaceRegex().IsMatch(value);
+        private static bool ExpectObjectiveCriteria(string value)
+        {
+            var split = value.Split(':');
+            var head = split.First();
+            if (split.Length > 1 && head != "minecraft")
+                return false;
+            else if (split.Length > 1)
+                return ExtensionData.ScoreboardCriterions.Contains(value);
+            return ExtensionData.ScoreboardCriterions.Contains($"minecraft:{value}");
+        }
+        private static readonly ImmutableArray<string> Operators = [
+            "=",
+            "+=",
+            "-=",
+            "/=",
+            "*=",
+            "%=",
+            "><",
+            "<",
+            ">"
+        ];
+        private static bool ExpectOperation(string value) => Operators.Contains(value);
+        private bool ExpectParticle(string value)
+        {
+            var split = value.Split(':');
+            var head = split.First();
+            if (split.Length > 1 && head != "minecraft")
+                return false;
+            value = split.Length == 1 ? $"minecraft:{value}" : value;
+
+            if (value == "minecraft:block" || value == "minecraft:block_marker" || value == "minecraft:falling_dust")
+                return ExpectBlock(Read());
+            else if (value == "item")
+                return ExpectItemPredicate(Read());
+            else if (value == "minecraft:dust")
+                return new bool[]
+                {
+                    ExpectFloat(Read()),ExpectFloat(Read()),ExpectFloat(Read()),ExpectFloat(Read())
+                }.All(v => v);
+            else if (value == "minecraft:dust_color_transition")
+                return new bool[]
+                {
+                    ExpectFloat(Read()),ExpectFloat(Read()),ExpectFloat(Read()),ExpectFloat(Read()),ExpectFloat(Read()),ExpectFloat(Read()),ExpectFloat(Read())
+                }.All(v => v);
+            else if (value == "minecraft:shriek")
+                return ExpectInt(Read());
+            else if (value == "minecraft:vibration")
+                return new bool[]
+                {
+                    ExpectFloat(Read()),ExpectFloat(Read()),ExpectFloat(Read()),ExpectInt(Read())
+                }.All(v => v);
+            else return ExtensionData.Particles.Contains(value);
+        }
+        private static bool ExpectResource(string value) => NonSpaceRegex().IsMatch(value);
+        private static readonly ImmutableArray<string> TeamColors = [
+            "black",
+            "dark_blue",
+            "dark_green",
+            "dark_aqua",
+            "dark_red",
+            "dark_purple",
+            "gold",
+            "gray",
+            "dark_gray",
+            "blue",
+            "green",
+            "aqua",
+            "red",
+            "light_purple",
+            "yellow",
+            "white"
+        ];
+        private static bool ExpectScoreboardSlot(string value)
+        {
+            if (value.StartsWith("sidebar.team."))
+                return TeamColors.Contains(value.Split('.').Last());
+            return value == "list" || value == "sidebar" || value == "belowName";
+        }
+
+        private static bool ExpectSwizzle(string value)
+        {
+            var xCount = value.Count(v => v == 'x') <= 1;
+            var yCount = value.Count(v => v == 'y') <= 1;
+            var zCount = value.Count(v => v == 'z') <= 1;
+            return xCount && yCount && zCount;
+        }
+
+        private static bool ExpectTeam(string value) => TeamRegex().IsMatch(value);
+        [GeneratedRegex(@"^[-+\._a-zA-Z0-9]+$", RegexOptions.Compiled)]
+        private static partial Regex TeamRegex();
+        private static bool ExpectTemplateMirror(string value) => value == "none" || value == "front_back" || value == "left_right";
+        private static bool ExpectTemplateRotation(string value) => value == "none" || value == "clockwise_90" || value == "counterclockwise_90" || value == "180";
+        private static bool ExpectTime(string value, Propety? propety = null)
+        {
+            var isLastNum = int.TryParse(value.Last().ToString(), out _);
+            var lastChar = value.Last();
+            float num;
+            bool success;
+            if (isLastNum)
+                success = float.TryParse(value[..1], out num);
+            else
+                success = float.TryParse(value, out num);
+            if (success && propety != null && propety.Min != null)
+            {
+                var ticks = lastChar switch
+                {
+                    'd' => num * 24000,
+                    's' => num * 20,
+                    _ => num
+                };
+                return ticks > propety.Min;
+            }
+            return success;
+        }
     }
 }

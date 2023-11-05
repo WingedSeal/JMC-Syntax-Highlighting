@@ -8,11 +8,32 @@
 
   <ItemGroup>
     <None Remove="Resource\1_20_1\blocks.json" />
+    <None Remove="Resource\1_20_1\block_tags.json" />
+    <None Remove="Resource\1_20_1\custom_statistics.json" />
+    <None Remove="Resource\1_20_1\items.json" />
+    <None Remove="Resource\1_20_1\item_tags.json" />
+    <None Remove="Resource\1_20_1\particles.json" />
   </ItemGroup>
   
   <ItemGroup>
     <EmbeddedResource Include="Resource\1_20_1\blocks.json" />
+    <EmbeddedResource Include="Resource\1_20_1\block_tags.json">
+      <CustomToolNamespace>JMC.Shared.Resouce.1_20_1</CustomToolNamespace>
+    </EmbeddedResource>
     <EmbeddedResource Include="Resource\1_20_1\commands.json">
+      <CustomToolNamespace>JMC.Shared.Resouce.1_20_1</CustomToolNamespace>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resource\1_20_1\custom_statistics.json">
+      <CustomToolNamespace>JMC.Shared.Resouce.1_20_1</CustomToolNamespace>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resource\1_20_1\items.json">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+      <CustomToolNamespace>JMC.Shared.Resouce.1_20_1</CustomToolNamespace>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resource\1_20_1\item_tags.json">
+      <CustomToolNamespace>JMC.Shared.Resouce.1_20_1</CustomToolNamespace>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resource\1_20_1\particles.json">
       <CustomToolNamespace>JMC.Shared.Resouce.1_20_1</CustomToolNamespace>
     </EmbeddedResource>
     <EmbeddedResource Include="Resource\BuiltInFunctions.json" />

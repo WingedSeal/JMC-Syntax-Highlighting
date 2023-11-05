@@ -31,7 +31,7 @@ namespace JMC
 
         static void Testing()
         {
-            var text = "execute as @s at @s run test.t()";
+            var text = "execute as @s at @s run gamemode survival";
             var parser = new CommandParser(text, 0, text);
             var r = parser.ParseCommand();
         }

@@ -2,6 +2,7 @@
 using JMC.Shared.Datas.Minecraft.Command;
 using JMC.Shared.Datas.Minecraft.Command.Types;
 using System.Collections.Immutable;
+using System.Text.RegularExpressions;
 
 namespace JMC.Parser.JMC.Command
 {
@@ -39,8 +40,9 @@ namespace JMC.Parser.JMC.Command
             {
                 var elem = CurrentNode?.Children?.ElementAtOrDefault(0).Value;
                 if (elem != null &&
-                    elem.Parser == "brigadier:string" &&
-                    elem.Properties?.Type == "greedy")
+                    ((elem.Parser == "brigadier:string" &&
+                    elem.Properties?.Type == "greedy") ||
+                    elem.Parser == "minecraft:message"))
                 {
                     CurrentNode = elem;
                     var s = ReadToEnd();
@@ -147,6 +149,35 @@ namespace JMC.Parser.JMC.Command
             "minecraft:entity_anchor" => JMCSyntaxNodeType.ENTITY_ANCHOR,
             "minecraft:float_range" => JMCSyntaxNodeType.FLOAT_RANGE,
             "minecraft:function" => JMCSyntaxNodeType.FUNCTION_CALL,
+            "minecraft:game_profile" => JMCSyntaxNodeType.ENTITY,
+            "minecraft:gamemode" => JMCSyntaxNodeType.LITERAL,
+            "minecraft:heightmap" => JMCSyntaxNodeType.LITERAL,
+            "minecraft:int_range" => JMCSyntaxNodeType.INT_RANGE,
+            "minecraft:item_predicate" => JMCSyntaxNodeType.ITEM_PREDICATE,
+            "minecraft:item_slot" => JMCSyntaxNodeType.ITEM_SLOT,
+            "minecraft:item_stack" => JMCSyntaxNodeType.ITEM_STACK,
+            "minecraft:message" => JMCSyntaxNodeType.MESSAGE,
+            "minecraft:nbt_compound_tag" => JMCSyntaxNodeType.NBT,
+            "minecraft:nbt_path" => JMCSyntaxNodeType.NBT_PATH,
+            "minecraft:nbt_tag" => JMCSyntaxNodeType.NBT_TAG,
+            "minecraft:objective" => JMCSyntaxNodeType.LITERAL,
+            "minecraft:objective_criteria" => JMCSyntaxNodeType.OBJECTIVE_CRITERIA,
+            "minecraft:operation" => JMCSyntaxNodeType.OPERATOR,
+            "minecraft:particle" => JMCSyntaxNodeType.PARTICLE,
+            "minecraft:resource" => JMCSyntaxNodeType.RESOURCE,
+            "minecraft:resource_key" => JMCSyntaxNodeType.RESOURCE,
+            "minecraft:resource_location" => JMCSyntaxNodeType.RESOURCE,
+            "minecraft:resource_or_tag" => JMCSyntaxNodeType.RESOURCE_TAG,
+            "minecraft:resource_or_tag_key" => JMCSyntaxNodeType.RESOURCE_TAG,
+            "minecraft:rotation" => JMCSyntaxNodeType.ROTATION,
+            "minecraft:score_holder" => JMCSyntaxNodeType.ENTITY,
+            "minecraft:scoreboard_slot" => JMCSyntaxNodeType.LITERAL,
+            "minecraft:swizzle" => JMCSyntaxNodeType.LITERAL,
+            "minecraft:team" => JMCSyntaxNodeType.TEAM,
+            "minecraft:template_mirror" => JMCSyntaxNodeType.LITERAL,
+            "minecraft:template_rotation" => JMCSyntaxNodeType.LITERAL,
+            "minecraft:time" => JMCSyntaxNodeType.TIME,
+            "minecraft:uuid" => JMCSyntaxNodeType.UUID,
             _ => JMCSyntaxNodeType.UNKNOWN
         };
 
@@ -174,6 +205,34 @@ namespace JMC.Parser.JMC.Command
                 "minecraft:entity_anchor" => ExpectEntityAnchor(value),
                 "minecraft:float_range" => ExpectFloatRange(value),
                 "minecraft:function" => ExpectFunction(value),
+                "minecraft:game_profile" => ExpectGameProfile(value),
+                "minecraft:gamemode" => ExpectGamemode(value),
+                "minecraft:heightmap" => ExpectHeightmap(value),
+                "minecraft:int_range" => ExpectIntRange(value),
+                "minecraft:item_predicate" => ExpectItemPredicate(value),
+                "minecraft:item_slot" => ExpectItemSlot(value),
+                "minecraft:item_stack" => ExpectItemPredicate(value),
+                "minecraft:nbt_compound_tag" => ExpectNBT(value),
+                "minecraft:nbt_path" => true,
+                "minecraft:nbt_tag" => true,
+                "minecraft:objective" => ExpectObjective(value),
+                "minecraft:objective_criteria" => ExpectObjectiveCriteria(value),
+                "minecraft:operation" => ExpectOperation(value),
+                "minecraft:particle" => ExpectParticle(value),
+                "minecraft:resource" => ExpectResource(value),
+                "minecraft:resource_key" => ExpectResource(value),
+                "minecraft:resource_location" => ExpectResource(value),
+                "minecraft:resource_or_tag" => ExpectResource(value) || value.StartsWith('#'),
+                "minecraft:resource_or_tag_key" => ExpectResource(value) || value.StartsWith('#'),
+                "minecraft:rotation" => ExpectVec2(value),
+                "minecraft:score_holder" => ExpectEntity(value) || value == "*",
+                "minecraft:scoreboard_slot" => ExpectScoreboardSlot(value),
+                "minecraft:swizzle" => ExpectSwizzle(value),
+                "minecraft:team" => ExpectTeam(value),
+                "minecraft:template_mirror" => ExpectTemplateMirror(value),
+                "minecraft:template_rotation" => ExpectTemplateRotation(value),
+                "minecraft:time" => ExpectTime(value),
+                "minecraft:uuid" => ExpectUUID(value),
                 _ => false
             };
         }
@@ -190,10 +249,16 @@ namespace JMC.Parser.JMC.Command
             {
                 var value = CommandTree.Nodes.FirstOrDefault(v => v.Key == cmd).Value;
                 if (value != null) return value;
-                //function and vars
-                var isFunc = ExpectFunction(cmd);
-                Nodes.Add(GetSyntaxNode(cmd, JMCSyntaxNodeType.FUNCTION_CALL));
-                if (isFunc) return null;
+                if(cmd.StartsWith('$') && VariableCallRegex().IsMatch(cmd))
+                {
+                    Nodes.Add(GetSyntaxNode(cmd, JMCSyntaxNodeType.VARIABLE_CALL));
+                    return null;
+                }
+                else if (ExpectFunction(cmd))
+                {
+                    Nodes.Add(GetSyntaxNode(cmd, JMCSyntaxNodeType.FUNCTION_CALL));
+                    return null;
+                }
             }
                 
 
@@ -309,5 +374,8 @@ namespace JMC.Parser.JMC.Command
             do Index++;
             while (char.IsWhiteSpace(CurrentChar));
         }
+
+        [GeneratedRegex(@"get\s*\((?:\s|.)*\)$", RegexOptions.Compiled)]
+        private static partial Regex VariableCallRegex();
     }
 }

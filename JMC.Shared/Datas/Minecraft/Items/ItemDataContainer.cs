@@ -1,9 +1,18 @@
-﻿namespace JMC.Shared.Datas.Minecraft.Blocks
+﻿namespace JMC.Shared.Datas.Minecraft.Items
 {
-    internal class BlockDataContainer(IEnumerable<BlockData> datas) : List<BlockData>(datas)
+    internal class ItemDataContainer(Dictionary<string, ItemData> datas) : List<ItemData>(datas.Select(v =>
+    {
+        v.Value.Name = v.Key;
+        return v.Value;
+    }))
     {
         //TODO support differnt namespace
-        public bool IsExist(string data)
+        /// <summary>
+        /// check if value exists in item tags or items
+        /// </summary>
+        /// <param name="data"></param>
+        /// <returns></returns>
+        public bool IsExists(string data)
         {
             if (data.StartsWith('#'))
             {
@@ -12,7 +21,7 @@
                     return false;
                 if (!data.StartsWith("minecraft:"))
                     data += "minecraft:";
-                return ExtensionData.BlockTags.Any(v => v == data);
+                return ExtensionData.ItemTags.Any(v => v == data);
             }
             else
             {
