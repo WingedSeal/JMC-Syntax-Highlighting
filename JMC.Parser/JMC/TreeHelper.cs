@@ -15,15 +15,14 @@ namespace JMC.Parser.JMC
             for (var i = 0; i < offset; i++)
             {
                 ref var value = ref arr[i];
-                if (text[i] == '\n')
+                var newLineCheck = $"{text[i]}{text[i + 1]}";
+                if (newLineCheck.StartsWith(Environment.NewLine))
                 {
                     line++;
-                    col = 0;
+                    col = 1 - Environment.NewLine.Length;
                 }
-                else
-                {
-                    col++;
-                }
+                else col++;
+
             }
 
             return new Position(line, col);
@@ -60,8 +59,6 @@ namespace JMC.Parser.JMC
         }
 
         public static JMCParseQuery AsParseQuery(this JMCSyntaxTree syntaxTree, int index = 0) => new(syntaxTree, index);
-        
-
 
         public static string ToTokenString(this JMCSyntaxNodeType nodeType)
         {

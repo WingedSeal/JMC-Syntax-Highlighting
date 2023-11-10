@@ -85,5 +85,6 @@
         TEAM,
         TIME,
         UUID,
+        COMMAND,
     }
 }

@@ -1,25 +1,67 @@
 ﻿using JMC.Parser.Error.Base;
-using JMC.Shared;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 
 namespace JMC.Parser.JMC
 {
     internal partial class JMCSyntaxTree
     {
+        //TODO Function Call
         public List<JMCSyntaxNode> Nodes { get; set; } = new();
 
         public string RawText { get; set; } = string.Empty;
 
         public string[] SplitText { get; private set; } = [];
         public string[] TrimmedText { get; private set; } = [];
-        public List<JMCBaseError> Errors { get; set; } = new();
+        public List<JMCBaseError> Errors { get; set; } = [];
 
         public JMCSyntaxTree(string text)
         {
             RawText = text;
-            SplitText = SPLIT_PATTERN.Split(RawText);
+            SplitText = SPLIT_PATTERN.Split(RawText).Where(v => v != "").ToArray();
             TrimmedText = SplitText.Select(x => x.Trim()).ToArray();
             Task.Run(InitAsync).Wait();
+        }
+
+        public async Task ModifyAsync(TextDocumentContentChangeEvent eventArgs)
+        {
+            if (eventArgs.Range == null)
+                return;
+            var start = ToOffset(eventArgs.Range.Start);
+            var end = ToOffset(eventArgs.Range.End);
+            var modifier = eventArgs.Text.Length - (end - start);
+        }
+
+        private int ToIndex(int offset)
+        {
+            var current = 0;
+
+            var arr = SplitText.AsSpan();
+            for (var i = 0; i < arr.Length; i++)
+            {
+                ref var text = ref arr[i];
+                current += text.Length;
+                if (current + text.Length > offset + 1) return i;
+            }
+
+            return -1;
+        }
+
+        internal int ToOffset(Position position)
+        {
+            if (position.Line == 0) return position.Character;
+
+            var offset = 0;
+            var split = RawText.Split(Environment.NewLine);
+            var arr = split.AsSpan();
+
+            for (var i = 0; i < position.Line; i++)
+            {
+                ref var line = ref arr[i];
+                offset += line.Length + Environment.NewLine.Length;
+            }
+            offset += position.Character;
+
+            return offset;
         }
 
         /// <summary>
@@ -45,7 +87,7 @@ namespace JMC.Parser.JMC
         /// <returns></returns>
         public async Task ParseNextAsync(int index)
         {
-            var result = await ParseAsync(index);
+            var result = await ParseAsync(index, isStart: true);
             index = NextIndex(result.EndIndex);
             lock (Nodes)
             {
@@ -62,7 +104,7 @@ namespace JMC.Parser.JMC
         /// <param name="noNext"></param>
         /// <param name="start"></param>
         /// <returns></returns>
-        public async Task<JMCParseResult> ParseAsync(int index, bool noNext = false)
+        public async Task<JMCParseResult> ParseAsync(int index, bool noNext = false, bool isStart = false)
         {
             var value = TrimmedText[index];
             var nextIndex = NextIndex(index);
@@ -337,12 +379,20 @@ namespace JMC.Parser.JMC
                     break;
             }
 
+            var position = IndexToPosition(nextIndex);
             var result = TokenPatterns.FirstOrDefault(v => v.Value.IsMatch(value)).Key;
-            if (result != default)
-                return new(new(result, range: range, value: value), nextIndex, IndexToPosition(nextIndex));
-            
 
-            return new(null, nextIndex, IndexToPosition(nextIndex));
+            if (isStart)
+            {
+                var r = await ParseExpressionAsync(index);
+                if (r.Node != null)
+                    return r;
+            }
+
+            if (result != default)
+                return new(new(result, range: range, value: value), nextIndex, position);
+
+            return new(null, nextIndex, position);
         }
 
 
@@ -480,7 +530,12 @@ namespace JMC.Parser.JMC
             //parse parameters
             var param = await ParseParameterAsync(NextIndex(index));
             index = SkipToValue(param.EndIndex);
-            if (param.Node != null) next.Add(param.Node);
+            if (param.Node?.Next != null) 
+                next.AddRange(param.Node.Next);
+            var query = this.AsParseQuery(index);
+            var match = await query.ExpectAsync(JMCSyntaxNodeType.RPAREN);
+            index = query.Index;
+
 
             node.Next = next.Count != 0 ? next : null;
 

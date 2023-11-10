@@ -4,3 +4,4 @@ using System.Runtime.CompilerServices;
 [assembly: InternalsVisibleTo("JMC.Extension.Server.Tests")]
 [assembly: InternalsVisibleTo("JMCServer")]
 [assembly: InternalsVisibleTo("JMC")]
+[assembly: InternalsVisibleTo("JMC.Parser.Test")]

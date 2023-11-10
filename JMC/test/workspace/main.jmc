@@ -1,4 +1,9 @@
 ﻿ import "amogus"; 
+//top levels
+$var = 3;
+obj:@s = 3;
+
+//funtions & classes
 function test.vars.bools() {
 	$true += true;
 	$false += false;
@@ -7,7 +12,8 @@ function test.vars.bools() {
 }
 
 function cmd() {
-	data get @s;
+	data get entity @s;
+	call();
 }
 
 class test {

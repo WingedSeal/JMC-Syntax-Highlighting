@@ -6,8 +6,6 @@ using System.Text.RegularExpressions;
 
 namespace JMC.Parser.JMC.Command
 {
-    //TODO Arguments types of commands
-    //TODO Redirect of command
     internal partial class CommandParser(string cmdString, int offset, string text)
     {
         private string CommandString => cmdString;
@@ -79,6 +77,7 @@ namespace JMC.Parser.JMC.Command
                 var s = keys != null ? string.Join(" or ", keys.Select(v => $"'{v}'")) : "";
                 Errors.Add(Index, $"Expect {s}");
             }
+
             return Nodes;
         }
 
@@ -99,7 +98,7 @@ namespace JMC.Parser.JMC.Command
 
             var node = new JMCSyntaxNode();
             var start = (StartOffset + StartReadIndex).ToPosition(TreeText);
-            var end = (StartOffset + Index - 2).ToPosition(TreeText);
+            var end = (StartOffset + StartReadIndex + Index - StartReadIndex - 1).ToPosition(TreeText);
             var range = new Range(start, end);
 
             var parser = CurrentNode.Parser;
@@ -249,7 +248,7 @@ namespace JMC.Parser.JMC.Command
             {
                 var value = CommandTree.Nodes.FirstOrDefault(v => v.Key == cmd).Value;
                 if (value != null) return value;
-                if(cmd.StartsWith('$') && VariableCallRegex().IsMatch(cmd))
+                if (cmd.StartsWith('$') && VariableCallRegex().IsMatch(cmd))
                 {
                     Nodes.Add(GetSyntaxNode(cmd, JMCSyntaxNodeType.VARIABLE_CALL));
                     return null;
@@ -260,7 +259,7 @@ namespace JMC.Parser.JMC.Command
                     return null;
                 }
             }
-                
+
 
 
             if (CurrentNode == null || CurrentNode.Children == null || CurrentNode.Children.Count == 0)

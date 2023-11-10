@@ -12,7 +12,7 @@ namespace JMC
             var ext = new ExtensionData();
             var sw = new Stopwatch();
             sw.Start();
-            Testing();
+            GeneralDebug();
             sw.Stop();
             Console.WriteLine($"Time escalped: {sw.ElapsedMilliseconds}ms");
         }
@@ -31,9 +31,17 @@ namespace JMC
 
         static void Testing()
         {
-            var text = "execute as @s at @s run gamemode survival";
-            var parser = new CommandParser(text, 0, text);
-            var r = parser.ParseCommand();
+            var content = File.ReadAllText("test/workspace/main.jmc");
+            var tree = new JMCSyntaxTree(content);
+            var sw = new Stopwatch();
+            sw.Start();
+            tree.ModifyAsync(new()
+            {
+                Range = new(1,1,2,2),
+                Text = "amogus",
+            });
+            sw.Stop();
+            Console.WriteLine($"Time escalped (Parsing): {sw.ElapsedMilliseconds}ms");
         }
     }
 }
