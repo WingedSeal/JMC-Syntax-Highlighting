@@ -3,34 +3,45 @@ using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 
 namespace JMC.Parser.JMC
 {
+    //TODO: cancel when encounter error
+    /// <summary>
+    /// Use <see cref="InitializeAsync(string)"/> for constructor
+    /// </summary>
     internal partial class JMCSyntaxTree
     {
-        //TODO Function Call
-        public List<JMCSyntaxNode> Nodes { get; set; } = new();
-
+        public List<JMCSyntaxNode> Nodes { get; set; } = [];
         public string RawText { get; set; } = string.Empty;
-
         public string[] SplitText { get; private set; } = [];
         public string[] TrimmedText { get; private set; } = [];
         public List<JMCBaseError> Errors { get; set; } = [];
+        public CancellationTokenSource CancellationSource { get; private set; } = new();
 
-        public JMCSyntaxTree(string text)
+        public async Task<JMCSyntaxTree> InitializeAsync(string text)
         {
             RawText = text;
-            SplitText = SPLIT_PATTERN.Split(RawText).Where(v => v != "").ToArray();
+            var split = SplitPatternRegex().Split(RawText);
+            SplitText = split.Where(v => v != "").ToArray();
             TrimmedText = SplitText.Select(x => x.Trim()).ToArray();
-            Task.Run(InitAsync).Wait();
+            await InitAsync();
+            return this;
         }
 
-        public async Task ModifyAsync(TextDocumentContentChangeEvent eventArgs)
+        //TODO: after lsp is done
+        public void Modify(TextDocumentContentChangeEvent eventArgs)
         {
             if (eventArgs.Range == null)
                 return;
             var start = ToOffset(eventArgs.Range.Start);
             var end = ToOffset(eventArgs.Range.End);
             var modifier = eventArgs.Text.Length - (end - start);
+
         }
 
+        /// <summary>
+        /// offset of text to <seealso cref="TrimmedText"/> Index
+        /// </summary>
+        /// <param name="offset"></param>
+        /// <returns></returns>
         private int ToIndex(int offset)
         {
             var current = 0;
@@ -46,29 +57,15 @@ namespace JMC.Parser.JMC
             return -1;
         }
 
-        internal int ToOffset(Position position)
-        {
-            if (position.Line == 0) return position.Character;
-
-            var offset = 0;
-            var split = RawText.Split(Environment.NewLine);
-            var arr = split.AsSpan();
-
-            for (var i = 0; i < position.Line; i++)
-            {
-                ref var line = ref arr[i];
-                offset += line.Length + Environment.NewLine.Length;
-            }
-            offset += position.Character;
-
-            return offset;
-        }
-
         /// <summary>
         /// 
         /// </summary>
         /// <returns></returns>
-        public async Task InitAsync() => await ParseNextAsync(SkipToValue(0));
+        public async Task InitAsync()
+        {
+            await ParseNextAsync(SkipToValue(0), CancellationSource.Token);
+        }
+
         /// <summary>
         /// print a tree view
         /// </summary>
@@ -79,37 +76,36 @@ namespace JMC.Parser.JMC
         /// <returns></returns>
         public IEnumerable<JMCSyntaxNode> GetFlattenNodes() => Nodes.SelectMany(v => v.ToFlattenNodes());
 
-
         /// <summary>
-        /// 
+        /// parse next expression
         /// </summary>
         /// <param name="index"></param>
-        /// <returns></returns>
-        public async Task ParseNextAsync(int index)
+        /// <param name="token"></param>
+        /// <returns>-1 is success,>= 0 is stopped index point</returns>
+        /// <exception cref="OperationCanceledException"/>
+        public async Task ParseNextAsync(int index, CancellationToken token)
         {
             var result = await ParseAsync(index, isStart: true);
             index = NextIndex(result.EndIndex);
-            lock (Nodes)
-            {
                 if (result.Node != null) Nodes.Add(result.Node);
-            }
+            
             if (index < TrimmedText.Length - 1)
-                await ParseNextAsync(index);
+                await ParseNextAsync(index, token);
         }
 
         /// <summary>
-        /// 
+        /// Parse a text
         /// </summary>
-        /// <param name="index"></param>
-        /// <param name="noNext"></param>
-        /// <param name="start"></param>
+        /// <param name="index">index of current <seealso cref="TrimmedText"/></param>
+        /// <param name="noNext">Does it require to parse the children</param>
+        /// <param name="isStart">Is it not a call from a parent node</param>
         /// <returns></returns>
         public async Task<JMCParseResult> ParseAsync(int index, bool noNext = false, bool isStart = false)
         {
             var value = TrimmedText[index];
             var nextIndex = NextIndex(index);
 
-            var range = new Range(IndexToPosition(index), (ToOffset(index) + value.Length).ToPosition(RawText));
+            var range = new Range(GetIndexStartPos(index), GetIndexEndPos(index));
 
             switch (value)
             {
@@ -119,21 +115,21 @@ namespace JMC.Parser.JMC
                         return await ParseClassAsync(index);
                     else
                     {
-                        return new(new JMCSyntaxNode(), index, IndexToPosition(index));
+                        return new(new JMCSyntaxNode(), index, GetIndexStartPos(index));
                     }
                 case "function":
                     if (!noNext)
                         return await ParseFunctionAsync(index);
                     else
                     {
-                        return new(new JMCSyntaxNode(), index, IndexToPosition(index));
+                        return new(new JMCSyntaxNode(), index, GetIndexStartPos(index));
                     }
                 case "import":
                     if (!noNext)
                         return await ParseImportAsync(index);
                     else
                     {
-                        return new(new JMCSyntaxNode(), index, IndexToPosition(index));
+                        return new(new JMCSyntaxNode(), index, GetIndexStartPos(index));
                     }
                 case "true":
                     return new(new JMCSyntaxNode
@@ -141,35 +137,35 @@ namespace JMC.Parser.JMC
                         NodeType = JMCSyntaxNodeType.TRUE,
                         Range = range
                     },
-                    nextIndex, IndexToPosition(nextIndex));
+                    nextIndex, GetIndexStartPos(nextIndex));
                 case "false":
                     return new(new JMCSyntaxNode
                     {
                         NodeType = JMCSyntaxNodeType.FALSE,
                         Range = range
                     },
-                    nextIndex, IndexToPosition(nextIndex));
+                    nextIndex, GetIndexStartPos(nextIndex));
                 case "while":
                     return new(new JMCSyntaxNode
                     {
                         NodeType = JMCSyntaxNodeType.WHILE,
                         Range = range
                     },
-                    nextIndex, IndexToPosition(nextIndex));
+                    nextIndex, GetIndexStartPos(nextIndex));
                 case "do":
                     return new(new JMCSyntaxNode
                     {
                         NodeType = JMCSyntaxNodeType.DO,
                         Range = range
                     },
-                    nextIndex, IndexToPosition(nextIndex));
+                    nextIndex, GetIndexStartPos(nextIndex));
                 case "for":
                     return new(new JMCSyntaxNode
                     {
                         NodeType = JMCSyntaxNodeType.FOR,
                         Range = range
                     },
-                    nextIndex, IndexToPosition(nextIndex));
+                    nextIndex, GetIndexStartPos(nextIndex));
                 #endregion
 
                 #region Ops
@@ -179,90 +175,90 @@ namespace JMC.Parser.JMC
                         NodeType = JMCSyntaxNodeType.OP_INCREMENT,
                         Range = range
                     },
-                    nextIndex, IndexToPosition(nextIndex));
+                    nextIndex, GetIndexStartPos(nextIndex));
                 case "--":
                     return new(new JMCSyntaxNode
                     {
                         NodeType = JMCSyntaxNodeType.OP_DECREMENT,
                         Range = range
                     },
-                    nextIndex, IndexToPosition(nextIndex));
+                    nextIndex, GetIndexStartPos(nextIndex));
                 case "+":
                     return new(new JMCSyntaxNode
                     {
                         NodeType = JMCSyntaxNodeType.OP_PLUS,
                         Range = range
                     },
-                    nextIndex, IndexToPosition(nextIndex));
+                    nextIndex, GetIndexStartPos(nextIndex));
                 case "-":
                     return new(new JMCSyntaxNode
                     {
                         NodeType = JMCSyntaxNodeType.OP_SUBSTRACT,
                         Range = range
                     },
-                    nextIndex, IndexToPosition(nextIndex));
+                    nextIndex, GetIndexStartPos(nextIndex));
                 case "*":
                     return new(new JMCSyntaxNode
                     {
                         NodeType = JMCSyntaxNodeType.OP_MULTIPLY,
                         Range = range
                     },
-                    nextIndex, IndexToPosition(nextIndex));
+                    nextIndex, GetIndexStartPos(nextIndex));
                 case "/":
                     return new(new JMCSyntaxNode
                     {
                         NodeType = JMCSyntaxNodeType.OP_DIVIDE,
                         Range = range
                     },
-                    nextIndex, IndexToPosition(nextIndex));
+                    nextIndex, GetIndexStartPos(nextIndex));
                 case "+=":
                     return new(new JMCSyntaxNode
                     {
                         NodeType = JMCSyntaxNodeType.OP_PLUSEQ,
                         Range = range
                     },
-                    nextIndex, IndexToPosition(nextIndex));
+                    nextIndex, GetIndexStartPos(nextIndex));
                 case "-=":
                     return new(new JMCSyntaxNode
                     {
                         NodeType = JMCSyntaxNodeType.OP_SUBSTRACTEQ,
                         Range = range
                     },
-                    nextIndex, IndexToPosition(nextIndex));
+                    nextIndex, GetIndexStartPos(nextIndex));
                 case "*=":
                     return new(new JMCSyntaxNode
                     {
                         NodeType = JMCSyntaxNodeType.OP_MULTIPLYEQ,
                         Range = range
                     },
-                    nextIndex, IndexToPosition(nextIndex));
+                    nextIndex, GetIndexStartPos(nextIndex));
                 case "/=":
                     return new(new JMCSyntaxNode
                     {
                         NodeType = JMCSyntaxNodeType.OP_DIVIDEEQ
                     },
-                    nextIndex, IndexToPosition(nextIndex));
+                    nextIndex, GetIndexStartPos(nextIndex));
                 case "??=":
                     return new(new JMCSyntaxNode
                     {
                         NodeType = JMCSyntaxNodeType.OP_NULLCOALE,
                         Range = range
                     },
-                    nextIndex, IndexToPosition(nextIndex));
+                    nextIndex, GetIndexStartPos(nextIndex));
                 case "?=":
                     return new(new JMCSyntaxNode
                     {
                         NodeType = JMCSyntaxNodeType.OP_SUCCESS,
                         Range = range
                     },
-                    nextIndex, IndexToPosition(nextIndex));
+                    nextIndex, GetIndexStartPos(nextIndex));
                 case "><":
                     return new(new JMCSyntaxNode
                     {
                         NodeType = JMCSyntaxNodeType.OP_SWAP,
                         Range = range
                     },
-                    nextIndex, IndexToPosition(nextIndex));
+                    nextIndex, GetIndexStartPos(nextIndex));
                 #endregion
 
                 #region Comps
@@ -271,19 +267,19 @@ namespace JMC.Parser.JMC
                     {
                         NodeType = JMCSyntaxNodeType.COMP_OR
                     },
-                    nextIndex, IndexToPosition(nextIndex));
+                    nextIndex, GetIndexStartPos(nextIndex));
                 case "&&":
                     return new(new JMCSyntaxNode
                     {
                         NodeType = JMCSyntaxNodeType.COMP_NOT
                     },
-                    nextIndex, IndexToPosition(nextIndex));
+                    nextIndex, GetIndexStartPos(nextIndex));
                 case "!":
                     return new(new JMCSyntaxNode
                     {
                         NodeType = JMCSyntaxNodeType.COMP_NOT
                     },
-                    nextIndex, IndexToPosition(nextIndex));
+                    nextIndex, GetIndexStartPos(nextIndex));
                 #endregion
 
                 #region Chars
@@ -293,42 +289,49 @@ namespace JMC.Parser.JMC
                         NodeType = JMCSyntaxNodeType.LCP,
                         Range = range
                     },
-                    nextIndex, IndexToPosition(nextIndex));
+                    nextIndex, GetIndexStartPos(nextIndex));
                 case "}":
                     return new(new JMCSyntaxNode
                     {
                         NodeType = JMCSyntaxNodeType.RCP,
                         Range = range
                     },
-                    nextIndex, IndexToPosition(nextIndex));
+                    nextIndex, GetIndexStartPos(nextIndex));
                 case "(":
                     return new(new JMCSyntaxNode
                     {
                         NodeType = JMCSyntaxNodeType.LPAREN,
                         Range = range
                     },
-                    nextIndex, IndexToPosition(nextIndex));
+                    nextIndex, GetIndexStartPos(nextIndex));
                 case ")":
                     return new(new JMCSyntaxNode
                     {
                         NodeType = JMCSyntaxNodeType.RPAREN,
                         Range = range
                     },
-                    nextIndex, IndexToPosition(nextIndex));
+                    nextIndex, GetIndexStartPos(nextIndex));
                 case ";":
                     return new(new JMCSyntaxNode
                     {
                         NodeType = JMCSyntaxNodeType.SEMI,
                         Range = range
                     },
-                    nextIndex, IndexToPosition(nextIndex));
+                    nextIndex, GetIndexStartPos(nextIndex));
                 case ":":
                     return new(new JMCSyntaxNode
                     {
                         NodeType = JMCSyntaxNodeType.COLON,
                         Range = range
                     },
-                    nextIndex, IndexToPosition(nextIndex));
+                    nextIndex, GetIndexStartPos(nextIndex));
+                case "=>":
+                    return new(new JMCSyntaxNode
+                    {
+                        NodeType = JMCSyntaxNodeType.ARROW_FUNCTION,
+                        Range = range
+                    },
+                    nextIndex, GetIndexStartPos(nextIndex));
                 #endregion
 
                 #region Misc
@@ -338,48 +341,48 @@ namespace JMC.Parser.JMC
                         NodeType = JMCSyntaxNodeType.GREATER_THAN,
                         Range = range
                     },
-                    nextIndex, IndexToPosition(nextIndex));
+                    nextIndex, GetIndexStartPos(nextIndex));
                 case "<":
                     return new(new JMCSyntaxNode
                     {
                         NodeType = JMCSyntaxNodeType.LESS_THAN,
                         Range = range
                     },
-                    nextIndex, IndexToPosition(nextIndex));
+                    nextIndex, GetIndexStartPos(nextIndex));
                 case ">=":
                     return new(new JMCSyntaxNode
                     {
                         NodeType = JMCSyntaxNodeType.GREATER_THAN_EQ,
                         Range = range
                     },
-                    nextIndex, IndexToPosition(nextIndex));
+                    nextIndex, GetIndexStartPos(nextIndex));
                 case "<=":
                     return new(new JMCSyntaxNode
                     {
                         NodeType = JMCSyntaxNodeType.LESS_THAN_EQ,
                         Range = range
                     },
-                    nextIndex, IndexToPosition(nextIndex));
+                    nextIndex, GetIndexStartPos(nextIndex));
                 case "=":
                     return new(new JMCSyntaxNode
                     {
                         NodeType = JMCSyntaxNodeType.EQUAL_TO,
                         Range = range
                     },
-                    nextIndex, IndexToPosition(nextIndex));
+                    nextIndex, GetIndexStartPos(nextIndex));
                 case "==":
                     return new(new JMCSyntaxNode
                     {
                         NodeType = JMCSyntaxNodeType.EQUAL,
                         Range = range
                     },
-                    nextIndex, IndexToPosition(nextIndex));
+                    nextIndex, GetIndexStartPos(nextIndex));
                 #endregion
                 default:
                     break;
             }
 
-            var position = IndexToPosition(nextIndex);
+            var position = GetIndexStartPos(nextIndex);
             var result = TokenPatterns.FirstOrDefault(v => v.Value.IsMatch(value)).Key;
 
             if (isStart)
@@ -397,10 +400,10 @@ namespace JMC.Parser.JMC
 
 
         /// <summary>
-        /// 
+        /// parse a class expression
         /// </summary>
         /// <remarks>
-        /// literal '{' expression* '}'
+        /// literal '{' function* '}'
         /// </remarks>
         /// <param name="index"></param>
         /// <returns></returns>
@@ -418,7 +421,7 @@ namespace JMC.Parser.JMC
 
             //get start pos
             index = SkipToValue(query.Index);
-            var start = IndexToPosition(index);
+            var start = GetIndexStartPos(index);
 
             //parse functions
             query.Reset(this, index);
@@ -439,7 +442,7 @@ namespace JMC.Parser.JMC
                     query.Reset(this, index);
                 }
             }
-            var end = IndexToPosition(index);
+            var end = GetIndexStartPos(index);
 
             //set next
             node.NodeType = JMCSyntaxNodeType.CLASS;
@@ -447,11 +450,11 @@ namespace JMC.Parser.JMC
             node.Range = new Range(start, end);
             node.Value = literal;
 
-            return new(node, index, IndexToPosition(index));
+            return new(node, index, GetIndexStartPos(index));
         }
 
         /// <summary>
-        /// 
+        /// parse a import expression
         /// </summary>
         /// <param name="index"></param>
         /// <returns></returns>
@@ -462,7 +465,7 @@ namespace JMC.Parser.JMC
             var query = this.AsParseQuery(index);
             var match = await query.ExpectListAsync(JMCSyntaxNodeType.STRING, JMCSyntaxNodeType.SEMI);
 
-            var start = IndexToPosition(index);
+            var start = GetIndexStartPos(index);
 
             //get path
             var str = await ParseAsync(NextIndex(index));
@@ -470,21 +473,21 @@ namespace JMC.Parser.JMC
             //move next
             index = SkipToValue(query.Index);
 
-            var end = IndexToPosition(index);
+            var end = GetIndexStartPos(index);
 
             //set node
             node.NodeType = JMCSyntaxNodeType.IMPORT;
-            node.Next = match ? [str.Node] : null;
+            node.Next = match && str.Node != null ? [str.Node] : null;
             node.Range = new Range(start, end);
 
-            return new(node, index, IndexToPosition(index));
+            return new(node, index, GetIndexStartPos(index));
         }
 
         /// <summary>
-        /// 
+        /// parse a function expression
         /// </summary>
         /// <remarks>
-        /// literal '(' ')' '{' expression* '}'
+        /// literal '(' ')' block
         /// </remarks>
         /// <param name="index">current index</param>
         /// <returns></returns>
@@ -501,60 +504,56 @@ namespace JMC.Parser.JMC
             var literal = TrimmedText[NextIndex(index)];
             index = query.Index;
 
-            var start = IndexToPosition(index);
+            var start = GetIndexStartPos(index);
 
             //parse expressions
-            while (index < TrimmedText.Length && match)
+            if (match)
             {
-                var exp = await ParseExpressionAsync(NextIndex(index));
-                if (exp.Node != null) next.Add(exp.Node);
-                index = exp.EndIndex;
-                if (TrimmedText[index] == "}") break;
+                var exps = await ParseBlockAsync(index);
+                var expsNode = exps.Node;
+                if (expsNode != null && expsNode.Next != null)
+                    next.AddRange(expsNode.Next);
+                index = exps.EndIndex;
             }
 
-            var end = IndexToPosition(index);
+            var end = GetIndexStartPos(index);
             //set next
             node.NodeType = JMCSyntaxNodeType.FUNCTION;
             node.Next = next.Count != 0 ? next : null;
             node.Range = new Range(start, end);
             node.Value = literal;
 
-            return new(node, index, IndexToPosition(index));
+            return new(node, index, GetIndexStartPos(index));
         }
 
-        private async Task<JMCParseResult> ParseFunctionCallAsync(int index)
+        /// <summary>
+        /// Get the <seealso cref="Range"/> of a <seealso cref="string"/> in <seealso cref="TrimmedText"/> by index
+        /// </summary>
+        /// <param name="index"></param>
+        /// <returns></returns>
+        internal Range GetRangeByIndex(int index)
         {
-            var node = new JMCSyntaxNode();
-            var next = new List<JMCSyntaxNode>();
-
-            //parse parameters
-            var param = await ParseParameterAsync(NextIndex(index));
-            index = SkipToValue(param.EndIndex);
-            if (param.Node?.Next != null) 
-                next.AddRange(param.Node.Next);
-            var query = this.AsParseQuery(index);
-            var match = await query.ExpectAsync(JMCSyntaxNodeType.RPAREN);
-            index = query.Index;
-
-
-            node.Next = next.Count != 0 ? next : null;
-
-            return new(node, index, IndexToPosition(index));
+            var start = GetIndexStartPos(index);
+            var end = GetIndexEndPos(index);
+            return new Range(start, end);
         }
 
-        private async Task<JMCParseResult> ParseParameterAsync(int index)
-        {
-            var node = new JMCSyntaxNode();
-            var next = new List<JMCSyntaxNode>();
+        /// <summary>
+        /// Get the <seealso cref="Position"/> of a <seealso cref="string"/> in <seealso cref="TrimmedText"/>'s end pos
+        /// </summary>
+        /// <param name="index"></param>
+        /// <returns></returns>
+        internal Position GetIndexEndPos(int index) => (ToOffset(index) + TrimmedText[index].Length - 1).ToPosition(RawText);
 
-            node.Next = next.Count != 0 ? next : null;
-
-            return new(node, index, IndexToPosition(index));
-        }
-
+        /// <summary>
+        /// Skip to a non-space index
+        /// </summary>
+        /// <param name="index"></param>
+        /// <returns></returns>
         internal int SkipToValue(int index)
         {
-            if (index >= TrimmedText.Length - 1) return index;
+            if (index >= TrimmedText.Length - 1)
+                return TrimmedText.Length - 1;
 
             var value = TrimmedText[index];
             var nextIndex = index;
@@ -568,8 +567,18 @@ namespace JMC.Parser.JMC
             return nextIndex;
         }
 
+        /// <summary>
+        /// Get next non-space character index
+        /// </summary>
+        /// <param name="index"></param>
+        /// <returns></returns>
         internal int NextIndex(int index) => SkipToValue(index + 1);
 
+        /// <summary>
+        /// index of <seealso cref="TrimmedText"/> to offset
+        /// </summary>
+        /// <param name="index"></param>
+        /// <returns></returns>
         internal int ToOffset(int index)
         {
             var offset = 0;
@@ -584,6 +593,34 @@ namespace JMC.Parser.JMC
             return offset;
         }
 
-        internal Position IndexToPosition(int index) => ToOffset(index).ToPosition(RawText);
+        /// <summary>
+        /// <seealso cref="Position"/> to <seealso cref="int"/>
+        /// </summary>
+        /// <param name="position"></param>
+        /// <returns></returns>
+        internal int ToOffset(Position position)
+        {
+            if (position.Line == 0) return position.Character;
+
+            var offset = 0;
+            var split = RawText.Split(Environment.NewLine);
+            var arr = split.AsSpan();
+
+            for (var i = 0; i < position.Line; i++)
+            {
+                ref var line = ref arr[i];
+                offset += line.Length + Environment.NewLine.Length;
+            }
+            offset += position.Character;
+
+            return offset;
+        }
+
+        /// <summary>
+        /// Get the start <seealso cref="Position"/> by index of the <seealso cref="TrimmedText"/>
+        /// </summary>
+        /// <param name="index"></param>
+        /// <returns></returns>
+        internal Position GetIndexStartPos(int index) => ToOffset(index).ToPosition(RawText);
     }
 }

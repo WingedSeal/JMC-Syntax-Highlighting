@@ -2,14 +2,20 @@
 
 namespace JMC.Parser.JMC
 {
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="syntaxTree"></param>
+    /// <param name="startIndex"></param>
     internal class JMCParseQuery(JMCSyntaxTree syntaxTree, int startIndex = 0)
     {
         private JMCSyntaxTree SyntaxTree { get; set; } = syntaxTree;
         public int Index { get; set; } = startIndex;
+        public int PreviousIndex { get; set; } = -1;
         public JMCParseQuery Next()
         {
-            Index++;
-            Index = SyntaxTree.SkipToValue(Index);
+            PreviousIndex = Index;
+            Index = SyntaxTree.NextIndex(Index);
             return this;
         }
         private string CurrentText => SyntaxTree.TrimmedText[Index];
@@ -28,12 +34,10 @@ namespace JMC.Parser.JMC
 
                 if (!isMatch && throwError)
                 {
-                    SyntaxTree.Errors.Add(new JMCSyntaxError(SyntaxTree.IndexToPosition(Index), syntaxNodeType.ToTokenString(), node.NodeType.ToTokenString()));
+                    SyntaxTree.Errors.Add(new JMCSyntaxError(SyntaxTree.GetIndexStartPos(Index), syntaxNodeType.ToTokenString(), node.NodeType.ToTokenString()));
                 }
 
                 return isMatch;
-
-
             }
             catch
             {
@@ -53,7 +57,7 @@ namespace JMC.Parser.JMC
 
                 if (!isMatch && throwError)
                 {
-                    SyntaxTree.Errors.Add(new JMCSyntaxError(SyntaxTree.IndexToPosition(Index), value, node.NodeType.ToTokenString()));
+                    SyntaxTree.Errors.Add(new JMCSyntaxError(SyntaxTree.GetIndexStartPos(Index), value, node.NodeType.ToTokenString()));
                 }
 
                 return isMatch;
@@ -63,7 +67,6 @@ namespace JMC.Parser.JMC
                 return false;
             }
         }
-
 
         public async Task<bool> ExpectListAsync(params string[] values)
         {
@@ -79,7 +82,7 @@ namespace JMC.Parser.JMC
                     var isMatch = value == text;
                     if (!isMatch)
                     {
-                        SyntaxTree.Errors.Add(new JMCSyntaxError(SyntaxTree.IndexToPosition(Index), value, node.NodeType.ToTokenString()));
+                        SyntaxTree.Errors.Add(new JMCSyntaxError(SyntaxTree.GetIndexStartPos(Index), value, node.NodeType.ToTokenString()));
                         return false;
                     }
                 }
@@ -105,7 +108,7 @@ namespace JMC.Parser.JMC
                     var isMatch = nodeType == node.NodeType;
                     if (!isMatch)
                     {
-                        SyntaxTree.Errors.Add(new JMCSyntaxError(SyntaxTree.IndexToPosition(Index), nodeType.ToTokenString(), node.NodeType.ToTokenString()));
+                        SyntaxTree.Errors.Add(new JMCSyntaxError(SyntaxTree.GetIndexStartPos(Index), nodeType.ToTokenString(), node.NodeType.ToTokenString()));
                         return false;
                     }
                 }
@@ -117,20 +120,20 @@ namespace JMC.Parser.JMC
             }
         }
 
-        public async Task<bool> ExpectOrAsync(params JMCSyntaxNodeType[] nodeTypes)
+        public async Task<Tuple<bool, JMCSyntaxNodeType?>> ExpectOrAsync(params JMCSyntaxNodeType[] nodeTypes)
         {
             var node = await GetCurrentNodeAsync();
             if (node == null)
-                return false;
+                return new(false, null);
             for (var i = 0; i < nodeTypes.Length; i++)
             {
                 var type = nodeTypes[i];
                 if (type == node.NodeType)
-                    return true;
-            }
-            return false;
-        }
+                    return new(true, type);
 
+            }
+            return new(false, null);
+        }
 
         public bool ExpectInt()
         {

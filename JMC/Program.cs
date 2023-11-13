@@ -1,5 +1,4 @@
 ﻿using JMC.Parser.JMC;
-using JMC.Parser.JMC.Command;
 using JMC.Shared;
 using System.Diagnostics;
 
@@ -7,21 +6,30 @@ namespace JMC
 {
     internal class Program
     {
-        static void Main(string[] args)
+        static async Task<int> Main(string[] args)
         {
             var ext = new ExtensionData();
             var sw = new Stopwatch();
             sw.Start();
-            GeneralDebug();
+            //await GeneralDebugAsync();
+            LexerDebug();
             sw.Stop();
             Console.WriteLine($"Time escalped: {sw.ElapsedMilliseconds}ms");
+            return 1;
         }
-        static void GeneralDebug()
+        static void LexerDebug()
+        {
+            var content = File.ReadAllText("test/workspace/main.jmc");
+            var lexer = new JMCLexer(content);
+            var result = lexer.StartLexing();
+        }
+
+        static async Task GeneralDebugAsync()
         {
             var content = File.ReadAllText("test/workspace/main.jmc");
             var sw = new Stopwatch();
             sw.Start();
-            var tree = new JMCSyntaxTree(content);
+            var tree = await new JMCSyntaxTree().InitializeAsync(content);
             sw.Stop();
             Console.WriteLine($"Time escalped (Parsing): {sw.ElapsedMilliseconds}ms");
             tree.PrintPretty();
@@ -29,15 +37,15 @@ namespace JMC
             tree.Errors.ForEach(v => Console.WriteLine($"{v.Message}"));
         }
 
-        static void Testing()
+        static async Task TestingAsync()
         {
             var content = File.ReadAllText("test/workspace/main.jmc");
-            var tree = new JMCSyntaxTree(content);
+            var tree = await new JMCSyntaxTree().InitializeAsync(content);
             var sw = new Stopwatch();
             sw.Start();
-            tree.ModifyAsync(new()
+            tree.Modify(new()
             {
-                Range = new(1,1,2,2),
+                Range = new(1, 1, 2, 2),
                 Text = "amogus",
             });
             sw.Stop();

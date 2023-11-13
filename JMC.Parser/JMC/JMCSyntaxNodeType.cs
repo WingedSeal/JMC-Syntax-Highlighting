@@ -86,5 +86,7 @@
         TIME,
         UUID,
         COMMAND,
+        PARAMETER,
+        ARROW_FUNCTION,
     }
 }

@@ -70,5 +70,11 @@ namespace JMC.Parser.JMC
                 _ => nodeType.ToString(),
             };
         }
+
+        public static Span<char> ToCharSpan(this string value, int index = 0)
+        {
+            var chars = value.ToCharArray();
+            return chars.AsSpan(index);
+        }
     }
 }

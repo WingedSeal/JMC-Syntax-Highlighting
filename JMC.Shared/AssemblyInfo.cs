@@ -6,4 +6,3 @@
 [assembly: InternalsVisibleTo("JMC")]
 [assembly: InternalsVisibleTo("JMC.Parser.Test")]
 
-

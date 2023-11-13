@@ -33,7 +33,6 @@ namespace JMC.Parser.JMC
         ];
 
         #region Regex
-        private static readonly Regex SPLIT_PATTERN = SplitPatternRegex();
         private static readonly RegexOptions _regexOptions = RegexOptions.Compiled;
         [GeneratedRegex(@"(\/\/.*)|(\`(?:.|\s)*\`)|(-?\d*\.?\b\d+[lbs]?\b)|(\.\.\d+)|([""\'].*[""\'])|(\s|\;|\{|\}|\[|\]|\(|\)|\|\||&&|==|!=|[\<\>]\=|[\<\>]|\>\<|\+\+|\-\-|\?=|\?\?\=|!|,|:|\=\>|[\+\-\*\%\/]\=|[\+\-\*\%\/]|\=)")]
         private static partial Regex SplitPatternRegex();

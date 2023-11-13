@@ -5,6 +5,11 @@ namespace JMC.Parser.JMC
 {
     internal partial class JMCSyntaxTree
     {
+        /// <summary>
+        /// Parse a command
+        /// </summary>
+        /// <param name="index"></param>
+        /// <returns></returns>
         private async Task<JMCParseResult> ParseCommandExpressionAsync(int index)
         {
             var node = new JMCSyntaxNode();
@@ -22,14 +27,14 @@ namespace JMC.Parser.JMC
             Errors.AddRange(parser.Errors.Select(v => new JMCSyntaxError((v.Key + startOffset).ToPosition(RawText), v.Value)));
 
             var start = startOffset.ToPosition(RawText);
-            var end = IndexToPosition(index);
+            var end = GetIndexStartPos(index);
             var range = new Range(start, end);
             //set next
             node.Next = next.Count != 0 ? next : null;
             node.Range = range;
             node.NodeType = JMCSyntaxNodeType.COMMAND;
 
-            return new(node, index, IndexToPosition(index));
+            return new(node, index, GetIndexStartPos(index));
         }
     }
 }

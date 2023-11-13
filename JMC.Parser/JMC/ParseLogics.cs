@@ -2,6 +2,7 @@
 {
     internal partial class JMCSyntaxTree
     {
+        //TODO all not finished
         private async Task<JMCParseResult> ParseDoAsync(int index)
         {
             var node = new JMCSyntaxNode();
@@ -9,17 +10,17 @@
 
             var query = this.AsParseQuery(index);
             var match = await query.Next().ExpectAsync(JMCSyntaxNodeType.LCP);
-            var start = IndexToPosition(query.Index);
+            var start = GetIndexStartPos(query.Index);
 
+            //TODO:
 
-
-            var end = IndexToPosition(query.Index);
+            var end = GetIndexStartPos(query.Index);
             //set next
             node.Next = next.Count != 0 ? next : null;
             node.Range = new Range(start, end);
             node.NodeType = JMCSyntaxNodeType.DO;
 
-            return new(node, index, IndexToPosition(index));
+            return new(node, index, GetIndexStartPos(index));
         }
 
         private async Task<JMCParseResult> ParseWhileAsync(int index)
@@ -30,7 +31,7 @@
             //set next
             node.Next = next.Count != 0 ? next : null;
 
-            return new(null, index, IndexToPosition(index));
+            return new(null, index, GetIndexStartPos(index));
         }
 
         private async Task<JMCParseResult> ParseForAsync(int index)
@@ -41,7 +42,7 @@
             //set next
             node.Next = next.Count != 0 ? next : null;
 
-            return new(null, index, IndexToPosition(index));
+            return new(null, index, GetIndexStartPos(index));
         }
 
         private async Task<JMCParseResult> ParseSwitchAsync(int index)
@@ -52,7 +53,7 @@
             //set next
             node.Next = next.Count != 0 ? next : null;
 
-            return new(null, index, IndexToPosition(index));
+            return new(null, index, GetIndexStartPos(index));
         }
 
         private async Task<JMCParseResult> ParseIfAsync(int index)
@@ -63,7 +64,7 @@
             //set next
             node.Next = next.Count != 0 ? next : null;
 
-            return new(null, index, IndexToPosition(index));
+            return new(null, index, GetIndexStartPos(index));
         }
     }
 }
