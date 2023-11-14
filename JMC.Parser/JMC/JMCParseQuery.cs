@@ -137,18 +137,20 @@ namespace JMC.Parser.JMC
 
         public bool ExpectInt()
         {
-            try
-            {
-                if (CurrentText == "true" || CurrentText == "false")
-                    return true;
-
-                var check = int.Parse(CurrentText);
+            if (CurrentText == "true" || CurrentText == "false")
                 return true;
-            }
-            catch
+
+            if (CurrentText == null || CurrentText == "") return false;
+
+            var arr = CurrentText.ToCharSpan();
+            for (int i = 0; i < arr.Length; i++)
             {
-                return false;
+                ref var s = ref arr[i];
+                if ((s ^ '0') > 9)
+                    return false;
             }
+
+            return true;
         }
         public void Reset(JMCSyntaxTree syntaxTree, int startIndex = 0)
         {

@@ -20,7 +20,7 @@
             node.Range = new Range(start, end);
             node.NodeType = JMCSyntaxNodeType.DO;
 
-            return new(node, index, GetIndexStartPos(index));
+            return new(node, index );
         }
 
         private async Task<JMCParseResult> ParseWhileAsync(int index)
@@ -31,7 +31,7 @@
             //set next
             node.Next = next.Count != 0 ? next : null;
 
-            return new(null, index, GetIndexStartPos(index));
+            return new(null, index );
         }
 
         private async Task<JMCParseResult> ParseForAsync(int index)
@@ -42,7 +42,7 @@
             //set next
             node.Next = next.Count != 0 ? next : null;
 
-            return new(null, index, GetIndexStartPos(index));
+            return new(null, index );
         }
 
         private async Task<JMCParseResult> ParseSwitchAsync(int index)
@@ -53,7 +53,7 @@
             //set next
             node.Next = next.Count != 0 ? next : null;
 
-            return new(null, index, GetIndexStartPos(index));
+            return new(null, index );
         }
 
         private async Task<JMCParseResult> ParseIfAsync(int index)
@@ -64,7 +64,7 @@
             //set next
             node.Next = next.Count != 0 ? next : null;
 
-            return new(null, index, GetIndexStartPos(index));
+            return new(null, index );
         }
     }
 }

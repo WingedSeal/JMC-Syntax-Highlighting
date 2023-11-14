@@ -26,7 +26,7 @@ namespace JMC.Parser.JMC
             //set next
             node.Next = next.Count == 0 ? null : next;
 
-            return new(node, index, GetIndexStartPos(index));
+            return new(node, index);
         }
 
         /// <summary>
@@ -53,7 +53,7 @@ namespace JMC.Parser.JMC
                 return result;
             var current = await ParseAsync(index);
             if (current.Node == null)
-                return new(null, index, GetIndexStartPos(index));
+                return new(null, index);
 
             if (ExtensionData.CommandTree.RootCommands.Contains(text))
             {
@@ -65,7 +65,7 @@ namespace JMC.Parser.JMC
                     node.Range = cr.Node.Range;
                     index = cr.EndIndex;
                 }
-                return new(cr?.Node, index, GetIndexStartPos(index));
+                return new(cr?.Node, index);
             }
 
             else if (current.Node.NodeType == JMCSyntaxNodeType.VARIABLE)
@@ -79,7 +79,7 @@ namespace JMC.Parser.JMC
                     index = r.EndIndex;
                 }
 
-                return new(r?.Node, index, GetIndexStartPos(index));
+                return new(r?.Node, index);
             }
             else if (current.Node.NodeType == JMCSyntaxNodeType.LITERAL &&
                 TrimmedText[NextIndex(index)] == ":")
@@ -93,7 +93,7 @@ namespace JMC.Parser.JMC
                     index = r.EndIndex;
                 }
 
-                return new(r?.Node, index, GetIndexStartPos(index));
+                return new(r?.Node, index);
             }
             else if (current.Node.NodeType == JMCSyntaxNodeType.LITERAL &&
                 TrimmedText[NextIndex(index)] == "(")
@@ -107,9 +107,9 @@ namespace JMC.Parser.JMC
                     index = r.EndIndex;
                 }
 
-                return new(r?.Node, index, GetIndexStartPos(index));
+                return new(r?.Node, index);
             }
-            return new(null, index, GetIndexStartPos(index));
+            return new(null, index);
         }
 
         /// <summary>
@@ -147,7 +147,7 @@ namespace JMC.Parser.JMC
             node.Value = value;
             node.NodeType = JMCSyntaxNodeType.VARIABLE;
 
-            return new(node, index, GetIndexStartPos(index));
+            return new(node, index);
         }
 
         /// <summary>
@@ -191,7 +191,7 @@ namespace JMC.Parser.JMC
             node.NodeType = JMCSyntaxNodeType.SCOREBOARD;
             node.Value = value;
 
-            return new(node, index, GetIndexStartPos(index));
+            return new(node, index);
         }
 
         /// <summary>
@@ -235,7 +235,7 @@ namespace JMC.Parser.JMC
             //set next
             node.Next = next.Count != 0 ? next : null;
 
-            return new(node, index, GetIndexStartPos(index));
+            return new(node, index);
         }
 
         /// <summary>
@@ -271,7 +271,7 @@ namespace JMC.Parser.JMC
             node.NodeType = JMCSyntaxNodeType.FUNCTION_CALL;
             node.Value = functionValue;
 
-            return new(node, index, end);
+            return new(node, index);
         }
 
         /// <summary>
@@ -299,7 +299,7 @@ namespace JMC.Parser.JMC
 
             node.Next = next.Count == 0 ? null : next;
 
-            return new(node, index, GetIndexStartPos(index));
+            return new(node, index);
         }
 
         /// <summary>
@@ -331,7 +331,7 @@ namespace JMC.Parser.JMC
             node.NodeType = JMCSyntaxNodeType.PARAMETER;
             node.Range = new(start, end);
 
-            return new(node, index, GetIndexStartPos(index));
+            return new(node, index);
         }
 
         /// <summary>
@@ -355,7 +355,7 @@ namespace JMC.Parser.JMC
             node.NodeType = JMCSyntaxNodeType.PARAMETER;
             node.Range = new(start, end);
 
-            return new(node, index, GetIndexStartPos(index));
+            return new(node, index);
         }
     }
 }

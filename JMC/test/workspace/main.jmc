@@ -1,10 +1,7 @@
 ﻿ import "amogus"; 
 //top levels
-$var2 = 3*3
 $var = 3;
 obj:@s = 3;
-`test
-test2`
 //funtions & classes
 function test.vars.bools() {
 	$true += true;

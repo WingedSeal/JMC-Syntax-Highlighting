@@ -34,7 +34,7 @@ namespace JMC.Parser.JMC
             node.Range = range;
             node.NodeType = JMCSyntaxNodeType.COMMAND;
 
-            return new(node, index, GetIndexStartPos(index));
+            return new(node, index);
         }
     }
 }

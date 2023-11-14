@@ -8,24 +8,37 @@ namespace JMC.Parser.JMC
     {
         public static Position ToPosition(this int offset, string text)
         {
-            var line = 0;
-            var col = 0;
+            //var arr = text.ToCharArray().AsSpan();
+            //for (var i = 0; i < offset; i++)
+            //{
+            //    ref var value = ref arr[i];
+            //    var newLineCheck = $"{text[i]}{text[i + 1]}";
+            //    if (newLineCheck.StartsWith(Environment.NewLine))
+            //    {
+            //        line++;
+            //        col = 1 - Environment.NewLine.Length;
+            //    }
+            //    else col++;
 
-            var arr = text.ToCharArray().AsSpan();
-            for (var i = 0; i < offset; i++)
+            //}
+            //TODO;
+            var split = text.Split(Environment.NewLine).AsSpan();
+            var textCounter = offset;
+
+            int i = 0;
+            for (; i < split.Length; i++)
             {
-                ref var value = ref arr[i];
-                var newLineCheck = $"{text[i]}{text[i + 1]}";
-                if (newLineCheck.StartsWith(Environment.NewLine))
+                ref var lineText = ref split[i];
+                lineText += Environment.NewLine;
+                textCounter -= lineText.Length;
+                if (textCounter < 0)
                 {
-                    line++;
-                    col = 1 - Environment.NewLine.Length;
+                    textCounter += lineText.Length;
+                    break;
                 }
-                else col++;
-
             }
 
-            return new Position(line, col);
+            return new Position(i, textCounter);
         }
 
         public static async Task<Position> ToPositionAsync(this int offset, string text)
@@ -47,15 +60,6 @@ namespace JMC.Parser.JMC
             }
 
             return new Position(line, col);
-        }
-
-        public static JMCSyntaxError? ExpectToken(this JMCParseResult parseResult, JMCSyntaxNodeType nodeType)
-        {
-            if (parseResult.Node == null)
-                return new(parseResult.Position, nodeType.ToTokenString(), "");
-            else if (parseResult.Node.NodeType == nodeType)
-                return new(parseResult.Position, nodeType.ToTokenString(), parseResult.Node.NodeType.ToTokenString());
-            return null;
         }
 
         public static JMCParseQuery AsParseQuery(this JMCSyntaxTree syntaxTree, int index = 0) => new(syntaxTree, index);

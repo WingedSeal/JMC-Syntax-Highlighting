@@ -19,7 +19,7 @@ namespace JMC.Parser.JMC
         public async Task<JMCSyntaxTree> InitializeAsync(string text)
         {
             RawText = text;
-            var split = SplitPatternRegex().Split(RawText);
+            var split = new JMCLexer(text).StartLexing();
             SplitText = split.Where(v => v != "").ToArray();
             TrimmedText = SplitText.Select(x => x.Trim()).ToArray();
             await InitAsync();
@@ -87,8 +87,8 @@ namespace JMC.Parser.JMC
         {
             var result = await ParseAsync(index, isStart: true);
             index = NextIndex(result.EndIndex);
-                if (result.Node != null) Nodes.Add(result.Node);
-            
+            if (result.Node != null) Nodes.Add(result.Node);
+
             if (index < TrimmedText.Length - 1)
                 await ParseNextAsync(index, token);
         }
@@ -115,21 +115,21 @@ namespace JMC.Parser.JMC
                         return await ParseClassAsync(index);
                     else
                     {
-                        return new(new JMCSyntaxNode(), index, GetIndexStartPos(index));
+                        return new(new JMCSyntaxNode(), index);
                     }
                 case "function":
                     if (!noNext)
                         return await ParseFunctionAsync(index);
                     else
                     {
-                        return new(new JMCSyntaxNode(), index, GetIndexStartPos(index));
+                        return new(new JMCSyntaxNode(), index);
                     }
                 case "import":
                     if (!noNext)
                         return await ParseImportAsync(index);
                     else
                     {
-                        return new(new JMCSyntaxNode(), index, GetIndexStartPos(index));
+                        return new(new JMCSyntaxNode(), index);
                     }
                 case "true":
                     return new(new JMCSyntaxNode
@@ -137,35 +137,35 @@ namespace JMC.Parser.JMC
                         NodeType = JMCSyntaxNodeType.TRUE,
                         Range = range
                     },
-                    nextIndex, GetIndexStartPos(nextIndex));
+                    nextIndex);
                 case "false":
                     return new(new JMCSyntaxNode
                     {
                         NodeType = JMCSyntaxNodeType.FALSE,
                         Range = range
                     },
-                    nextIndex, GetIndexStartPos(nextIndex));
+                    nextIndex);
                 case "while":
                     return new(new JMCSyntaxNode
                     {
                         NodeType = JMCSyntaxNodeType.WHILE,
                         Range = range
                     },
-                    nextIndex, GetIndexStartPos(nextIndex));
+                    nextIndex);
                 case "do":
                     return new(new JMCSyntaxNode
                     {
                         NodeType = JMCSyntaxNodeType.DO,
                         Range = range
                     },
-                    nextIndex, GetIndexStartPos(nextIndex));
+                    nextIndex);
                 case "for":
                     return new(new JMCSyntaxNode
                     {
                         NodeType = JMCSyntaxNodeType.FOR,
                         Range = range
                     },
-                    nextIndex, GetIndexStartPos(nextIndex));
+                    nextIndex);
                 #endregion
 
                 #region Ops
@@ -175,90 +175,90 @@ namespace JMC.Parser.JMC
                         NodeType = JMCSyntaxNodeType.OP_INCREMENT,
                         Range = range
                     },
-                    nextIndex, GetIndexStartPos(nextIndex));
+                    nextIndex);
                 case "--":
                     return new(new JMCSyntaxNode
                     {
                         NodeType = JMCSyntaxNodeType.OP_DECREMENT,
                         Range = range
                     },
-                    nextIndex, GetIndexStartPos(nextIndex));
+                    nextIndex);
                 case "+":
                     return new(new JMCSyntaxNode
                     {
                         NodeType = JMCSyntaxNodeType.OP_PLUS,
                         Range = range
                     },
-                    nextIndex, GetIndexStartPos(nextIndex));
+                    nextIndex);
                 case "-":
                     return new(new JMCSyntaxNode
                     {
                         NodeType = JMCSyntaxNodeType.OP_SUBSTRACT,
                         Range = range
                     },
-                    nextIndex, GetIndexStartPos(nextIndex));
+                    nextIndex);
                 case "*":
                     return new(new JMCSyntaxNode
                     {
                         NodeType = JMCSyntaxNodeType.OP_MULTIPLY,
                         Range = range
                     },
-                    nextIndex, GetIndexStartPos(nextIndex));
+                    nextIndex);
                 case "/":
                     return new(new JMCSyntaxNode
                     {
                         NodeType = JMCSyntaxNodeType.OP_DIVIDE,
                         Range = range
                     },
-                    nextIndex, GetIndexStartPos(nextIndex));
+                    nextIndex);
                 case "+=":
                     return new(new JMCSyntaxNode
                     {
                         NodeType = JMCSyntaxNodeType.OP_PLUSEQ,
                         Range = range
                     },
-                    nextIndex, GetIndexStartPos(nextIndex));
+                    nextIndex);
                 case "-=":
                     return new(new JMCSyntaxNode
                     {
                         NodeType = JMCSyntaxNodeType.OP_SUBSTRACTEQ,
                         Range = range
                     },
-                    nextIndex, GetIndexStartPos(nextIndex));
+                    nextIndex);
                 case "*=":
                     return new(new JMCSyntaxNode
                     {
                         NodeType = JMCSyntaxNodeType.OP_MULTIPLYEQ,
                         Range = range
                     },
-                    nextIndex, GetIndexStartPos(nextIndex));
+                    nextIndex);
                 case "/=":
                     return new(new JMCSyntaxNode
                     {
                         NodeType = JMCSyntaxNodeType.OP_DIVIDEEQ
                     },
-                    nextIndex, GetIndexStartPos(nextIndex));
+                    nextIndex);
                 case "??=":
                     return new(new JMCSyntaxNode
                     {
                         NodeType = JMCSyntaxNodeType.OP_NULLCOALE,
                         Range = range
                     },
-                    nextIndex, GetIndexStartPos(nextIndex));
+                    nextIndex);
                 case "?=":
                     return new(new JMCSyntaxNode
                     {
                         NodeType = JMCSyntaxNodeType.OP_SUCCESS,
                         Range = range
                     },
-                    nextIndex, GetIndexStartPos(nextIndex));
+                    nextIndex);
                 case "><":
                     return new(new JMCSyntaxNode
                     {
                         NodeType = JMCSyntaxNodeType.OP_SWAP,
                         Range = range
                     },
-                    nextIndex, GetIndexStartPos(nextIndex));
+                    nextIndex);
                 #endregion
 
                 #region Comps
@@ -267,19 +267,19 @@ namespace JMC.Parser.JMC
                     {
                         NodeType = JMCSyntaxNodeType.COMP_OR
                     },
-                    nextIndex, GetIndexStartPos(nextIndex));
+                    nextIndex);
                 case "&&":
                     return new(new JMCSyntaxNode
                     {
                         NodeType = JMCSyntaxNodeType.COMP_NOT
                     },
-                    nextIndex, GetIndexStartPos(nextIndex));
+                    nextIndex);
                 case "!":
                     return new(new JMCSyntaxNode
                     {
                         NodeType = JMCSyntaxNodeType.COMP_NOT
                     },
-                    nextIndex, GetIndexStartPos(nextIndex));
+                    nextIndex);
                 #endregion
 
                 #region Chars
@@ -289,49 +289,49 @@ namespace JMC.Parser.JMC
                         NodeType = JMCSyntaxNodeType.LCP,
                         Range = range
                     },
-                    nextIndex, GetIndexStartPos(nextIndex));
+                    nextIndex);
                 case "}":
                     return new(new JMCSyntaxNode
                     {
                         NodeType = JMCSyntaxNodeType.RCP,
                         Range = range
                     },
-                    nextIndex, GetIndexStartPos(nextIndex));
+                    nextIndex);
                 case "(":
                     return new(new JMCSyntaxNode
                     {
                         NodeType = JMCSyntaxNodeType.LPAREN,
                         Range = range
                     },
-                    nextIndex, GetIndexStartPos(nextIndex));
+                    nextIndex);
                 case ")":
                     return new(new JMCSyntaxNode
                     {
                         NodeType = JMCSyntaxNodeType.RPAREN,
                         Range = range
                     },
-                    nextIndex, GetIndexStartPos(nextIndex));
+                    nextIndex);
                 case ";":
                     return new(new JMCSyntaxNode
                     {
                         NodeType = JMCSyntaxNodeType.SEMI,
                         Range = range
                     },
-                    nextIndex, GetIndexStartPos(nextIndex));
+                    nextIndex);
                 case ":":
                     return new(new JMCSyntaxNode
                     {
                         NodeType = JMCSyntaxNodeType.COLON,
                         Range = range
                     },
-                    nextIndex, GetIndexStartPos(nextIndex));
+                    nextIndex);
                 case "=>":
                     return new(new JMCSyntaxNode
                     {
                         NodeType = JMCSyntaxNodeType.ARROW_FUNCTION,
                         Range = range
                     },
-                    nextIndex, GetIndexStartPos(nextIndex));
+                    nextIndex);
                 #endregion
 
                 #region Misc
@@ -341,48 +341,47 @@ namespace JMC.Parser.JMC
                         NodeType = JMCSyntaxNodeType.GREATER_THAN,
                         Range = range
                     },
-                    nextIndex, GetIndexStartPos(nextIndex));
+                    nextIndex);
                 case "<":
                     return new(new JMCSyntaxNode
                     {
                         NodeType = JMCSyntaxNodeType.LESS_THAN,
                         Range = range
                     },
-                    nextIndex, GetIndexStartPos(nextIndex));
+                    nextIndex);
                 case ">=":
                     return new(new JMCSyntaxNode
                     {
                         NodeType = JMCSyntaxNodeType.GREATER_THAN_EQ,
                         Range = range
                     },
-                    nextIndex, GetIndexStartPos(nextIndex));
+                    nextIndex);
                 case "<=":
                     return new(new JMCSyntaxNode
                     {
                         NodeType = JMCSyntaxNodeType.LESS_THAN_EQ,
                         Range = range
                     },
-                    nextIndex, GetIndexStartPos(nextIndex));
+                    nextIndex);
                 case "=":
                     return new(new JMCSyntaxNode
                     {
                         NodeType = JMCSyntaxNodeType.EQUAL_TO,
                         Range = range
                     },
-                    nextIndex, GetIndexStartPos(nextIndex));
+                    nextIndex);
                 case "==":
                     return new(new JMCSyntaxNode
                     {
                         NodeType = JMCSyntaxNodeType.EQUAL,
                         Range = range
                     },
-                    nextIndex, GetIndexStartPos(nextIndex));
+                    nextIndex);
                 #endregion
                 default:
                     break;
             }
 
-            var position = GetIndexStartPos(nextIndex);
             var result = TokenPatterns.FirstOrDefault(v => v.Value.IsMatch(value)).Key;
 
             if (isStart)
@@ -393,9 +392,9 @@ namespace JMC.Parser.JMC
             }
 
             if (result != default)
-                return new(new(result, range: range, value: value), nextIndex, position);
+                return new(new(result, range: range, value: value), nextIndex);
 
-            return new(null, nextIndex, position);
+            return new(null, nextIndex);
         }
 
 
@@ -450,7 +449,7 @@ namespace JMC.Parser.JMC
             node.Range = new Range(start, end);
             node.Value = literal;
 
-            return new(node, index, GetIndexStartPos(index));
+            return new(node, index);
         }
 
         /// <summary>
@@ -480,7 +479,7 @@ namespace JMC.Parser.JMC
             node.Next = match && str.Node != null ? [str.Node] : null;
             node.Range = new Range(start, end);
 
-            return new(node, index, GetIndexStartPos(index));
+            return new(node, index);
         }
 
         /// <summary>
@@ -523,7 +522,7 @@ namespace JMC.Parser.JMC
             node.Range = new Range(start, end);
             node.Value = literal;
 
-            return new(node, index, GetIndexStartPos(index));
+            return new(node, index);
         }
 
         /// <summary>

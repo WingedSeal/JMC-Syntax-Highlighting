@@ -11,8 +11,7 @@ namespace JMC
             var ext = new ExtensionData();
             var sw = new Stopwatch();
             sw.Start();
-            //await GeneralDebugAsync();
-            LexerDebug();
+            await GeneralDebugAsync();
             sw.Stop();
             Console.WriteLine($"Time escalped: {sw.ElapsedMilliseconds}ms");
             return 1;
