@@ -1,6 +1,4 @@
-﻿using JMC.Parser.Error;
-using OmniSharp.Extensions.LanguageServer.Protocol.Models;
-using static JMC.Parser.JMC.JMCSyntaxTree;
+﻿using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 
 namespace JMC.Parser.JMC
 {
@@ -8,20 +6,6 @@ namespace JMC.Parser.JMC
     {
         public static Position ToPosition(this int offset, string text)
         {
-            //var arr = text.ToCharArray().AsSpan();
-            //for (var i = 0; i < offset; i++)
-            //{
-            //    ref var value = ref arr[i];
-            //    var newLineCheck = $"{text[i]}{text[i + 1]}";
-            //    if (newLineCheck.StartsWith(Environment.NewLine))
-            //    {
-            //        line++;
-            //        col = 1 - Environment.NewLine.Length;
-            //    }
-            //    else col++;
-
-            //}
-            //TODO;
             var split = text.Split(Environment.NewLine).AsSpan();
             var textCounter = offset;
 

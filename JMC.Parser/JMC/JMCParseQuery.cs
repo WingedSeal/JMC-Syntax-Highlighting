@@ -1,4 +1,4 @@
-﻿using JMC.Parser.Error;
+﻿using JMC.Parser.JMC.Error;
 
 namespace JMC.Parser.JMC
 {
@@ -135,9 +135,13 @@ namespace JMC.Parser.JMC
             return new(false, null);
         }
 
-        public bool ExpectInt()
+        /// <summary>
+        /// Expect <seealso cref="CurrentText"/> to be <seealso cref="int"/> or <seealso cref="bool"/>
+        /// </summary>
+        /// <returns><seealso cref="CurrentText"/> is <seealso cref="int"/> or <seealso cref="bool"/></returns>
+        public bool ExpectInt(bool includeBool = true)
         {
-            if (CurrentText == "true" || CurrentText == "false")
+            if (includeBool && CurrentText == "true" || CurrentText == "false")
                 return true;
 
             if (CurrentText == null || CurrentText == "") return false;
@@ -152,10 +156,13 @@ namespace JMC.Parser.JMC
 
             return true;
         }
+
         public void Reset(JMCSyntaxTree syntaxTree, int startIndex = 0)
         {
             SyntaxTree = syntaxTree;
             Index = startIndex;
         }
+
+        public void Reset(int startIndex = 0) => Index = startIndex;
     }
 }

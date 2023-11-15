@@ -1,4 +1,4 @@
-﻿using JMC.Parser.Error.Base;
+﻿using JMC.Parser.JMC.Error.Base;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 
 namespace JMC.Parser.JMC

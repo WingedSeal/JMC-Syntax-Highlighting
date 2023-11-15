@@ -12,7 +12,6 @@ function test.vars.bools() {
 
 function cmd() {
 	data get entity @s;
-	call(a=a,a=3);
 }
 
 class test {
@@ -38,4 +37,8 @@ class test {
 		$var = obj:@p = $a1;
 		obj:@s = obj:@e = $a1 = 5;
 	}
+}
+
+function function.calls() {
+	call(a=a,a=3);
 }

@@ -1,5 +1,5 @@
-﻿using JMC.Parser.Error;
-using JMC.Parser.JMC.Command;
+﻿using JMC.Parser.JMC.Command;
+using JMC.Parser.JMC.Error;
 
 namespace JMC.Parser.JMC
 {

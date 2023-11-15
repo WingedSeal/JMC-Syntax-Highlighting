@@ -1,4 +1,5 @@
-﻿using JMC.Shared;
+﻿using JMC.Parser.JMC.Error;
+using JMC.Shared;
 using JMC.Shared.Datas.BuiltIn;
 
 namespace JMC.Parser.JMC
@@ -287,14 +288,23 @@ namespace JMC.Parser.JMC
 
             var split = funcLiteral.Split('.');
             var builtinFunc = ExtensionData.JMCBuiltInFunctions.GetFunction(split.First(), split.Last());
+            var pos = GetIndexStartPos(index);
             while (TrimmedText[index] != ")")
             {
-                var param = builtinFunc != null ? await ParseParameterAsync(index, builtinFunc) : await ParseParameterAsync(index);
+                var param = builtinFunc != null ? await ParseParameterAsync(index, builtinFunc, next) : await ParseParameterAsync(index);
                 if (param.Node != null)
                     next.Add(param.Node);
                 index = NextIndex(param.EndIndex);
                 if (TrimmedText[index] == ",")
                     index = NextIndex(index);
+            }
+            pos = GetIndexStartPos(index);
+            if (builtinFunc != null)
+            {
+                var args = ExtensionData.JMCBuiltInFunctions.GetRequiredArgs(builtinFunc);
+                var nonNamedArgsCount = next.Where(v => v.Next?.Count() == 1).Count();
+                if (nonNamedArgsCount < args.Count())
+                    Errors.Add(new JMCArgumentError(pos, args.ElementAt(nonNamedArgsCount)));
             }
 
             node.Next = next.Count == 0 ? null : next;
@@ -340,14 +350,78 @@ namespace JMC.Parser.JMC
         /// <param name="index"></param>
         /// <param name="builtInFunction"></param>
         /// <returns></returns>
-        private async Task<JMCParseResult> ParseParameterAsync(int index, JMCBuiltInFunction builtInFunction)
+        private async Task<JMCParseResult> ParseParameterAsync(int index, JMCBuiltInFunction builtInFunction, List<JMCSyntaxNode> paramNodes)
         {
             var node = new JMCSyntaxNode();
             var next = new List<JMCSyntaxNode>();
             var query = this.AsParseQuery(index);
             var start = GetIndexStartPos(index);
 
-            //TODO: parse params
+            var args = builtInFunction.Arguments;
+            var hasEqual = await query.Next().ExpectAsync(JMCSyntaxNodeType.EQUAL_TO, false);
+            JMCFunctionArgument? targetArg = hasEqual || paramNodes.Count > 0 && paramNodes.Last().Next?.Count() > 1
+                ? args.FirstOrDefault(v => v.Name == TrimmedText[index])
+                : args[paramNodes.Count];
+
+            if (targetArg == null)
+            {
+                Errors.Add(new JMCArgumentError(start, args[paramNodes.Count]));
+                index = query.Index;
+            }
+            else
+            {
+                if (hasEqual)
+                {
+                    var result = await ParseAsync(index);
+                    var resultNode = result.Node!;
+                    next.Add(resultNode);
+                    index = NextIndex(index);
+
+                    result = await ParseAsync(index);
+                    resultNode = result.Node!;
+                    next.Add(resultNode);
+                    index = NextIndex(index);
+                }
+                query.Reset(index);
+
+                //TODO: not fully supported
+                JMCSyntaxNodeType? expectedType = default;
+                bool match = false;
+                switch (targetArg.ArgumentType)
+                {
+                    case "String":
+                        var tuple = await query.ExpectOrAsync(JMCSyntaxNodeType.STRING, JMCSyntaxNodeType.MULTILINE_STRING);
+                        expectedType = tuple.Item2;
+                        match = tuple.Item1;
+                        break;
+                    case "FormattedString":
+                        match = await query.ExpectAsync(JMCSyntaxNodeType.STRING);
+                        expectedType = match ? JMCSyntaxNodeType.STRING : null;
+                        break;
+                    case "Integer":
+                        match = query.ExpectInt(false);
+                        expectedType = match ? JMCSyntaxNodeType.INT : null;
+                        break;
+                    case "Float":
+                        match = await query.ExpectAsync(JMCSyntaxNodeType.NUMBER);
+                        expectedType = match ? JMCSyntaxNodeType.NUMBER : null;
+                        break;
+                    case "Keyword":
+                    case "Objective":
+                        match = await query.ExpectAsync(JMCSyntaxNodeType.LITERAL);
+                        expectedType = match ? JMCSyntaxNodeType.LITERAL : null;
+                        break;
+                    default:
+                        break;
+                }
+                if (match && expectedType != default)
+                {
+                    index = query.Index;
+                    var r = await ParseAsync(index);
+                    if (r.Node != null)
+                        next.Add(r.Node);
+                }
+            }
 
             var end = GetIndexStartPos(index);
 

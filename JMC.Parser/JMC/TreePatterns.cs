@@ -32,10 +32,6 @@ namespace JMC.Parser.JMC
             JMCSyntaxNodeType.OP_SWAP
         ];
 
-        #region Regex
         private static readonly RegexOptions _regexOptions = RegexOptions.Compiled;
-        [GeneratedRegex(@"(\/\/.*)|(\`(?:.|\s)*\`)|(-?\d*\.?\b\d+[lbs]?\b)|(\.\.\d+)|([""\'].*[""\'])|(\s|\;|\{|\}|\[|\]|\(|\)|\|\||&&|==|!=|[\<\>]\=|[\<\>]|\>\<|\+\+|\-\-|\?=|\?\?\=|!|,|:|\=\>|[\+\-\*\%\/]\=|[\+\-\*\%\/]|\=)")]
-        private static partial Regex SplitPatternRegex();
-        #endregion
     }
 }
