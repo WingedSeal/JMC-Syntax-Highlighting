@@ -20,22 +20,21 @@ namespace JMC.Parser.JMC
         }
         private string CurrentText => SyntaxTree.TrimmedText[Index];
 
-        private async Task<JMCSyntaxNode?> GetCurrentNodeAsync() => (await SyntaxTree.ParseAsync(Index, true)).Node;
+        private JMCSyntaxNode? GetCurrentNode() => SyntaxTree.Parse(Index, true).Node;
 
-        public async Task<bool> ExpectAsync(JMCSyntaxNodeType syntaxNodeType, bool throwError = true)
+        public bool Expect(JMCSyntaxNodeType syntaxNodeType, bool throwError = true)
         {
             try
             {
                 //parse token
                 var text = SyntaxTree.TrimmedText[Index];
-                var node = await GetCurrentNodeAsync();
+                var node = GetCurrentNode();
                 if (node == null) return false;
                 var isMatch = node.NodeType == syntaxNodeType;
 
                 if (!isMatch && throwError)
-                {
                     SyntaxTree.Errors.Add(new JMCSyntaxError(SyntaxTree.GetIndexStartPos(Index), syntaxNodeType.ToTokenString(), node.NodeType.ToTokenString()));
-                }
+                
 
                 return isMatch;
             }
@@ -45,20 +44,19 @@ namespace JMC.Parser.JMC
             }
         }
 
-        public async Task<bool> ExpectAsync(string value, bool throwError = true)
+        public bool Expect(string value, bool throwError = true)
         {
             try
             {
                 //parse token
                 var text = SyntaxTree.TrimmedText[Index];
-                var node = await GetCurrentNodeAsync();
+                var node = GetCurrentNode();
                 if (node == null) return false;
                 var isMatch = value == text;
 
                 if (!isMatch && throwError)
-                {
                     SyntaxTree.Errors.Add(new JMCSyntaxError(SyntaxTree.GetIndexStartPos(Index), value, node.NodeType.ToTokenString()));
-                }
+                
 
                 return isMatch;
             }
@@ -68,7 +66,7 @@ namespace JMC.Parser.JMC
             }
         }
 
-        public async Task<bool> ExpectListAsync(params string[] values)
+        public bool ExpectList(params string[] values)
         {
             try
             {
@@ -77,7 +75,7 @@ namespace JMC.Parser.JMC
                     Next();
                     var value = values.ElementAt(i);
                     var text = SyntaxTree.TrimmedText[Index];
-                    var node = (await SyntaxTree.ParseAsync(Index, true)).Node;
+                    var node = (SyntaxTree.Parse(Index, true)).Node;
                     if (node == null) return false;
                     var isMatch = value == text;
                     if (!isMatch)
@@ -94,16 +92,17 @@ namespace JMC.Parser.JMC
             }
         }
 
-        public async Task<bool> ExpectListAsync(params JMCSyntaxNodeType[] nodeTypes)
+        public bool ExpectList(params JMCSyntaxNodeType[] nodeTypes)
         {
             try
             {
-                for (var i = 0; i < nodeTypes.Length; i++)
+                var arr = nodeTypes.AsSpan();
+                for (var i = 0; i < arr.Length; i++)
                 {
                     Next();
-                    var nodeType = nodeTypes.ElementAt(i);
+                    ref var nodeType = ref arr[i];
                     var text = SyntaxTree.TrimmedText[Index];
-                    var node = await GetCurrentNodeAsync();
+                    var node = GetCurrentNode();
                     if (node == null) return false;
                     var isMatch = nodeType == node.NodeType;
                     if (!isMatch)
@@ -120,14 +119,15 @@ namespace JMC.Parser.JMC
             }
         }
 
-        public async Task<Tuple<bool, JMCSyntaxNodeType?>> ExpectOrAsync(params JMCSyntaxNodeType[] nodeTypes)
+        public Tuple<bool, JMCSyntaxNodeType?> ExpectOr(params JMCSyntaxNodeType[] nodeTypes)
         {
-            var node = await GetCurrentNodeAsync();
+            var node = GetCurrentNode();
             if (node == null)
                 return new(false, null);
-            for (var i = 0; i < nodeTypes.Length; i++)
+            var arr = nodeTypes.AsSpan();
+            for (var i = 0; i < arr.Length; i++)
             {
-                var type = nodeTypes[i];
+                ref var type = ref arr[i];
                 if (type == node.NodeType)
                     return new(true, type);
 

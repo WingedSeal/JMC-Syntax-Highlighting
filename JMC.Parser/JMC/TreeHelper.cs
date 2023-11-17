@@ -25,27 +25,6 @@ namespace JMC.Parser.JMC
             return new Position(i, textCounter);
         }
 
-        public static async Task<Position> ToPositionAsync(this int offset, string text)
-        {
-            var line = 0;
-            var col = 0;
-
-            for (var i = 0; i < offset; i++)
-            {
-                if (text[i] == '\n')
-                {
-                    line++;
-                    col = 0;
-                }
-                else
-                {
-                    col++;
-                }
-            }
-
-            return new Position(line, col);
-        }
-
         public static JMCParseQuery AsParseQuery(this JMCSyntaxTree syntaxTree, int index = 0) => new(syntaxTree, index);
 
         public static string ToTokenString(this JMCSyntaxNodeType nodeType)

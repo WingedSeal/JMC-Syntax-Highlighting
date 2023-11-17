@@ -11,14 +11,14 @@ namespace JMC.Parser.JMC
         /// </summary>
         /// <param name="index"></param>
         /// <returns><seealso cref="JMCSyntaxNode"/> has only <seealso cref="JMCSyntaxNode.Next"/></returns>
-        private async Task<JMCParseResult> ParseBlockAsync(int index)
+        private JMCParseResult ParseBlock(int index)
         {
             var node = new JMCSyntaxNode();
             var next = new List<JMCSyntaxNode>();
 
             while (index < TrimmedText.Length)
             {
-                var exp = await ParseExpressionAsync(NextIndex(index));
+                var exp = ParseExpression(NextIndex(index));
                 if (exp.Node != null) next.Add(exp.Node);
                 index = exp.EndIndex;
                 if (TrimmedText[index] == "}") break;
@@ -35,7 +35,7 @@ namespace JMC.Parser.JMC
         /// </summary>
         /// <param name="index"></param>
         /// <returns></returns>
-        private async Task<JMCParseResult> ParseExpressionAsync(int index)
+        private JMCParseResult ParseExpression(int index)
         {
             var node = new JMCSyntaxNode();
             var next = new List<JMCSyntaxNode>();
@@ -43,22 +43,22 @@ namespace JMC.Parser.JMC
             var text = TrimmedText[index];
             JMCParseResult? result = text switch
             {
-                "do" => await ParseDoAsync(NextIndex(index)),
-                "while" => await ParseWhileAsync(NextIndex(index)),
-                "for" => await ParseForAsync(NextIndex(index)),
-                "switch" => await ParseSwitchAsync(NextIndex(index)),
-                "if" => await ParseIfAsync(NextIndex(index)),
+                "do" => ParseDo(NextIndex(index)),
+                "while" => ParseWhile(NextIndex(index)),
+                "for" => ParseFor(NextIndex(index)),
+                "switch" => ParseSwitch(NextIndex(index)),
+                "if" => ParseIf(NextIndex(index)),
                 _ => null,
             };
             if (result != null)
                 return result;
-            var current = await ParseAsync(index);
+            var current = Parse(index);
             if (current.Node == null)
                 return new(null, index);
 
             if (ExtensionData.CommandTree.RootCommands.Contains(text))
             {
-                var cr = await ParseCommandExpressionAsync(index);
+                var cr = ParseCommandExpressionAsync(index);
                 if (cr?.Node != null)
                 {
                     node.Next = cr.Node.Next;
@@ -71,7 +71,7 @@ namespace JMC.Parser.JMC
 
             else if (current.Node.NodeType == JMCSyntaxNodeType.VARIABLE)
             {
-                var r = await ParseVariableExpressionAsync(index);
+                var r = ParseVariableExpression(index);
                 if (r?.Node != null)
                 {
                     node.Next = r.Node.Next;
@@ -85,7 +85,7 @@ namespace JMC.Parser.JMC
             else if (current.Node.NodeType == JMCSyntaxNodeType.LITERAL &&
                 TrimmedText[NextIndex(index)] == ":")
             {
-                var r = await ParseScoreboardObjExpressionAsync(index);
+                var r = ParseScoreboardObjExpression(index);
                 if (r?.Node != null)
                 {
                     node.Next = r.Node.Next;
@@ -99,7 +99,7 @@ namespace JMC.Parser.JMC
             else if (current.Node.NodeType == JMCSyntaxNodeType.LITERAL &&
                 TrimmedText[NextIndex(index)] == "(")
             {
-                var r = await ParseFunctionCallAsync(index);
+                var r = ParseFunctionCall(index);
                 if (r?.Node != null)
                 {
                     node.Next = r.Node.Next;
@@ -119,7 +119,7 @@ namespace JMC.Parser.JMC
         /// <param name="index"></param>
         /// <param name="isRecursion"></param>
         /// <returns></returns>
-        private async Task<JMCParseResult> ParseVariableExpressionAsync(int index, bool isRecursion = false)
+        private JMCParseResult ParseVariableExpression(int index, bool isRecursion = false)
         {
             var node = new JMCSyntaxNode();
             var next = new List<JMCSyntaxNode>();
@@ -127,7 +127,7 @@ namespace JMC.Parser.JMC
             //start position
             var startPos = GetIndexStartPos(index);
             //parse assignment
-            var result = await ParseAssignmentExpressionAsync(NextIndex(index));
+            var result = ParseAssignmentExpression(NextIndex(index));
             if (result.Node?.Next != null)
                 next.AddRange(result.Node.Next);
             index = result.EndIndex;
@@ -136,7 +136,7 @@ namespace JMC.Parser.JMC
             if (!isRecursion)
             {
                 var query = this.AsParseQuery(index);
-                await query.ExpectAsync(JMCSyntaxNodeType.SEMI);
+                query.Expect(JMCSyntaxNodeType.SEMI);
             }
 
             //end position
@@ -160,18 +160,18 @@ namespace JMC.Parser.JMC
         /// <param name="index"></param>
         /// <param name="isRecursion"></param>
         /// <returns></returns>
-        private async Task<JMCParseResult> ParseScoreboardObjExpressionAsync(int index, bool isRecursion = false)
+        private JMCParseResult ParseScoreboardObjExpression(int index, bool isRecursion = false)
         {
             var node = new JMCSyntaxNode();
             var next = new List<JMCSyntaxNode>();
 
             var query = this.AsParseQuery(index);
-            var match = await query.ExpectListAsync(JMCSyntaxNodeType.COLON, JMCSyntaxNodeType.SELECTOR);
+            var match = query.ExpectList(JMCSyntaxNodeType.COLON, JMCSyntaxNodeType.SELECTOR);
             var value = string.Join("", TrimmedText[index..(query.Index + 1)].Where(v => !string.IsNullOrEmpty(v)));
             index = query.Index;
             var startPos = GetIndexStartPos(index);
             //parse assignment
-            var result = await ParseAssignmentExpressionAsync(NextIndex(index));
+            var result = ParseAssignmentExpression(NextIndex(index));
             if (result.Node?.Next != null)
                 next.AddRange(result.Node.Next);
             index = result.EndIndex;
@@ -180,7 +180,7 @@ namespace JMC.Parser.JMC
             if (!isRecursion)
             {
                 query.Reset(this, index);
-                await query.ExpectAsync(JMCSyntaxNodeType.SEMI);
+                query.Expect(JMCSyntaxNodeType.SEMI);
             }
 
 
@@ -200,34 +200,34 @@ namespace JMC.Parser.JMC
         /// </summary>
         /// <param name="index"></param>
         /// <returns></returns>
-        private async Task<JMCParseResult> ParseAssignmentExpressionAsync(int index)
+        private JMCParseResult ParseAssignmentExpression(int index)
         {
             var node = new JMCSyntaxNode();
             var next = new List<JMCSyntaxNode>();
 
             var query = this.AsParseQuery(index);
-            var match = await query.ExpectOrAsync([.. OperatorsAssignTokens]);
+            var match = query.ExpectOr([.. OperatorsAssignTokens]);
 
             if (match.Item1)
             {
-                next.Add((await ParseAsync(index)).Node!);
+                next.Add((Parse(index)).Node!);
                 query.Next();
                 index = query.Index;
                 if (query.ExpectInt())
                 {
-                    var r = await ParseAsync(index);
+                    var r = Parse(index);
                     next.Add(r.Node!);
                     index = r.EndIndex;
                 }
-                else if (await query.ExpectAsync(JMCSyntaxNodeType.VARIABLE, false))
+                else if (query.Expect(JMCSyntaxNodeType.VARIABLE, false))
                 {
-                    var r = await ParseVariableExpressionAsync(index, true);
+                    var r = ParseVariableExpression(index, true);
                     next.Add(r.Node!);
                     index = r.EndIndex;
                 }
-                else if (await query.ExpectAsync(JMCSyntaxNodeType.LITERAL, false))
+                else if (query.Expect(JMCSyntaxNodeType.LITERAL, false))
                 {
-                    var r = await ParseScoreboardObjExpressionAsync(index, true);
+                    var r = ParseScoreboardObjExpression(index, true);
                     next.Add(r.Node!);
                     index = r.EndIndex;
                 }
@@ -247,7 +247,7 @@ namespace JMC.Parser.JMC
         /// </remarks>
         /// <param name="index"></param>
         /// <returns></returns>
-        private async Task<JMCParseResult> ParseFunctionCallAsync(int index)
+        private JMCParseResult ParseFunctionCall(int index)
         {
             var node = new JMCSyntaxNode();
             var next = new List<JMCSyntaxNode>();
@@ -256,12 +256,12 @@ namespace JMC.Parser.JMC
             var functionValue = TrimmedText[index];
             index = NextIndex(index);
             var start = GetIndexStartPos(index);
-            var param = await ParseParametersAsync(NextIndex(index), functionValue);
+            var param = ParseParameters(NextIndex(index), functionValue);
 
             //test for RPAREN
             index = param.EndIndex;
             var query = this.AsParseQuery(index);
-            await query.ExpectAsync(JMCSyntaxNodeType.RPAREN);
+            query.Expect(JMCSyntaxNodeType.RPAREN);
             index = NextIndex(query.Index);
 
             //get end pos
@@ -281,7 +281,7 @@ namespace JMC.Parser.JMC
         /// <param name="index"></param>
         /// <param name="funcLiteral"></param>
         /// <returns></returns>
-        private async Task<JMCParseResult> ParseParametersAsync(int index, string funcLiteral)
+        private JMCParseResult ParseParameters(int index, string funcLiteral)
         {
             var node = new JMCSyntaxNode();
             var next = new List<JMCSyntaxNode>();
@@ -291,7 +291,7 @@ namespace JMC.Parser.JMC
             var pos = GetIndexStartPos(index);
             while (TrimmedText[index] != ")")
             {
-                var param = builtinFunc != null ? await ParseParameterAsync(index, builtinFunc, next) : await ParseParameterAsync(index);
+                var param = builtinFunc != null ? ParseParameter(index, builtinFunc, next) : ParseParameter(index);
                 if (param.Node != null)
                     next.Add(param.Node);
                 index = NextIndex(param.EndIndex);
@@ -317,22 +317,22 @@ namespace JMC.Parser.JMC
         /// </summary>
         /// <param name="index"></param>
         /// <returns></returns>
-        private async Task<JMCParseResult> ParseParameterAsync(int index)
+        private JMCParseResult ParseParameter(int index)
         {
             var node = new JMCSyntaxNode();
             var next = new List<JMCSyntaxNode>();
             var query = this.AsParseQuery(index);
             var start = GetIndexStartPos(index);
             // literal '=' (number || literal)
-            await query.ExpectAsync(JMCSyntaxNodeType.LITERAL);
+            query.Expect(JMCSyntaxNodeType.LITERAL);
             next.Add(new(JMCSyntaxNodeType.LITERAL, TrimmedText[index], range: GetRangeByIndex(index)));
             index = NextIndex(query.Index);
 
-            await query.Next().ExpectAsync(JMCSyntaxNodeType.EQUAL_TO);
+            query.Next().Expect(JMCSyntaxNodeType.EQUAL_TO);
             next.Add(new(JMCSyntaxNodeType.EQUAL_TO, TrimmedText[index], range: GetRangeByIndex(index)));
             index = NextIndex(query.Index);
 
-            var r = await query.Next().ExpectOrAsync(JMCSyntaxNodeType.LITERAL, JMCSyntaxNodeType.NUMBER);
+            var r = query.Next().ExpectOr(JMCSyntaxNodeType.LITERAL, JMCSyntaxNodeType.NUMBER);
             next.Add(new(r.Item2 ?? JMCSyntaxNodeType.UNKNOWN, TrimmedText[index], range: GetRangeByIndex(index)));
             index = query.Index;
             var end = GetIndexStartPos(index);
@@ -350,7 +350,7 @@ namespace JMC.Parser.JMC
         /// <param name="index"></param>
         /// <param name="builtInFunction"></param>
         /// <returns></returns>
-        private async Task<JMCParseResult> ParseParameterAsync(int index, JMCBuiltInFunction builtInFunction, List<JMCSyntaxNode> paramNodes)
+        private JMCParseResult ParseParameter(int index, JMCBuiltInFunction builtInFunction, List<JMCSyntaxNode> paramNodes)
         {
             var node = new JMCSyntaxNode();
             var next = new List<JMCSyntaxNode>();
@@ -358,7 +358,7 @@ namespace JMC.Parser.JMC
             var start = GetIndexStartPos(index);
 
             var args = builtInFunction.Arguments;
-            var hasEqual = await query.Next().ExpectAsync(JMCSyntaxNodeType.EQUAL_TO, false);
+            var hasEqual = query.Next().Expect(JMCSyntaxNodeType.EQUAL_TO, false);
             JMCFunctionArgument? targetArg = hasEqual || paramNodes.Count > 0 && paramNodes.Last().Next?.Count() > 1
                 ? args.FirstOrDefault(v => v.Name == TrimmedText[index])
                 : args[paramNodes.Count];
@@ -372,12 +372,12 @@ namespace JMC.Parser.JMC
             {
                 if (hasEqual)
                 {
-                    var result = await ParseAsync(index);
+                    var result = Parse(index);
                     var resultNode = result.Node!;
                     next.Add(resultNode);
                     index = NextIndex(index);
 
-                    result = await ParseAsync(index);
+                    result = Parse(index);
                     resultNode = result.Node!;
                     next.Add(resultNode);
                     index = NextIndex(index);
@@ -390,12 +390,12 @@ namespace JMC.Parser.JMC
                 switch (targetArg.ArgumentType)
                 {
                     case "String":
-                        var tuple = await query.ExpectOrAsync(JMCSyntaxNodeType.STRING, JMCSyntaxNodeType.MULTILINE_STRING);
+                        var tuple = query.ExpectOr(JMCSyntaxNodeType.STRING, JMCSyntaxNodeType.MULTILINE_STRING);
                         expectedType = tuple.Item2;
                         match = tuple.Item1;
                         break;
                     case "FormattedString":
-                        match = await query.ExpectAsync(JMCSyntaxNodeType.STRING);
+                        match = query.Expect(JMCSyntaxNodeType.STRING);
                         expectedType = match ? JMCSyntaxNodeType.STRING : null;
                         break;
                     case "Integer":
@@ -403,12 +403,12 @@ namespace JMC.Parser.JMC
                         expectedType = match ? JMCSyntaxNodeType.INT : null;
                         break;
                     case "Float":
-                        match = await query.ExpectAsync(JMCSyntaxNodeType.NUMBER);
+                        match = query.Expect(JMCSyntaxNodeType.NUMBER);
                         expectedType = match ? JMCSyntaxNodeType.NUMBER : null;
                         break;
                     case "Keyword":
                     case "Objective":
-                        match = await query.ExpectAsync(JMCSyntaxNodeType.LITERAL);
+                        match = query.Expect(JMCSyntaxNodeType.LITERAL);
                         expectedType = match ? JMCSyntaxNodeType.LITERAL : null;
                         break;
                     default:
@@ -417,7 +417,7 @@ namespace JMC.Parser.JMC
                 if (match && expectedType != default)
                 {
                     index = query.Index;
-                    var r = await ParseAsync(index);
+                    var r = Parse(index);
                     if (r.Node != null)
                         next.Add(r.Node);
                 }

@@ -88,5 +88,7 @@
         COMMAND,
         PARAMETER,
         ARROW_FUNCTION,
+        COMP_AND,
+        CONDITION,
     }
 }

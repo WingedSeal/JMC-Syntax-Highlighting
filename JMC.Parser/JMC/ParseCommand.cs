@@ -10,7 +10,7 @@ namespace JMC.Parser.JMC
         /// </summary>
         /// <param name="index"></param>
         /// <returns></returns>
-        private async Task<JMCParseResult> ParseCommandExpressionAsync(int index)
+        private JMCParseResult ParseCommandExpressionAsync(int index)
         {
             var node = new JMCSyntaxNode();
             var next = new List<JMCSyntaxNode>();

@@ -61,10 +61,7 @@ namespace JMC.Parser.JMC
         /// 
         /// </summary>
         /// <returns></returns>
-        public async Task InitAsync()
-        {
-            await ParseNextAsync(SkipToValue(0), CancellationSource.Token);
-        }
+        public async Task InitAsync() => await ParseNextAsync(SkipToValue(0), CancellationSource.Token);
 
         /// <summary>
         /// print a tree view
@@ -85,7 +82,7 @@ namespace JMC.Parser.JMC
         /// <exception cref="OperationCanceledException"/>
         public async Task ParseNextAsync(int index, CancellationToken token)
         {
-            var result = await ParseAsync(index, isStart: true);
+            var result = Parse(index, isStart: true);
             index = NextIndex(result.EndIndex);
             if (result.Node != null) Nodes.Add(result.Node);
 
@@ -100,7 +97,7 @@ namespace JMC.Parser.JMC
         /// <param name="noNext">Does it require to parse the children</param>
         /// <param name="isStart">Is it not a call from a parent node</param>
         /// <returns></returns>
-        public async Task<JMCParseResult> ParseAsync(int index, bool noNext = false, bool isStart = false)
+        public JMCParseResult Parse(int index, bool noNext = false, bool isStart = false)
         {
             var value = TrimmedText[index];
             var nextIndex = NextIndex(index);
@@ -112,21 +109,21 @@ namespace JMC.Parser.JMC
                 #region Keywords
                 case "class":
                     if (!noNext)
-                        return await ParseClassAsync(index);
+                        return ParseClass(index);
                     else
                     {
                         return new(new JMCSyntaxNode(), index);
                     }
                 case "function":
                     if (!noNext)
-                        return await ParseFunctionAsync(index);
+                        return ParseFunction(index);
                     else
                     {
                         return new(new JMCSyntaxNode(), index);
                     }
                 case "import":
                     if (!noNext)
-                        return await ParseImportAsync(index);
+                        return ParseImport(index);
                     else
                     {
                         return new(new JMCSyntaxNode(), index);
@@ -271,7 +268,7 @@ namespace JMC.Parser.JMC
                 case "&&":
                     return new(new JMCSyntaxNode
                     {
-                        NodeType = JMCSyntaxNodeType.COMP_NOT
+                        NodeType = JMCSyntaxNodeType.COMP_AND
                     },
                     nextIndex);
                 case "!":
@@ -386,7 +383,7 @@ namespace JMC.Parser.JMC
 
             if (isStart)
             {
-                var r = await ParseExpressionAsync(index);
+                var r = ParseExpression(index);
                 if (r.Node != null)
                     return r;
             }
@@ -406,14 +403,14 @@ namespace JMC.Parser.JMC
         /// </remarks>
         /// <param name="index"></param>
         /// <returns></returns>
-        private async Task<JMCParseResult> ParseClassAsync(int index)
+        private JMCParseResult ParseClass(int index)
         {
             var node = new JMCSyntaxNode();
             var next = new List<JMCSyntaxNode>();
 
             //check for `literal '{'`
             var query = this.AsParseQuery(index);
-            var match = await query.ExpectListAsync(JMCSyntaxNodeType.LITERAL, JMCSyntaxNodeType.LCP);
+            var match = query.ExpectList(JMCSyntaxNodeType.LITERAL, JMCSyntaxNodeType.LCP);
 
             //get Key
             var literal = TrimmedText[NextIndex(index)];
@@ -426,10 +423,10 @@ namespace JMC.Parser.JMC
             query.Reset(this, index);
             while (index < TrimmedText.Length && match)
             {
-                var funcTest = await query.Next().ExpectAsync("function", false);
+                var funcTest = query.Next().Expect("function", false);
                 if (funcTest)
                 {
-                    var result = await ParseFunctionAsync(query.Index);
+                    var result = ParseFunction(query.Index);
                     if (result.Node != null) next.Add(result.Node);
                     index = result.EndIndex;
                     query.Reset(this, index);
@@ -457,17 +454,17 @@ namespace JMC.Parser.JMC
         /// </summary>
         /// <param name="index"></param>
         /// <returns></returns>
-        private async Task<JMCParseResult> ParseImportAsync(int index)
+        private JMCParseResult ParseImport(int index)
         {
             var node = new JMCSyntaxNode();
 
             var query = this.AsParseQuery(index);
-            var match = await query.ExpectListAsync(JMCSyntaxNodeType.STRING, JMCSyntaxNodeType.SEMI);
+            var match = query.ExpectList(JMCSyntaxNodeType.STRING, JMCSyntaxNodeType.SEMI);
 
             var start = GetIndexStartPos(index);
 
             //get path
-            var str = await ParseAsync(NextIndex(index));
+            var str = Parse(NextIndex(index));
 
             //move next
             index = SkipToValue(query.Index);
@@ -490,13 +487,13 @@ namespace JMC.Parser.JMC
         /// </remarks>
         /// <param name="index">current index</param>
         /// <returns></returns>
-        private async Task<JMCParseResult> ParseFunctionAsync(int index)
+        private JMCParseResult ParseFunction(int index)
         {
             var node = new JMCSyntaxNode();
             var next = new List<JMCSyntaxNode>();
 
             var query = this.AsParseQuery(index);
-            var match = await query.ExpectListAsync(JMCSyntaxNodeType.LITERAL, JMCSyntaxNodeType.LPAREN, JMCSyntaxNodeType.RPAREN, JMCSyntaxNodeType.LCP);
+            var match = query.ExpectList(JMCSyntaxNodeType.LITERAL, JMCSyntaxNodeType.LPAREN, JMCSyntaxNodeType.RPAREN, JMCSyntaxNodeType.LCP);
 
             index = SkipToValue(index);
 
@@ -508,7 +505,7 @@ namespace JMC.Parser.JMC
             //parse expressions
             if (match)
             {
-                var exps = await ParseBlockAsync(index);
+                var exps = ParseBlock(index);
                 var expsNode = exps.Node;
                 if (expsNode != null && expsNode.Next != null)
                     next.AddRange(expsNode.Next);
@@ -554,13 +551,15 @@ namespace JMC.Parser.JMC
             if (index >= TrimmedText.Length - 1)
                 return TrimmedText.Length - 1;
 
-            var value = TrimmedText[index];
+            var arr = TrimmedText.AsSpan();
+
+            ref var value = ref arr[index];
             var nextIndex = index;
 
             while (string.IsNullOrEmpty(value) || value.StartsWith("//"))
             {
                 nextIndex++;
-                value = TrimmedText[nextIndex];
+                value = ref arr[nextIndex]!;
             }
 
             return nextIndex;

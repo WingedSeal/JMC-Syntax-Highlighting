@@ -32,6 +32,22 @@ namespace JMC.Parser.JMC
             JMCSyntaxNodeType.OP_SWAP
         ];
 
+        private static readonly ImmutableArray<JMCSyntaxNodeType> ConditonalOperatorTokens = [
+            JMCSyntaxNodeType.EQUAL,
+            JMCSyntaxNodeType.EQUAL_TO,
+            JMCSyntaxNodeType.GREATER_THAN,
+            JMCSyntaxNodeType.GREATER_THAN_EQ,
+            JMCSyntaxNodeType.LESS_THAN,
+            JMCSyntaxNodeType.LESS_THAN_EQ,
+        ];
+
+        private readonly ImmutableArray<JMCSyntaxNodeType> LogicOperatorTokens = [
+            JMCSyntaxNodeType.COMP_OR,
+            JMCSyntaxNodeType.COMP_AND,
+            JMCSyntaxNodeType.COMP_NOT,
+            JMCSyntaxNodeType.LPAREN,
+        ];
+
         private static readonly RegexOptions _regexOptions = RegexOptions.Compiled;
     }
 }
