@@ -1,5 +1,6 @@
 ﻿using JMC.Parser.JMC.Command;
 using JMC.Parser.JMC.Error;
+using JMC.Parser.JMC.Types;
 
 namespace JMC.Parser.JMC
 {
@@ -10,7 +11,7 @@ namespace JMC.Parser.JMC
         /// </summary>
         /// <param name="index"></param>
         /// <returns></returns>
-        private JMCParseResult ParseCommandExpressionAsync(int index)
+        private JMCParseResult ParseCommandExpression(int index)
         {
             var node = new JMCSyntaxNode();
             var next = new List<JMCSyntaxNode>();

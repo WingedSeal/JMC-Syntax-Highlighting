@@ -22,6 +22,8 @@ namespace JMC.Shared
 #pragma warning restore CS8618
         public static JMCBuiltInFunctionContainer JMCBuiltInFunctions { get; private set; } =
             new JMCBuiltInFunctionContainer(GetJMCBuiltInFunctions());
+        private static string ModifiedVersion = string.Empty;
+
         public ExtensionData() => UpdateVersion("1.20.1");
 
         /// <summary>
@@ -31,6 +33,9 @@ namespace JMC.Shared
         public static void UpdateVersion(string version)
         {
             MinecraftVersion = version;
+            ModifiedVersion = version.Replace(".", "_") ?? throw new NotImplementedException();
+            
+
             CommandTree = new(GetCommandNodes(MinecraftVersion));
             BlockDatas = new(GetBlockDatas(MinecraftVersion));
             ItemDatas = new(GetItemDatas(MinecraftVersion));
@@ -47,12 +52,10 @@ namespace JMC.Shared
         /// <returns></returns>
         private static IEnumerable<string> GetParticles(string version)
         {
-            var v = version.Replace(".", "_") ?? throw new NotImplementedException();
             var asm = Assembly.GetExecutingAssembly();
-
             //commands
             var resouceStream =
-                asm.GetManifestResourceStream($"JMC.Shared.Resource._{v}.particles.json") ??
+                asm.GetManifestResourceStream($"JMC.Shared.Resource._{ModifiedVersion}.particles.json") ??
                 throw new NotImplementedException();
             var reader = new StreamReader(resouceStream);
             var jsonText = reader.ReadToEnd();
@@ -70,12 +73,12 @@ namespace JMC.Shared
         /// <returns></returns>
         private static IEnumerable<string> GetCustomStatistics(string version)
         {
-            var v = version.Replace(".", "_") ?? throw new NotImplementedException();
+
             var asm = Assembly.GetExecutingAssembly();
 
             //commands
             var resouceStream =
-                asm.GetManifestResourceStream($"JMC.Shared.Resource._{v}.custom_statistics.json") ??
+                asm.GetManifestResourceStream($"JMC.Shared.Resource._{ModifiedVersion}.custom_statistics.json") ??
                 throw new NotImplementedException();
             var reader = new StreamReader(resouceStream);
             var jsonText = reader.ReadToEnd();
@@ -97,12 +100,12 @@ namespace JMC.Shared
         /// <returns></returns>
         private static IEnumerable<string> GetItemTags(string version)
         {
-            var v = version.Replace(".", "_") ?? throw new NotImplementedException();
-            var asm = Assembly.GetExecutingAssembly();
 
+
+            var asm = Assembly.GetExecutingAssembly();
             //commands
             var resouceStream =
-                asm.GetManifestResourceStream($"JMC.Shared.Resource._{v}.item_tags.json") ??
+                asm.GetManifestResourceStream($"JMC.Shared.Resource._{ModifiedVersion}.item_tags.json") ??
                 throw new NotImplementedException();
             var reader = new StreamReader(resouceStream);
             var jsonText = reader.ReadToEnd();
@@ -120,12 +123,12 @@ namespace JMC.Shared
         /// <returns></returns>
         private static IEnumerable<string> GetBlockTags(string version)
         {
-            var v = version.Replace(".", "_") ?? throw new NotImplementedException();
-            var asm = Assembly.GetExecutingAssembly();
 
+
+            var asm = Assembly.GetExecutingAssembly();
             //commands
             var resouceStream =
-                asm.GetManifestResourceStream($"JMC.Shared.Resource._{v}.block_tags.json") ??
+                asm.GetManifestResourceStream($"JMC.Shared.Resource._{ModifiedVersion}.block_tags.json") ??
                 throw new NotImplementedException();
             var reader = new StreamReader(resouceStream);
             var jsonText = reader.ReadToEnd();
@@ -143,12 +146,12 @@ namespace JMC.Shared
         /// <returns></returns>
         private static Dictionary<string, CommandNode> GetCommandNodes(string version)
         {
-            var v = version.Replace(".", "_") ?? throw new NotImplementedException();
-            var asm = Assembly.GetExecutingAssembly();
 
+
+            var asm = Assembly.GetExecutingAssembly();
             //commands
             var resouceStream =
-                asm.GetManifestResourceStream($"JMC.Shared.Resource._{v}.commands.json") ??
+                asm.GetManifestResourceStream($"JMC.Shared.Resource._{ModifiedVersion}.commands.json") ??
                 throw new NotImplementedException();
             var reader = new StreamReader(resouceStream);
             var jsonText = reader.ReadToEnd();
@@ -167,12 +170,10 @@ namespace JMC.Shared
         /// <exception cref="NotImplementedException"></exception>
         private static List<BlockData> GetBlockDatas(string version)
         {
-            var v = version.Replace(".", "_") ?? throw new NotImplementedException();
             var asm = Assembly.GetExecutingAssembly();
-
             //commands
             var resouceStream =
-                asm.GetManifestResourceStream($"JMC.Shared.Resource._{v}.blocks.json") ??
+                asm.GetManifestResourceStream($"JMC.Shared.Resource._{ModifiedVersion}.blocks.json") ??
                 throw new NotImplementedException();
             var reader = new StreamReader(resouceStream);
             var jsonText = reader.ReadToEnd();
@@ -191,12 +192,12 @@ namespace JMC.Shared
         /// <exception cref="NotImplementedException"></exception>
         private static Dictionary<string, ItemData> GetItemDatas(string version)
         {
-            var v = version.Replace(".", "_") ?? throw new NotImplementedException();
-            var asm = Assembly.GetExecutingAssembly();
 
+
+            var asm = Assembly.GetExecutingAssembly();
             //commands
             var resouceStream =
-                asm.GetManifestResourceStream($"JMC.Shared.Resource._{v}.items.json") ??
+                asm.GetManifestResourceStream($"JMC.Shared.Resource._{ModifiedVersion}.items.json") ??
                 throw new NotImplementedException();
             var reader = new StreamReader(resouceStream);
             var jsonText = reader.ReadToEnd();

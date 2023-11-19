@@ -42,3 +42,9 @@ class test {
 function function.calls() {
 	call(a=a,a=3);
 }
+
+if ($test matches 1.. || !($test)) {
+	do {
+		$test = 1;	
+	} while ($test == 1)
+}

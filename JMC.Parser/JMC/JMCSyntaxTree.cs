@@ -1,4 +1,5 @@
 ﻿using JMC.Parser.JMC.Error.Base;
+using JMC.Parser.JMC.Types;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 
 namespace JMC.Parser.JMC
@@ -262,19 +263,22 @@ namespace JMC.Parser.JMC
                 case "||":
                     return new(new JMCSyntaxNode
                     {
-                        NodeType = JMCSyntaxNodeType.COMP_OR
+                        NodeType = JMCSyntaxNodeType.COMP_OR,
+                        Range = range
                     },
                     nextIndex);
                 case "&&":
                     return new(new JMCSyntaxNode
                     {
-                        NodeType = JMCSyntaxNodeType.COMP_AND
+                        NodeType = JMCSyntaxNodeType.COMP_AND,
+                        Range = range
                     },
                     nextIndex);
                 case "!":
                     return new(new JMCSyntaxNode
                     {
-                        NodeType = JMCSyntaxNodeType.COMP_NOT
+                        NodeType = JMCSyntaxNodeType.COMP_NOT,
+                        Range = range
                     },
                     nextIndex);
                 #endregion
@@ -410,7 +414,7 @@ namespace JMC.Parser.JMC
 
             //check for `literal '{'`
             var query = this.AsParseQuery(index);
-            var match = query.ExpectList(JMCSyntaxNodeType.LITERAL, JMCSyntaxNodeType.LCP);
+            var match = query.ExpectList(true, JMCSyntaxNodeType.LITERAL, JMCSyntaxNodeType.LCP);
 
             //get Key
             var literal = TrimmedText[NextIndex(index)];
@@ -423,7 +427,7 @@ namespace JMC.Parser.JMC
             query.Reset(this, index);
             while (index < TrimmedText.Length && match)
             {
-                var funcTest = query.Next().Expect("function", false);
+                var funcTest = query.Next().Expect(out _, "function", false);
                 if (funcTest)
                 {
                     var result = ParseFunction(query.Index);
@@ -459,7 +463,7 @@ namespace JMC.Parser.JMC
             var node = new JMCSyntaxNode();
 
             var query = this.AsParseQuery(index);
-            var match = query.ExpectList(JMCSyntaxNodeType.STRING, JMCSyntaxNodeType.SEMI);
+            var match = query.ExpectList(true, JMCSyntaxNodeType.STRING, JMCSyntaxNodeType.SEMI);
 
             var start = GetIndexStartPos(index);
 
@@ -493,7 +497,8 @@ namespace JMC.Parser.JMC
             var next = new List<JMCSyntaxNode>();
 
             var query = this.AsParseQuery(index);
-            var match = query.ExpectList(JMCSyntaxNodeType.LITERAL, JMCSyntaxNodeType.LPAREN, JMCSyntaxNodeType.RPAREN, JMCSyntaxNodeType.LCP);
+            var match = query.
+                ExpectList(true, JMCSyntaxNodeType.LITERAL, JMCSyntaxNodeType.LPAREN, JMCSyntaxNodeType.RPAREN, JMCSyntaxNodeType.LCP);
 
             index = SkipToValue(index);
 
@@ -507,8 +512,8 @@ namespace JMC.Parser.JMC
             {
                 var exps = ParseBlock(index);
                 var expsNode = exps.Node;
-                if (expsNode != null && expsNode.Next != null)
-                    next.AddRange(expsNode.Next);
+                if (expsNode != null)
+                    next.Add(expsNode);
                 index = exps.EndIndex;
             }
 

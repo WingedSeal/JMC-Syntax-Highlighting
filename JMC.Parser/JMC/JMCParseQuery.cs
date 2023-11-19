@@ -1,4 +1,5 @@
 ﻿using JMC.Parser.JMC.Error;
+using JMC.Parser.JMC.Types;
 
 namespace JMC.Parser.JMC
 {
@@ -22,19 +23,21 @@ namespace JMC.Parser.JMC
 
         private JMCSyntaxNode? GetCurrentNode() => SyntaxTree.Parse(Index, true).Node;
 
-        public bool Expect(JMCSyntaxNodeType syntaxNodeType, bool throwError = true)
+        public bool Expect(JMCSyntaxNodeType syntaxNodeType, out JMCSyntaxNode? syntaxNode, bool throwError = true)
         {
+            syntaxNode = null;
             try
             {
                 //parse token
                 var text = SyntaxTree.TrimmedText[Index];
                 var node = GetCurrentNode();
                 if (node == null) return false;
+                syntaxNode = node;
                 var isMatch = node.NodeType == syntaxNodeType;
 
                 if (!isMatch && throwError)
                     SyntaxTree.Errors.Add(new JMCSyntaxError(SyntaxTree.GetIndexStartPos(Index), syntaxNodeType.ToTokenString(), node.NodeType.ToTokenString()));
-                
+
 
                 return isMatch;
             }
@@ -44,19 +47,21 @@ namespace JMC.Parser.JMC
             }
         }
 
-        public bool Expect(string value, bool throwError = true)
+        public bool Expect(out JMCSyntaxNode? syntaxNode, string value, bool throwError = true)
         {
+            syntaxNode = null;
             try
             {
                 //parse token
                 var text = SyntaxTree.TrimmedText[Index];
                 var node = GetCurrentNode();
                 if (node == null) return false;
+                syntaxNode = node;
                 var isMatch = value == text;
 
                 if (!isMatch && throwError)
                     SyntaxTree.Errors.Add(new JMCSyntaxError(SyntaxTree.GetIndexStartPos(Index), value, node.NodeType.ToTokenString()));
-                
+
 
                 return isMatch;
             }
@@ -66,7 +71,7 @@ namespace JMC.Parser.JMC
             }
         }
 
-        public bool ExpectList(params string[] values)
+        public bool ExpectList(bool throwError = true, params string[] values)
         {
             try
             {
@@ -92,7 +97,7 @@ namespace JMC.Parser.JMC
             }
         }
 
-        public bool ExpectList(params JMCSyntaxNodeType[] nodeTypes)
+        public bool ExpectList(bool throwError = true, params JMCSyntaxNodeType[] nodeTypes)
         {
             try
             {
@@ -105,7 +110,7 @@ namespace JMC.Parser.JMC
                     var node = GetCurrentNode();
                     if (node == null) return false;
                     var isMatch = nodeType == node.NodeType;
-                    if (!isMatch)
+                    if (!isMatch && throwError)
                     {
                         SyntaxTree.Errors.Add(new JMCSyntaxError(SyntaxTree.GetIndexStartPos(Index), nodeType.ToTokenString(), node.NodeType.ToTokenString()));
                         return false;
@@ -119,20 +124,26 @@ namespace JMC.Parser.JMC
             }
         }
 
-        public Tuple<bool, JMCSyntaxNodeType?> ExpectOr(params JMCSyntaxNodeType[] nodeTypes)
+        public bool ExpectOr(out JMCSyntaxNode? syntaxNode, params JMCSyntaxNodeType[] nodeTypes)
         {
             var node = GetCurrentNode();
+            syntaxNode = null;
             if (node == null)
-                return new(false, null);
+            {
+                return false;
+            }
             var arr = nodeTypes.AsSpan();
             for (var i = 0; i < arr.Length; i++)
             {
                 ref var type = ref arr[i];
                 if (type == node.NodeType)
-                    return new(true, type);
+                {
+                    syntaxNode = node;
+                    return true;
+                }
 
             }
-            return new(false, null);
+            return false;
         }
 
         /// <summary>
@@ -155,6 +166,33 @@ namespace JMC.Parser.JMC
             }
 
             return true;
+        }
+
+        public bool ExpectIntRange()
+        {
+            var text = CurrentText;
+            try
+            {
+                var split = text.Split("..");
+                var head = split.First();
+                var tail = split.Last();
+
+                var isHeadInt = int.TryParse(head, out _) || head == string.Empty && tail != string.Empty;
+                var isTailInt = int.TryParse(tail, out _) || tail == string.Empty && head != string.Empty;
+
+                if (isHeadInt && isTailInt)
+                    return true;
+                else
+                {
+                    SyntaxTree.Errors.Add(new JMCSyntaxError(SyntaxTree.GetIndexStartPos(Index), JMCSyntaxNodeType.INT_RANGE.ToTokenString(), text));
+                    return false;
+                }
+            }
+            catch
+            {
+                SyntaxTree.Errors.Add(new JMCSyntaxError(SyntaxTree.GetIndexStartPos(Index), JMCSyntaxNodeType.INT_RANGE.ToTokenString(), text));
+                return false;
+            }
         }
 
         public void Reset(JMCSyntaxTree syntaxTree, int startIndex = 0)

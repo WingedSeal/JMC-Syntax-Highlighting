@@ -1,4 +1,4 @@
-﻿namespace JMC.Parser.JMC
+﻿namespace JMC.Parser.JMC.Types
 {
     public enum JMCSyntaxNodeType
     {
@@ -90,5 +90,8 @@
         ARROW_FUNCTION,
         COMP_AND,
         CONDITION,
+        IF,
+        BLOCK,
+        RANGE,
     }
 }

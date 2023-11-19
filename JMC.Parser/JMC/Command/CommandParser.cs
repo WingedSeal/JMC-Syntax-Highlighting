@@ -1,4 +1,5 @@
-﻿using JMC.Shared;
+﻿using JMC.Parser.JMC.Types;
+using JMC.Shared;
 using JMC.Shared.Datas.Minecraft.Command;
 using JMC.Shared.Datas.Minecraft.Command.Types;
 using System.Collections.Immutable;
@@ -8,7 +9,7 @@ namespace JMC.Parser.JMC.Command
 {
     internal partial class CommandParser(string cmdString, int offset, string text)
     {
-        private string CommandString => cmdString;
+        private string CommandString { get; set; } = cmdString;
         private int StartOffset => offset;
         private string TreeText => text;
         private int StartReadIndex { get; set; } = -1;
@@ -81,6 +82,56 @@ namespace JMC.Parser.JMC.Command
             return Nodes;
         }
 
+        public IEnumerable<JMCSyntaxNode> ParseIfCommand()
+        {
+            var extend = "execute if ";
+            CommandString = extend + CommandString;
+            while (CurrentChar != '\0')
+            {
+                var elem = CurrentNode?.Children?.ElementAtOrDefault(0).Value;
+                if (elem != null &&
+                    ((elem.Parser == "brigadier:string" &&
+                    elem.Properties?.Type == "greedy") ||
+                    elem.Parser == "minecraft:message"))
+                {
+                    CurrentNode = elem;
+                    var s = ReadToEnd();
+                    var n = GetSyntaxNode(s);
+                    Nodes.Add(n);
+                    break;
+                }
+
+                var r = Read();
+                CurrentNode = GetCommandNode(r);
+
+                if (CurrentNode == null) break;
+
+
+                var node = GetSyntaxNode(r);
+                Nodes.Add(node);
+
+                if (CurrentNode?.Redirect != null)
+                {
+                    var q = CurrentNode.Redirect.First();
+                    Started = false;
+                    CurrentNode = GetCommandNode(q);
+                }
+            }
+
+            //detect end
+            if (CurrentNode == null && CurrentChar != '\0')
+            {
+                Errors.Add(Index, "Expect End");
+            }
+            else if (CurrentNode?.Executable == null)
+            {
+                var keys = CurrentNode?.Children?.Keys;
+                var s = keys != null ? string.Join(" or ", keys.Select(v => $"'{v}'")) : "";
+                Errors.Add(Index, $"Expect {s}");
+            }
+
+            return Nodes[2..];
+        }
         private JMCSyntaxNode GetSyntaxNode(string value)
         {
             if (CurrentNode == null) return new();

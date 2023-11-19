@@ -1,4 +1,4 @@
-﻿namespace JMC.Parser.JMC
+﻿namespace JMC.Parser.JMC.Types
 {
     internal class JMCSyntaxNode(JMCSyntaxNodeType nodeType = JMCSyntaxNodeType.UNKNOWN, string value = "", IEnumerable<JMCSyntaxNode>? previous = null, IEnumerable<JMCSyntaxNode>? next = null, Range? range = null)
     {

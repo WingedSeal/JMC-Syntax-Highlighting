@@ -1,4 +1,5 @@
-﻿using System.Collections.Immutable;
+﻿using JMC.Parser.JMC.Types;
+using System.Collections.Immutable;
 using System.Text.RegularExpressions;
 
 namespace JMC.Parser.JMC
@@ -32,7 +33,7 @@ namespace JMC.Parser.JMC
             JMCSyntaxNodeType.OP_SWAP
         ];
 
-        private static readonly ImmutableArray<JMCSyntaxNodeType> ConditonalOperatorTokens = [
+        private static readonly ImmutableArray<JMCSyntaxNodeType> ConditionalOperatorTokens = [
             JMCSyntaxNodeType.EQUAL,
             JMCSyntaxNodeType.EQUAL_TO,
             JMCSyntaxNodeType.GREATER_THAN,

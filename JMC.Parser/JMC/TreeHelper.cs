@@ -1,4 +1,5 @@
-﻿using OmniSharp.Extensions.LanguageServer.Protocol.Models;
+﻿using JMC.Parser.JMC.Types;
+using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 
 namespace JMC.Parser.JMC
 {
