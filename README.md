@@ -1,5 +1,8 @@
 # Syntax Highlighting for JMC
 
+!!! This branch is no longer being maintained, currently developing on the 'master' branch
+---
+
 > Developed and Maintained by [@bdke](https://github.com/bdke)
 
 Documentation for JMC: <https://jmc.wingedseal.com>  
