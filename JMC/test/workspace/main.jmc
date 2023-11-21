@@ -44,7 +44,27 @@ function function.calls() {
 }
 
 if ($test matches 1.. || !($test)) {
+	$test = $test;
+}
+
+function logic.loops() {
 	do {
 		$test = 1;	
-	} while ($test == 1)
+	} while ($test == 1);
+
+	while ($test == 2) {
+		$test = 3;
+	}
+
+	for ($test=1;$test>1;$test++) {
+		$test = 3;
+	}
+
+	switch ($test) {
+		case 1:
+			$test = 4;
+		case 2:
+			$test = 5;
+			break;
+	}
 }

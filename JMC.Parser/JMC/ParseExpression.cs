@@ -2,16 +2,21 @@
 using JMC.Parser.JMC.Types;
 using JMC.Shared;
 using JMC.Shared.Datas.BuiltIn;
+using System.Collections.Immutable;
 
 namespace JMC.Parser.JMC
 {
     internal partial class JMCSyntaxTree
     {
+        private static readonly ImmutableArray<JMCSyntaxNodeType?> ParseBlockExcluded = [
+            JMCSyntaxNodeType.WHILE,
+            JMCSyntaxNodeType.FOR
+        ];
         /// <summary>
         /// Parse a block
         /// </summary>
         /// <param name="index"></param>
-        /// <returns><seealso cref="JMCSyntaxNode"/> has only <seealso cref="JMCSyntaxNode.Next"/></returns>
+        /// <returns></returns>
         private JMCParseResult ParseBlock(int index)
         {
             var node = new JMCSyntaxNode();
@@ -24,7 +29,8 @@ namespace JMC.Parser.JMC
                 var exp = ParseExpression(NextIndex(index));
                 if (exp.Node != null) next.Add(exp.Node);
                 index = exp.EndIndex;
-                if (TrimmedText[index] == "}") break;
+                if (TrimmedText[index] == "}" && 
+                    !ParseBlockExcluded.Contains(exp.Node?.NodeType)) break;
             }
 
             var end = GetIndexEndPos(index);
@@ -42,10 +48,9 @@ namespace JMC.Parser.JMC
         /// </summary>
         /// <param name="index"></param>
         /// <returns></returns>
-        private JMCParseResult ParseExpression(int index)
+        private JMCParseResult ParseExpression(int index, bool isForLoop = false)
         {
             var node = new JMCSyntaxNode();
-            var next = new List<JMCSyntaxNode>();
 
             var text = TrimmedText[index];
             JMCParseResult? result = text switch
@@ -55,6 +60,7 @@ namespace JMC.Parser.JMC
                 "for" => ParseFor(NextIndex(index)),
                 "switch" => ParseSwitch(NextIndex(index)),
                 "if" => ParseIf(NextIndex(index)),
+                "break" => Parse(index, true),
                 _ => null,
             };
             if (result != null)
@@ -78,7 +84,7 @@ namespace JMC.Parser.JMC
 
             else if (current.Node.NodeType == JMCSyntaxNodeType.VARIABLE)
             {
-                var r = ParseVariableExpression(index);
+                var r = ParseVariableExpression(index, isForLoop);
                 if (r?.Node != null)
                 {
                     node.Next = r.Node.Next;
@@ -92,7 +98,7 @@ namespace JMC.Parser.JMC
             else if (current.Node.NodeType == JMCSyntaxNodeType.LITERAL &&
                 TrimmedText[NextIndex(index)] == ":")
             {
-                var r = ParseScoreboardObjExpression(index);
+                var r = ParseScoreboardObjExpression(index, isForLoop);
                 if (r?.Node != null)
                 {
                     node.Next = r.Node.Next;
@@ -126,7 +132,7 @@ namespace JMC.Parser.JMC
         /// <param name="index"></param>
         /// <param name="isRecursion"></param>
         /// <returns></returns>
-        private JMCParseResult ParseVariableExpression(int index, bool isRecursion = false)
+        private JMCParseResult ParseVariableExpression(int index, bool isRecursion = false, bool isForLoop = false)
         {
             var node = new JMCSyntaxNode();
             var next = new List<JMCSyntaxNode>();
@@ -143,7 +149,10 @@ namespace JMC.Parser.JMC
             if (!isRecursion)
             {
                 var query = this.AsParseQuery(index);
-                query.Expect(JMCSyntaxNodeType.SEMI, out _);
+                if (!isForLoop)
+                    query.Expect(JMCSyntaxNodeType.SEMI, out _);
+                else
+                    query.Expect(JMCSyntaxNodeType.RPAREN, out _);
             }
 
             //end position
@@ -167,13 +176,13 @@ namespace JMC.Parser.JMC
         /// <param name="index"></param>
         /// <param name="isRecursion"></param>
         /// <returns></returns>
-        private JMCParseResult ParseScoreboardObjExpression(int index, bool isRecursion = false)
+        private JMCParseResult ParseScoreboardObjExpression(int index, bool isRecursion = false, bool isForLoop = false)
         {
             var node = new JMCSyntaxNode();
             var next = new List<JMCSyntaxNode>();
 
             var query = this.AsParseQuery(index);
-            var match = query.ExpectList(true, JMCSyntaxNodeType.COLON, JMCSyntaxNodeType.SELECTOR);
+            var match = query.ExpectList(out _, true, JMCSyntaxNodeType.COLON, JMCSyntaxNodeType.SELECTOR);
             var value = string.Join("", TrimmedText[index..(query.Index + 1)].Where(v => !string.IsNullOrEmpty(v)));
             index = query.Index;
             var startPos = GetIndexStartPos(index);
@@ -187,7 +196,10 @@ namespace JMC.Parser.JMC
             if (!isRecursion)
             {
                 query.Reset(this, index);
-                query.Expect(JMCSyntaxNodeType.SEMI, out _);
+                if (!isForLoop)
+                    query.Expect(JMCSyntaxNodeType.SEMI, out _);
+                else
+                    query.Expect(JMCSyntaxNodeType.RPAREN, out _);
             }
 
 

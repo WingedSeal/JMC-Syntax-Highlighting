@@ -47,7 +47,7 @@ namespace JMC.Parser.JMC
             }
         }
 
-        public bool Expect(out JMCSyntaxNode? syntaxNode, string value, bool throwError = true)
+        public bool Expect(string value, out JMCSyntaxNode? syntaxNode, bool throwError = true)
         {
             syntaxNode = null;
             try
@@ -71,8 +71,9 @@ namespace JMC.Parser.JMC
             }
         }
 
-        public bool ExpectList(bool throwError = true, params string[] values)
+        public bool ExpectList(out List<JMCSyntaxNode> nodes, bool throwError = true, params string[] values)
         {
+            nodes = [];
             try
             {
                 for (var i = 0; i < values.Length; i++)
@@ -82,6 +83,7 @@ namespace JMC.Parser.JMC
                     var text = SyntaxTree.TrimmedText[Index];
                     var node = (SyntaxTree.Parse(Index, true)).Node;
                     if (node == null) return false;
+                    nodes.Add(node);
                     var isMatch = value == text;
                     if (!isMatch)
                     {
@@ -97,8 +99,9 @@ namespace JMC.Parser.JMC
             }
         }
 
-        public bool ExpectList(bool throwError = true, params JMCSyntaxNodeType[] nodeTypes)
+        public bool ExpectList(out List<JMCSyntaxNode> nodes, bool throwError = true, params JMCSyntaxNodeType[] nodeTypes)
         {
+            nodes = [];
             try
             {
                 var arr = nodeTypes.AsSpan();
@@ -109,6 +112,7 @@ namespace JMC.Parser.JMC
                     var text = SyntaxTree.TrimmedText[Index];
                     var node = GetCurrentNode();
                     if (node == null) return false;
+                    nodes.Add(node);
                     var isMatch = nodeType == node.NodeType;
                     if (!isMatch && throwError)
                     {

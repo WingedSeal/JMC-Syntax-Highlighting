@@ -93,5 +93,8 @@
         IF,
         BLOCK,
         RANGE,
+        BREAK,
+        SWITCH,
+        CASE,
     }
 }

@@ -164,6 +164,13 @@ namespace JMC.Parser.JMC
                         Range = range
                     },
                     nextIndex);
+                case "break":
+                    return new(new()
+                    {
+                        NodeType = JMCSyntaxNodeType.BREAK,
+                        Range = range
+                    }
+                    , nextIndex);
                 #endregion
 
                 #region Ops
@@ -398,7 +405,6 @@ namespace JMC.Parser.JMC
             return new(null, nextIndex);
         }
 
-
         /// <summary>
         /// parse a class expression
         /// </summary>
@@ -414,7 +420,7 @@ namespace JMC.Parser.JMC
 
             //check for `literal '{'`
             var query = this.AsParseQuery(index);
-            var match = query.ExpectList(true, JMCSyntaxNodeType.LITERAL, JMCSyntaxNodeType.LCP);
+            var match = query.ExpectList(out _, true, JMCSyntaxNodeType.LITERAL, JMCSyntaxNodeType.LCP);
 
             //get Key
             var literal = TrimmedText[NextIndex(index)];
@@ -427,7 +433,7 @@ namespace JMC.Parser.JMC
             query.Reset(this, index);
             while (index < TrimmedText.Length && match)
             {
-                var funcTest = query.Next().Expect(out _, "function", false);
+                var funcTest = query.Next().Expect("function", out _, false);
                 if (funcTest)
                 {
                     var result = ParseFunction(query.Index);
@@ -463,7 +469,7 @@ namespace JMC.Parser.JMC
             var node = new JMCSyntaxNode();
 
             var query = this.AsParseQuery(index);
-            var match = query.ExpectList(true, JMCSyntaxNodeType.STRING, JMCSyntaxNodeType.SEMI);
+            var match = query.ExpectList(out _, true, JMCSyntaxNodeType.STRING, JMCSyntaxNodeType.SEMI);
 
             var start = GetIndexStartPos(index);
 
@@ -498,7 +504,7 @@ namespace JMC.Parser.JMC
 
             var query = this.AsParseQuery(index);
             var match = query.
-                ExpectList(true, JMCSyntaxNodeType.LITERAL, JMCSyntaxNodeType.LPAREN, JMCSyntaxNodeType.RPAREN, JMCSyntaxNodeType.LCP);
+                ExpectList(out _, true, JMCSyntaxNodeType.LITERAL, JMCSyntaxNodeType.LPAREN, JMCSyntaxNodeType.RPAREN, JMCSyntaxNodeType.LCP);
 
             index = SkipToValue(index);
 
