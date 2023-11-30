@@ -1,4 +1,5 @@
-﻿using JMC.Shared;
+﻿using JMC.Extension.Server.Handler.JMC;
+using JMC.Shared;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
@@ -52,6 +53,8 @@ namespace JMC.Extension.Server
                                 .AddLanguageProtocolLogging()
                                 .SetMinimumLevel(LogLevel.Debug)
                         )
+                       .WithHandler<JMCTextDocumentHandler>()
+                       .WithHandler<JMCDidChangedWatchFilesHandler>()
                        .WithServices(x => x.AddLogging(b => b.SetMinimumLevel(LogLevel.Trace)))
                        .WithServices(
                             services =>
@@ -130,7 +133,17 @@ namespace JMC.Extension.Server
                        .OnInitialized(
                             async (server, request, response, token) =>
                             {
-                                var folders = request.WorkspaceFolders;
+                                var folders = request.WorkspaceFolders?.ToArray();
+                                if (folders == null) return;
+                                for (var i = 0; i < folders.Length; i++)
+                                {
+                                    var folder = folders[i];
+                                    if (folder != null)
+                                        await Task.Run(() =>
+                                        {
+                                            ExtensionDatabase.Workspaces.Add(new(folder.Uri));
+                                        }, token);
+                                }
                             }
                         )
                        .OnStarted(

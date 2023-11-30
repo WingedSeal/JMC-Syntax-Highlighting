@@ -19,6 +19,8 @@ namespace JMC.Parser.JMC
 
         public async Task<JMCSyntaxTree> InitializeAsync(string text)
         {
+            Errors.Clear();
+            Nodes.Clear();
             RawText = text;
             var split = new JMCLexer(text).StartLexing();
             SplitText = split.Where(v => v != "").ToArray();
@@ -28,7 +30,7 @@ namespace JMC.Parser.JMC
         }
 
         //TODO: after lsp is done
-        public void Modify(TextDocumentContentChangeEvent eventArgs)
+        public void ModifyIncremental(TextDocumentContentChangeEvent eventArgs)
         {
             if (eventArgs.Range == null)
                 return;
@@ -37,6 +39,9 @@ namespace JMC.Parser.JMC
             var modifier = eventArgs.Text.Length - (end - start);
 
         }
+
+        public void ModifyFull(string changedText) => InitializeAsync(changedText).Wait();
+        public async Task ModifyFullAsync(string changedText) => await InitializeAsync(changedText);
 
         /// <summary>
         /// offset of text to <seealso cref="TrimmedText"/> Index

@@ -42,7 +42,7 @@ namespace JMC
             var tree = await new JMCSyntaxTree().InitializeAsync(content);
             var sw = new Stopwatch();
             sw.Start();
-            tree.Modify(new()
+            tree.ModifyIncremental(new()
             {
                 Range = new(1, 1, 2, 2),
                 Text = "amogus",
