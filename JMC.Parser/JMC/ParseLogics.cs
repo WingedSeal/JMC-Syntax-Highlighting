@@ -20,7 +20,7 @@ namespace JMC.Parser.JMC
 
             while (true)
             {
-                var isVar = query.Expect(JMCSyntaxNodeType.VARIABLE, out var sn, false);
+                var isVar = query.Expect(JMCSyntaxNodeType.Variable, out var sn, false);
 
                 string[] commands = [.. ExtensionData.CommandTree.Nodes["execute"].Children!["if"].Children!.Keys];
                 var isCommand = commands.Contains(TrimmedText[index]);
@@ -43,9 +43,9 @@ namespace JMC.Parser.JMC
 
                 query.Reset(index);
                 if (!query.ExpectOr(out var syntaxNode, [.. LogicOperatorTokens]) ||
-                    syntaxNode?.NodeType == JMCSyntaxNodeType.RPAREN)
+                    syntaxNode?.NodeType == JMCSyntaxNodeType.RParen)
                     break;
-                else if (syntaxNode?.NodeType == JMCSyntaxNodeType.LPAREN)
+                else if (syntaxNode?.NodeType == JMCSyntaxNodeType.LParen)
                 {
                     index = NextIndex(index);
                     var r = ParseCondition(index);
@@ -66,7 +66,7 @@ namespace JMC.Parser.JMC
 
             node.Next = next.Count == 0 ? null : next;
             node.Range = new Range(start, end);
-            node.NodeType = JMCSyntaxNodeType.CONDITION;
+            node.NodeType = JMCSyntaxNodeType.Condition;
 
             return new(node, index);
         }
@@ -86,14 +86,14 @@ namespace JMC.Parser.JMC
             if (query.ExpectOr(out var syntaxNode, [.. ConditionalOperatorTokens]))
             {
                 next.Add(syntaxNode!);
-                JMCSyntaxNodeType[] types = [JMCSyntaxNodeType.NUMBER, JMCSyntaxNodeType.VARIABLE, JMCSyntaxNodeType.SCOREBOARD];
+                JMCSyntaxNodeType[] types = [JMCSyntaxNodeType.Number, JMCSyntaxNodeType.Variable, JMCSyntaxNodeType.Scoreboard];
                 var match = query.Next().
                     ExpectOr(out syntaxNode, types);
 
                 if (match && syntaxNode != null)
                     next.Add(syntaxNode!);
                 else
-                    Errors.Add(new JMCSyntaxError(GetIndexStartPos(index), TrimmedText[index], types));
+                    Errors.Add(new JMCSyntaxError(GetRangeByIndex(index), TrimmedText[index], types));
 
                 index = query.Index;
             }
@@ -103,11 +103,11 @@ namespace JMC.Parser.JMC
                 var match = query.Next().ExpectIntRange();
                 index = query.Index;
                 var range = GetRangeByIndex(index);
-                next.Add(new(JMCSyntaxNodeType.INT_RANGE, TrimmedText[index], range: range));
+                next.Add(new(JMCSyntaxNodeType.IntRange, TrimmedText[index], range: range));
             }
-            else if (!query.Expect(JMCSyntaxNodeType.RPAREN, out _))
+            else if (!query.Expect(JMCSyntaxNodeType.RParen, out _))
             {
-                Errors.Add(new JMCSyntaxError(start, TrimmedText[index],
+                Errors.Add(new JMCSyntaxError(new(start, start), TrimmedText[index],
                     ConditionalOperatorTokens.Select(v => v.ToTokenString())
                     .Concat(["matches"])
                     .ToArray()));
@@ -117,7 +117,7 @@ namespace JMC.Parser.JMC
 
             node.Next = next.Count == 0 ? null : next;
             node.Range = new Range(start, end);
-            node.NodeType = JMCSyntaxNodeType.CONDITION;
+            node.NodeType = JMCSyntaxNodeType.Condition;
 
             return new(node, index);
         }
@@ -142,20 +142,20 @@ namespace JMC.Parser.JMC
             var query = this.AsParseQuery(index);
 
             //parse while
-            query.Expect(JMCSyntaxNodeType.WHILE, out _);
+            query.Expect(JMCSyntaxNodeType.While, out _);
             index = NextIndex(NextIndex(query.Index));
 
             //parse condition
             var condition = ParseCondition(index);
             if (condition.Node != null)
                 next.Add(condition.Node);
-            index = condition.EndIndex;
+            index = NextIndex(condition.EndIndex);
 
             var end = GetIndexStartPos(index);
             //set next
             node.Next = next.Count != 0 ? next : null;
             node.Range = new Range(start, end);
-            node.NodeType = JMCSyntaxNodeType.DO;
+            node.NodeType = JMCSyntaxNodeType.Do;
 
             return new(node, index);
         }
@@ -188,7 +188,7 @@ namespace JMC.Parser.JMC
             //set next
             node.Next = next.Count != 0 ? next : null;
             node.Range = new(start, end);
-            node.NodeType = JMCSyntaxNodeType.WHILE;
+            node.NodeType = JMCSyntaxNodeType.While;
 
             return new(node, index);
         }
@@ -224,7 +224,7 @@ namespace JMC.Parser.JMC
             index = s3.EndIndex;
 
             //parse block
-            var block = ParseBlock(NextIndex(NextIndex(index)));
+            var block = ParseBlock(NextIndex(index));
             if (block.Node != null)
                 next.Add(block.Node);
             index = block.EndIndex;
@@ -233,7 +233,7 @@ namespace JMC.Parser.JMC
             //set next
             node.Next = next.Count != 0 ? next : null;
             node.Range = new(start, end);
-            node.NodeType = JMCSyntaxNodeType.FOR;
+            node.NodeType = JMCSyntaxNodeType.For;
 
             return new(node, index);
         }
@@ -251,7 +251,7 @@ namespace JMC.Parser.JMC
             //parse paren
             var start = GetIndexEndPos(index);
             var query = this.AsParseQuery(index);
-            query.ExpectList(out var nodes, true, JMCSyntaxNodeType.VARIABLE, JMCSyntaxNodeType.RPAREN, JMCSyntaxNodeType.LCP);
+            query.ExpectList(out var nodes, true, JMCSyntaxNodeType.Variable, JMCSyntaxNodeType.RParen, JMCSyntaxNodeType.LCP);
             index = query.Index;
 
             //add variable
@@ -278,7 +278,7 @@ namespace JMC.Parser.JMC
             //set next
             node.Next = next.Count != 0 ? next : null;
             node.Range = new(start, end);
-            node.NodeType = JMCSyntaxNodeType.SWITCH;
+            node.NodeType = JMCSyntaxNodeType.Switch;
             node.Value = nodes.FirstOrDefault()?.Value;
 
             return new(node, index);
@@ -299,7 +299,7 @@ namespace JMC.Parser.JMC
 
             //test for syntax
             var match = 
-                query.ExpectList(out var syntaxNodes, true, JMCSyntaxNodeType.NUMBER, JMCSyntaxNodeType.COLON);
+                query.ExpectList(out var syntaxNodes, true, JMCSyntaxNodeType.Number, JMCSyntaxNodeType.Colon);
 
             index = NextIndex(query.Index);
 
@@ -321,7 +321,7 @@ namespace JMC.Parser.JMC
             //set next
             node.Next = next.Count != 0 ? next : null;
             node.Range = new(start, end);
-            node.NodeType = JMCSyntaxNodeType.CASE;
+            node.NodeType = JMCSyntaxNodeType.Case;
             node.Value = syntaxNodes.FirstOrDefault()?.Value;
 
             return new(node, index);
@@ -355,7 +355,7 @@ namespace JMC.Parser.JMC
 
             //set next
             node.Next = next.Count != 0 ? next : null;
-            node.NodeType = JMCSyntaxNodeType.IF;
+            node.NodeType = JMCSyntaxNodeType.If;
             node.Range = new(start, end);
 
             return new(node, index);

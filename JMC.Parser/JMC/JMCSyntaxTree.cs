@@ -1,6 +1,7 @@
 ﻿using JMC.Parser.JMC.Error.Base;
 using JMC.Parser.JMC.Types;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
+using System.Runtime.InteropServices;
 
 namespace JMC.Parser.JMC
 {
@@ -11,6 +12,7 @@ namespace JMC.Parser.JMC
     internal partial class JMCSyntaxTree
     {
         public List<JMCSyntaxNode> Nodes { get; set; } = [];
+        public JMCSyntaxNode[] FlattenedNodes { get; set; } = [];
         public string RawText { get; set; } = string.Empty;
         public string[] SplitText { get; private set; } = [];
         public string[] TrimmedText { get; private set; } = [];
@@ -26,6 +28,7 @@ namespace JMC.Parser.JMC
             SplitText = split.Where(v => v != "").ToArray();
             TrimmedText = SplitText.Select(x => x.Trim()).ToArray();
             await InitAsync();
+            FlattenedNodes = [.. GetFlattenNodes()];
             return this;
         }
 
@@ -40,8 +43,38 @@ namespace JMC.Parser.JMC
 
         }
 
+        public Diagnostic[] GetDiagnostics()
+        {
+            var diagnostics = new List<Diagnostic>();
+
+            var arr = CollectionsMarshal.AsSpan(Errors);
+            for (var i = 0; i < arr.Length; i++)
+            {
+                ref var error = ref arr[i];
+                diagnostics.Add(new()
+                {
+                    Range = error.Range,
+                    Severity = error.DiagnosticSeverity,
+                    Message = error.Message,
+                });
+            }
+
+            return [.. diagnostics];
+        }
+
         public void ModifyFull(string changedText) => InitializeAsync(changedText).Wait();
         public async Task ModifyFullAsync(string changedText) => await InitializeAsync(changedText);
+
+        /// <summary>
+        /// return index of <see cref="FlattenedNodes"/>
+        /// </summary>
+        /// <param name="pos"></param>
+        /// <returns>-1 if not found</returns>
+        public int GetIndexByRange(Position pos)
+        {
+            var node = FlattenedNodes.First(v => v.Range != null && v.Range.Contains(pos));
+            return Array.IndexOf(FlattenedNodes, node);
+        }
 
         /// <summary>
         /// offset of text to <seealso cref="TrimmedText"/> Index
@@ -108,288 +141,144 @@ namespace JMC.Parser.JMC
             var value = TrimmedText[index];
             var nextIndex = NextIndex(index);
 
+            var node = new JMCSyntaxNode();
+
             var range = new Range(GetIndexStartPos(index), GetIndexEndPos(index));
+            node.Range = range;
+            node.Value = value;
 
             switch (value)
             {
                 #region Keywords
                 case "class":
-                    if (!noNext)
-                        return ParseClass(index);
-                    else
-                    {
-                        return new(new JMCSyntaxNode(), index);
-                    }
+                    return noNext ? new(node, index) : ParseClass(index);
                 case "function":
-                    if (!noNext)
-                        return ParseFunction(index);
-                    else
-                    {
-                        return new(new JMCSyntaxNode(), index);
-                    }
+                    return noNext ? new(node, index) : ParseFunction(index);
                 case "import":
-                    if (!noNext)
-                        return ParseImport(index);
-                    else
-                    {
-                        return new(new JMCSyntaxNode(), index);
-                    }
+                    return noNext ? new(node, index) : ParseImport(index);
                 case "true":
-                    return new(new JMCSyntaxNode
-                    {
-                        NodeType = JMCSyntaxNodeType.TRUE,
-                        Range = range
-                    },
-                    nextIndex);
+                    node.NodeType = JMCSyntaxNodeType.True;
+                    return new(node, nextIndex);
                 case "false":
-                    return new(new JMCSyntaxNode
-                    {
-                        NodeType = JMCSyntaxNodeType.FALSE,
-                        Range = range
-                    },
-                    nextIndex);
+                    node.NodeType = JMCSyntaxNodeType.False;
+                    return new(node, nextIndex);
                 case "while":
-                    return new(new JMCSyntaxNode
-                    {
-                        NodeType = JMCSyntaxNodeType.WHILE,
-                        Range = range
-                    },
-                    nextIndex);
+                    node.NodeType = JMCSyntaxNodeType.While;
+                    return new(node, nextIndex);
                 case "do":
-                    return new(new JMCSyntaxNode
-                    {
-                        NodeType = JMCSyntaxNodeType.DO,
-                        Range = range
-                    },
-                    nextIndex);
+                    node.NodeType = JMCSyntaxNodeType.Do;
+                    return new(node, nextIndex);
                 case "for":
-                    return new(new JMCSyntaxNode
-                    {
-                        NodeType = JMCSyntaxNodeType.FOR,
-                        Range = range
-                    },
-                    nextIndex);
+                    node.NodeType = JMCSyntaxNodeType.For;
+                    return new(node, nextIndex);
                 case "break":
-                    return new(new()
-                    {
-                        NodeType = JMCSyntaxNodeType.BREAK,
-                        Range = range
-                    }
-                    , nextIndex);
+                    node.NodeType = JMCSyntaxNodeType.Break;
+                    return new(node, nextIndex);
                 #endregion
 
                 #region Ops
                 case "++":
-                    return new(new JMCSyntaxNode
-                    {
-                        NodeType = JMCSyntaxNodeType.OP_INCREMENT,
-                        Range = range
-                    },
-                    nextIndex);
+                    node.NodeType = JMCSyntaxNodeType.OpIncrement;
+                    return new(node, nextIndex);
                 case "--":
-                    return new(new JMCSyntaxNode
-                    {
-                        NodeType = JMCSyntaxNodeType.OP_DECREMENT,
-                        Range = range
-                    },
-                    nextIndex);
+                    node.NodeType = JMCSyntaxNodeType.OpDecrement;
+                    return new(node, nextIndex);
                 case "+":
-                    return new(new JMCSyntaxNode
-                    {
-                        NodeType = JMCSyntaxNodeType.OP_PLUS,
-                        Range = range
-                    },
-                    nextIndex);
+                    node.NodeType = JMCSyntaxNodeType.OpPlus;
+                    return new(node, nextIndex);
                 case "-":
-                    return new(new JMCSyntaxNode
-                    {
-                        NodeType = JMCSyntaxNodeType.OP_SUBSTRACT,
-                        Range = range
-                    },
-                    nextIndex);
+                    node.NodeType = JMCSyntaxNodeType.OpSubtract;
+                    return new(node, nextIndex);
                 case "*":
-                    return new(new JMCSyntaxNode
-                    {
-                        NodeType = JMCSyntaxNodeType.OP_MULTIPLY,
-                        Range = range
-                    },
-                    nextIndex);
+                    node.NodeType = JMCSyntaxNodeType.OpMultiply;
+                    return new(node, nextIndex);
                 case "/":
-                    return new(new JMCSyntaxNode
-                    {
-                        NodeType = JMCSyntaxNodeType.OP_DIVIDE,
-                        Range = range
-                    },
-                    nextIndex);
+                    node.NodeType = JMCSyntaxNodeType.OpDivide;
+                    return new(node, nextIndex);
+                case "%":
+                    node.NodeType = JMCSyntaxNodeType.OpRemainder;
+                    return new(node, nextIndex);
                 case "+=":
-                    return new(new JMCSyntaxNode
-                    {
-                        NodeType = JMCSyntaxNodeType.OP_PLUSEQ,
-                        Range = range
-                    },
-                    nextIndex);
+                    node.NodeType = JMCSyntaxNodeType.OpPlusEqual;
+                    return new(node, nextIndex);
                 case "-=":
-                    return new(new JMCSyntaxNode
-                    {
-                        NodeType = JMCSyntaxNodeType.OP_SUBSTRACTEQ,
-                        Range = range
-                    },
-                    nextIndex);
+                    node.NodeType = JMCSyntaxNodeType.OpSubtractEqual;
+                    return new(node, nextIndex);
                 case "*=":
-                    return new(new JMCSyntaxNode
-                    {
-                        NodeType = JMCSyntaxNodeType.OP_MULTIPLYEQ,
-                        Range = range
-                    },
-                    nextIndex);
+                    node.NodeType = JMCSyntaxNodeType.OpMultiplyEqual;
+                    return new(node, nextIndex);
                 case "/=":
-                    return new(new JMCSyntaxNode
-                    {
-                        NodeType = JMCSyntaxNodeType.OP_DIVIDEEQ
-                    },
-                    nextIndex);
+                    node.NodeType = JMCSyntaxNodeType.OpDivideEqual;
+                    return new(node, nextIndex);
+                case "%=":
+                    node.NodeType = JMCSyntaxNodeType.OpRemainderEqual;
+                    return new(node, nextIndex);
                 case "??=":
-                    return new(new JMCSyntaxNode
-                    {
-                        NodeType = JMCSyntaxNodeType.OP_NULLCOALE,
-                        Range = range
-                    },
-                    nextIndex);
+                    node.NodeType = JMCSyntaxNodeType.OpNullcoale;
+                    return new(node, nextIndex);
                 case "?=":
-                    return new(new JMCSyntaxNode
-                    {
-                        NodeType = JMCSyntaxNodeType.OP_SUCCESS,
-                        Range = range
-                    },
-                    nextIndex);
+                    node.NodeType = JMCSyntaxNodeType.OpSuccess;
+                    return new(node, nextIndex);
                 case "><":
-                    return new(new JMCSyntaxNode
-                    {
-                        NodeType = JMCSyntaxNodeType.OP_SWAP,
-                        Range = range
-                    },
-                    nextIndex);
+                    node.NodeType = JMCSyntaxNodeType.OpSwap;
+                    return new(node, nextIndex);
                 #endregion
 
                 #region Comps
                 case "||":
-                    return new(new JMCSyntaxNode
-                    {
-                        NodeType = JMCSyntaxNodeType.COMP_OR,
-                        Range = range
-                    },
-                    nextIndex);
+                    node.NodeType = JMCSyntaxNodeType.CompOr;
+                    return new(node, nextIndex);
                 case "&&":
-                    return new(new JMCSyntaxNode
-                    {
-                        NodeType = JMCSyntaxNodeType.COMP_AND,
-                        Range = range
-                    },
-                    nextIndex);
+                    node.NodeType = JMCSyntaxNodeType.CompAnd;
+                    return new(node, nextIndex);
                 case "!":
-                    return new(new JMCSyntaxNode
-                    {
-                        NodeType = JMCSyntaxNodeType.COMP_NOT,
-                        Range = range
-                    },
-                    nextIndex);
+                    node.NodeType = JMCSyntaxNodeType.CompNot;
+                    return new(node, nextIndex);
                 #endregion
 
                 #region Chars
                 case "{":
-                    return new(new JMCSyntaxNode
-                    {
-                        NodeType = JMCSyntaxNodeType.LCP,
-                        Range = range
-                    },
-                    nextIndex);
+                    node.NodeType = JMCSyntaxNodeType.LCP;
+                    return new(node, nextIndex);
                 case "}":
-                    return new(new JMCSyntaxNode
-                    {
-                        NodeType = JMCSyntaxNodeType.RCP,
-                        Range = range
-                    },
-                    nextIndex);
+                    node.NodeType = JMCSyntaxNodeType.RCP;
+                    return new(node, nextIndex);
                 case "(":
-                    return new(new JMCSyntaxNode
-                    {
-                        NodeType = JMCSyntaxNodeType.LPAREN,
-                        Range = range
-                    },
-                    nextIndex);
+                    node.NodeType = JMCSyntaxNodeType.LParen;
+                    return new(node, nextIndex);
                 case ")":
-                    return new(new JMCSyntaxNode
-                    {
-                        NodeType = JMCSyntaxNodeType.RPAREN,
-                        Range = range
-                    },
-                    nextIndex);
+                    node.NodeType = JMCSyntaxNodeType.RParen;
+                    return new(node, nextIndex);
                 case ";":
-                    return new(new JMCSyntaxNode
-                    {
-                        NodeType = JMCSyntaxNodeType.SEMI,
-                        Range = range
-                    },
-                    nextIndex);
+                    node.NodeType = JMCSyntaxNodeType.Semi;
+                    return new(node, nextIndex);
                 case ":":
-                    return new(new JMCSyntaxNode
-                    {
-                        NodeType = JMCSyntaxNodeType.COLON,
-                        Range = range
-                    },
-                    nextIndex);
+                    node.NodeType = JMCSyntaxNodeType.Colon;
+                    return new(node, nextIndex);
                 case "=>":
-                    return new(new JMCSyntaxNode
-                    {
-                        NodeType = JMCSyntaxNodeType.ARROW_FUNCTION,
-                        Range = range
-                    },
-                    nextIndex);
+                    node.NodeType = JMCSyntaxNodeType.ArrowFunction;
+                    return new(node, nextIndex);
                 #endregion
 
                 #region Misc
                 case ">":
-                    return new(new JMCSyntaxNode
-                    {
-                        NodeType = JMCSyntaxNodeType.GREATER_THAN,
-                        Range = range
-                    },
-                    nextIndex);
+                    node.NodeType = JMCSyntaxNodeType.GreaterThan;
+                    return new(node, nextIndex);
                 case "<":
-                    return new(new JMCSyntaxNode
-                    {
-                        NodeType = JMCSyntaxNodeType.LESS_THAN,
-                        Range = range
-                    },
-                    nextIndex);
+                    node.NodeType = JMCSyntaxNodeType.LessThan;
+                    return new(node, nextIndex);
                 case ">=":
-                    return new(new JMCSyntaxNode
-                    {
-                        NodeType = JMCSyntaxNodeType.GREATER_THAN_EQ,
-                        Range = range
-                    },
-                    nextIndex);
+                    node.NodeType = JMCSyntaxNodeType.GreaterThanEqual;
+                    return new(node, nextIndex);
                 case "<=":
-                    return new(new JMCSyntaxNode
-                    {
-                        NodeType = JMCSyntaxNodeType.LESS_THAN_EQ,
-                        Range = range
-                    },
-                    nextIndex);
+                    node.NodeType = JMCSyntaxNodeType.LessThanEqual;
+                    return new(node, nextIndex);
                 case "=":
-                    return new(new JMCSyntaxNode
-                    {
-                        NodeType = JMCSyntaxNodeType.EQUAL_TO,
-                        Range = range
-                    },
-                    nextIndex);
+                    node.NodeType = JMCSyntaxNodeType.EqualTo;
+                    return new(node, nextIndex);
                 case "==":
-                    return new(new JMCSyntaxNode
-                    {
-                        NodeType = JMCSyntaxNodeType.EQUAL,
-                        Range = range
-                    },
-                    nextIndex);
+                    node.NodeType = JMCSyntaxNodeType.Equal;
+                    return new(node, nextIndex);
                 #endregion
                 default:
                     break;
@@ -425,7 +314,7 @@ namespace JMC.Parser.JMC
 
             //check for `literal '{'`
             var query = this.AsParseQuery(index);
-            var match = query.ExpectList(out _, true, JMCSyntaxNodeType.LITERAL, JMCSyntaxNodeType.LCP);
+            var match = query.ExpectList(out _, true, JMCSyntaxNodeType.Literal, JMCSyntaxNodeType.LCP);
 
             //get Key
             var literal = TrimmedText[NextIndex(index)];
@@ -456,7 +345,7 @@ namespace JMC.Parser.JMC
             var end = GetIndexStartPos(index);
 
             //set next
-            node.NodeType = JMCSyntaxNodeType.CLASS;
+            node.NodeType = JMCSyntaxNodeType.Class;
             node.Next = next.Count != 0 ? next : null;
             node.Range = new Range(start, end);
             node.Value = literal;
@@ -474,7 +363,7 @@ namespace JMC.Parser.JMC
             var node = new JMCSyntaxNode();
 
             var query = this.AsParseQuery(index);
-            var match = query.ExpectList(out _, true, JMCSyntaxNodeType.STRING, JMCSyntaxNodeType.SEMI);
+            var match = query.ExpectList(out _, true, JMCSyntaxNodeType.String, JMCSyntaxNodeType.Semi);
 
             var start = GetIndexStartPos(index);
 
@@ -487,7 +376,7 @@ namespace JMC.Parser.JMC
             var end = GetIndexStartPos(index);
 
             //set node
-            node.NodeType = JMCSyntaxNodeType.IMPORT;
+            node.NodeType = JMCSyntaxNodeType.Import;
             node.Next = match && str.Node != null ? [str.Node] : null;
             node.Range = new Range(start, end);
 
@@ -509,7 +398,7 @@ namespace JMC.Parser.JMC
 
             var query = this.AsParseQuery(index);
             var match = query.
-                ExpectList(out _, true, JMCSyntaxNodeType.LITERAL, JMCSyntaxNodeType.LPAREN, JMCSyntaxNodeType.RPAREN, JMCSyntaxNodeType.LCP);
+                ExpectList(out _, true, JMCSyntaxNodeType.Literal, JMCSyntaxNodeType.LParen, JMCSyntaxNodeType.RParen, JMCSyntaxNodeType.LCP);
 
             index = SkipToValue(index);
 
@@ -530,7 +419,7 @@ namespace JMC.Parser.JMC
 
             var end = GetIndexStartPos(index);
             //set next
-            node.NodeType = JMCSyntaxNodeType.FUNCTION;
+            node.NodeType = JMCSyntaxNodeType.Function;
             node.Next = next.Count != 0 ? next : null;
             node.Range = new Range(start, end);
             node.Value = literal;
@@ -543,10 +432,10 @@ namespace JMC.Parser.JMC
         /// </summary>
         /// <param name="index"></param>
         /// <returns></returns>
-        internal Range GetRangeByIndex(int index)
+        internal Range GetRangeByIndex(int index, bool isError = false)
         {
             var start = GetIndexStartPos(index);
-            var end = GetIndexEndPos(index);
+            var end = GetIndexEndPos(index, isError);
             return new Range(start, end);
         }
 
@@ -555,7 +444,8 @@ namespace JMC.Parser.JMC
         /// </summary>
         /// <param name="index"></param>
         /// <returns></returns>
-        internal Position GetIndexEndPos(int index) => (ToOffset(index) + TrimmedText[index].Length - 1).ToPosition(RawText);
+        internal Position GetIndexEndPos(int index, bool isError = false) =>
+            (ToOffset(index) + TrimmedText[index].Length - (isError ? 0 : 1)).ToPosition(RawText);
 
         /// <summary>
         /// Skip to a non-space index

@@ -6,6 +6,7 @@ namespace JMC.Extension.Server.Types
     internal class ExtensionWorkspace
     {
         public List<JMCFile> JMCFiles { get; set; } = [];
+        public List<HJMCFile> HJMCFiles { get; set; } = [];
         public DocumentUri Root { get; set; }
         public ExtensionWorkspace(DocumentUri root)
         {
@@ -59,5 +60,6 @@ namespace JMC.Extension.Server.Types
         }
 
         public JMCFile? GetJMCFile(DocumentUri documentUri) => JMCFiles.Find(v => v.DocumentUri == documentUri);
+        public HJMCFile? GetHJMCFile(DocumentUri documentUri) => HJMCFiles.Find(v => v.DocumentUri == documentUri);
     }
 }

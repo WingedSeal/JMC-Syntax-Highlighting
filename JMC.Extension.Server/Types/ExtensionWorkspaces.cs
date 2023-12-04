@@ -10,6 +10,9 @@ namespace JMC.Extension.Server.Types
 
         public JMCFile? GetJMCFile(DocumentUri documentUri) =>
             Find(v => v.GetJMCFile(documentUri) != null)?.GetJMCFile(documentUri);
+        public HJMCFile? GetHJMCFile(DocumentUri documentUri) =>
+            Find(v => v.GetHJMCFile(documentUri) != null)?.GetHJMCFile(documentUri);
+
         public bool DeleteJMCFile(DocumentUri documentUri)
         {
             var workspace = Find(v => v.GetJMCFile(documentUri) != null);

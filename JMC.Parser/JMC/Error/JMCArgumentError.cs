@@ -4,9 +4,7 @@ using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 
 namespace JMC.Parser.JMC.Error
 {
-    internal class JMCArgumentError : JMCBaseError
+    internal class JMCArgumentError(Range range, JMCFunctionArgument arg) : JMCBaseError($"ArgumentError: at line:{range.Start.Line + 1} character: {range.Start.Character + 1}; Missing argument '{arg.Name}'", ErrorType.IDE, range)
     {
-        public JMCArgumentError(Position position, JMCFunctionArgument arg) : 
-            base($"ArgumentError: at line:{position.Line + 1} character: {position.Character + 1}; Missing argument '{arg.Name}'", ErrorType.IDE) { }
     }
 }

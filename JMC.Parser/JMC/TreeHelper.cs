@@ -34,7 +34,7 @@ namespace JMC.Parser.JMC
             {
                 JMCSyntaxNodeType.LCP => "{",
                 JMCSyntaxNodeType.RCP => "}",
-                JMCSyntaxNodeType.LITERAL => "literal",
+                JMCSyntaxNodeType.Literal => "literal",
                 _ => nodeType.ToString(),
             };
         }

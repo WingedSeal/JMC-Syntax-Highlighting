@@ -36,7 +36,7 @@ namespace JMC.Parser.JMC
                 var isMatch = node.NodeType == syntaxNodeType;
 
                 if (!isMatch && throwError)
-                    SyntaxTree.Errors.Add(new JMCSyntaxError(SyntaxTree.GetIndexStartPos(Index), syntaxNodeType.ToTokenString(), node.NodeType.ToTokenString()));
+                    SyntaxTree.Errors.Add(new JMCSyntaxError(SyntaxTree.GetRangeByIndex(Index, true), syntaxNodeType.ToTokenString(), node.NodeType.ToTokenString()));
 
 
                 return isMatch;
@@ -60,7 +60,7 @@ namespace JMC.Parser.JMC
                 var isMatch = value == text;
 
                 if (!isMatch && throwError)
-                    SyntaxTree.Errors.Add(new JMCSyntaxError(SyntaxTree.GetIndexStartPos(Index), value, node.NodeType.ToTokenString()));
+                    SyntaxTree.Errors.Add(new JMCSyntaxError(SyntaxTree.GetRangeByIndex(Index, true), value, node.NodeType.ToTokenString()));
 
 
                 return isMatch;
@@ -87,7 +87,7 @@ namespace JMC.Parser.JMC
                     var isMatch = value == text;
                     if (!isMatch)
                     {
-                        SyntaxTree.Errors.Add(new JMCSyntaxError(SyntaxTree.GetIndexStartPos(Index), value, node.NodeType.ToTokenString()));
+                        SyntaxTree.Errors.Add(new JMCSyntaxError(SyntaxTree.GetRangeByIndex(Index, true), value, node.NodeType.ToTokenString()));
                         return false;
                     }
                 }
@@ -116,7 +116,7 @@ namespace JMC.Parser.JMC
                     var isMatch = nodeType == node.NodeType;
                     if (!isMatch && throwError)
                     {
-                        SyntaxTree.Errors.Add(new JMCSyntaxError(SyntaxTree.GetIndexStartPos(Index), nodeType.ToTokenString(), node.NodeType.ToTokenString()));
+                        SyntaxTree.Errors.Add(new JMCSyntaxError(SyntaxTree.GetRangeByIndex(Index, true), nodeType.ToTokenString(), node.NodeType.ToTokenString()));
                         return false;
                     }
                 }
@@ -188,13 +188,13 @@ namespace JMC.Parser.JMC
                     return true;
                 else
                 {
-                    SyntaxTree.Errors.Add(new JMCSyntaxError(SyntaxTree.GetIndexStartPos(Index), JMCSyntaxNodeType.INT_RANGE.ToTokenString(), text));
+                    SyntaxTree.Errors.Add(new JMCSyntaxError(SyntaxTree.GetRangeByIndex(Index), JMCSyntaxNodeType.IntRange.ToTokenString(), text));
                     return false;
                 }
             }
             catch
             {
-                SyntaxTree.Errors.Add(new JMCSyntaxError(SyntaxTree.GetIndexStartPos(Index), JMCSyntaxNodeType.INT_RANGE.ToTokenString(), text));
+                SyntaxTree.Errors.Add(new JMCSyntaxError(SyntaxTree.GetRangeByIndex(Index), JMCSyntaxNodeType.IntRange.ToTokenString(), text));
                 return false;
             }
         }

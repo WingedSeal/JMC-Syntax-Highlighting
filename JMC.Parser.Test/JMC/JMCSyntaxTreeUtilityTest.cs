@@ -1,23 +1,12 @@
 using JMC.Parser.JMC;
-using JMC.Shared;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 
-namespace JMC.Parser.Test
+namespace JMC.Parser.Test.JMC
 {
-    public abstract class SyntaxTreeBase : IDisposable
-    {
-        internal static readonly JMCSyntaxTree UtilityTestTree = new JMCSyntaxTree().InitializeAsync("testString;\r\ntestString2;\r\ntestString3;\r\ntestString4;").Result;
-        protected SyntaxTreeBase()
-        {
-            var ext = new ExtensionData();
-        }
-
-        public void Dispose() => GC.SuppressFinalize(this);
-    }
-    public class SyntaxTreeTest : SyntaxTreeBase
+    public class JMCSyntaxTreeUtilityTest : JMCSyntaxTreeTestBase
     {
         [Theory]
-        [MemberData(nameof(SyntaxTreeTestCase.ToOffsetTests), MemberType = typeof(SyntaxTreeTestCase))]
+        [MemberData(nameof(JMCSyntaxTreeUtilityTestCase.ToOffsetTests), MemberType = typeof(JMCSyntaxTreeUtilityTestCase))]
         public void ToOffset_Test(Range range, int offset1, int offset2)
         {
             var start = range.Start;
@@ -27,7 +16,7 @@ namespace JMC.Parser.Test
         }
 
         [Theory]
-        [MemberData(nameof(SyntaxTreeTestCase.ToOffsetTests), MemberType = typeof(SyntaxTreeTestCase))]
+        [MemberData(nameof(JMCSyntaxTreeUtilityTestCase.ToOffsetTests), MemberType = typeof(JMCSyntaxTreeUtilityTestCase))]
         public void ToOffset_Test2(Range range, int offset1, int offset2)
         {
             var start = offset1.ToPosition(UtilityTestTree.RawText);
@@ -37,7 +26,7 @@ namespace JMC.Parser.Test
         }
 
         [Theory]
-        [MemberData(nameof(SyntaxTreeTestCase.IndexToPositionTests), MemberType = typeof(SyntaxTreeTestCase))]
+        [MemberData(nameof(JMCSyntaxTreeUtilityTestCase.IndexToPositionTests), MemberType = typeof(JMCSyntaxTreeUtilityTestCase))]
         public void GetIndexEndPos_Test(int index, Position pos)
         {
             var r = UtilityTestTree.GetIndexStartPos(index);
@@ -45,7 +34,7 @@ namespace JMC.Parser.Test
         }
 
         [Theory]
-        [MemberData(nameof(SyntaxTreeTestCase.GetRangeByIndexTests), MemberType = typeof(SyntaxTreeTestCase))]
+        [MemberData(nameof(JMCSyntaxTreeUtilityTestCase.GetRangeByIndexTests), MemberType = typeof(JMCSyntaxTreeUtilityTestCase))]
         public void GetRangeByIndex_Test(int index, Range range)
         {
             var r = UtilityTestTree.GetRangeByIndex(index);

@@ -25,7 +25,14 @@ namespace JMC.Parser.JMC
             var parser = new CommandParser(exp, startOffset, RawText);
             var result = parser.ParseCommand();
             next.AddRange(result);
-            Errors.AddRange(parser.Errors.Select(v => new JMCSyntaxError((v.Key + startOffset).ToPosition(RawText), v.Value)));
+            Errors.AddRange(parser.Errors.Select(v =>
+                {
+                    var start = (v.Key + startOffset).ToPosition(RawText);
+                    var end = (v.Key + startOffset + RawText.Length).ToPosition(RawText);
+                    var error = new JMCSyntaxError(new(start, end), v.Value);
+                    return error;
+                }
+            ));
 
             var start = startOffset.ToPosition(RawText);
             var end = GetIndexStartPos(index);
@@ -33,7 +40,7 @@ namespace JMC.Parser.JMC
             //set next
             node.Next = next.Count != 0 ? next : null;
             node.Range = range;
-            node.NodeType = JMCSyntaxNodeType.COMMAND;
+            node.NodeType = JMCSyntaxNodeType.Command;
 
             return new(node, index);
         }

@@ -1,8 +1,8 @@
 ﻿using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 
-namespace JMC.Parser.Test
+namespace JMC.Parser.Test.JMC
 {
-    public static class SyntaxTreeTestCase
+    public static class JMCSyntaxTreeUtilityTestCase
     {
         public static readonly List<object[]> ToOffsetTests = [
             [new Range(0, 0, 0, 3), 0, 3],

@@ -55,6 +55,7 @@ namespace JMC.Extension.Server
                         )
                        .WithHandler<JMCTextDocumentHandler>()
                        .WithHandler<JMCDidChangedWatchFilesHandler>()
+                       .WithHandler<JMCCompletionHandler>()
                        .WithServices(x => x.AddLogging(b => b.SetMinimumLevel(LogLevel.Trace)))
                        .WithServices(
                             services =>
@@ -91,10 +92,7 @@ namespace JMC.Extension.Server
                                         CompletionProvider = new()
                                         {
                                             ResolveProvider = true,
-                                            TriggerCharacters = new string[]
-                                            {
-                                                ".", "#", " ", "/", "$"
-                                            }
+                                            TriggerCharacters = JMCCompletionHandler.TriggerChars
                                         },
                                         SignatureHelpProvider = new()
                                         {
@@ -155,9 +153,7 @@ namespace JMC.Extension.Server
                         );
         }
 
-        private static void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
-        {
+        private static void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e) => 
             Log.Fatal(e.ExceptionObject.ToString());
-        }
     }
 }

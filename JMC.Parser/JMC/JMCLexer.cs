@@ -21,7 +21,8 @@ namespace JMC.Parser.JMC
             "-=",
             "*=",
             "/=",
-            "%="
+            "%=",
+            "?="
         ];
         public string RawText { get; private set; } = text;
         private int Index { get; set; } = 0;
@@ -30,6 +31,14 @@ namespace JMC.Parser.JMC
             get
             {
                 return Index + 1 >= RawText.Length ? '\0' : RawText[Index + 1];
+            }
+        }
+
+        private char NextPeekChar
+        {
+            get
+            {
+                return Index + 2 >= RawText.Length ? '\0' : RawText[Index + 2];
             }
         }
         public IEnumerable<string> StartLexing()
@@ -41,7 +50,15 @@ namespace JMC.Parser.JMC
             {
                 ref var ch = ref span[Index];
                 var twoChars = new string(new char[] { ch, PeekChar });
-                if (ValidTwoChars.Contains(twoChars))
+                var threeChars = new string(new char[] { ch, PeekChar, NextPeekChar });
+                if (threeChars == "??=")
+                {
+                    strs.Add(tempString);
+                    strs.Add(threeChars);
+                    Index += 2;
+                    tempString = string.Empty;
+                }
+                else if (ValidTwoChars.Contains(twoChars))
                 {
                     strs.Add(tempString);
                     strs.Add(twoChars);

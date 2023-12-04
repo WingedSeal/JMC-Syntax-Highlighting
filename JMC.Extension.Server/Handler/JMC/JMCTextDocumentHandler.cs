@@ -1,21 +1,35 @@
-﻿using MediatR;
+﻿using JMC.Parser.JMC;
+using MediatR;
 using Microsoft.Extensions.Logging;
 using OmniSharp.Extensions.LanguageServer.Protocol;
 using OmniSharp.Extensions.LanguageServer.Protocol.Client.Capabilities;
 using OmniSharp.Extensions.LanguageServer.Protocol.Document;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
+using OmniSharp.Extensions.LanguageServer.Protocol.Server;
 using OmniSharp.Extensions.LanguageServer.Protocol.Server.Capabilities;
 
 namespace JMC.Extension.Server.Handler.JMC
 {
-    internal class JMCTextDocumentHandler(ILogger<JMCTextDocumentHandler> logger) : TextDocumentSyncHandlerBase
+    internal class JMCTextDocumentHandler(ILanguageServerFacade facade, ILogger<JMCTextDocumentHandler> logger) : TextDocumentSyncHandlerBase
     {
-        private ILogger<JMCTextDocumentHandler> _logger = logger;
+        private readonly ILanguageServerFacade _facade = facade;
+        private readonly ILogger<JMCTextDocumentHandler> _logger = logger;
         public TextDocumentSyncKind Change { get; } = TextDocumentSyncKind.Full;
+
+        private void PublicDiagnostic(JMCSyntaxTree tree, DocumentUri uri, int? version) => _facade.TextDocument.PublishDiagnostics(new()
+        {
+            Diagnostics = new(tree.GetDiagnostics()),
+            Uri = uri,
+            Version = version
+        });
 
         public override Task<Unit> Handle(DidOpenTextDocumentParams request, CancellationToken cancellationToken)
         {
             _logger.LogDebug($"Opened Document: ${request.TextDocument.Uri}");
+            var filePath = request.TextDocument.Uri;
+            var file = ExtensionDatabase.Workspaces.GetJMCFile(filePath);
+            if (file != null)
+                PublicDiagnostic(file.SyntaxTree, file.DocumentUri, request.TextDocument.Version);
             return Unit.Task;
         }
 
@@ -29,7 +43,10 @@ namespace JMC.Extension.Server.Handler.JMC
             {
                 var file = ExtensionDatabase.Workspaces.GetJMCFile(filePath);
                 if (file != null)
+                {
                     await file.SyntaxTree.ModifyFullAsync(request.ContentChanges.First().Text);
+                    PublicDiagnostic(file.SyntaxTree, file.DocumentUri, request.TextDocument.Version);
+                }
             }
             //TODO Incremental support
 

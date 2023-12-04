@@ -72,7 +72,7 @@ namespace JMC.Parser.JMC.Command
             {
                 Errors.Add(Index, "Expect End");
             }
-            else if (CurrentNode?.Executable == null)
+            else if (CurrentNode?.Executable == null && CurrentNode?.Children?.Keys != null)
             {
                 var keys = CurrentNode?.Children?.Keys;
                 var s = keys != null ? string.Join(" or ", keys.Select(v => $"'{v}'")) : "";
@@ -154,7 +154,7 @@ namespace JMC.Parser.JMC.Command
 
             var parser = CurrentNode.Parser;
             var type = CurrentNode.Type == CommandNodeType.LITERAL ?
-                JMCSyntaxNodeType.LITERAL :
+                JMCSyntaxNodeType.Literal :
                 ToSyntaxNodeType(parser ?? "");
 
             node.Value = value;
@@ -182,53 +182,53 @@ namespace JMC.Parser.JMC.Command
 
         private static JMCSyntaxNodeType ToSyntaxNodeType(string parser) => parser switch
         {
-            "brigadier:bool" => JMCSyntaxNodeType.BOOL,
-            "brigadier:double" => JMCSyntaxNodeType.DOUBLE,
-            "brigadier:float" => JMCSyntaxNodeType.FLOAT,
-            "brigadier:integer" => JMCSyntaxNodeType.INT,
-            "brigadier:long" => JMCSyntaxNodeType.LONG,
-            "brigadier:string" => JMCSyntaxNodeType.COMMAND_STRING,
-            "minecraft:block_pos" => JMCSyntaxNodeType.VEC3,
-            "minecraft:vec3" => JMCSyntaxNodeType.VEC3,
-            "minecraft:vec2" => JMCSyntaxNodeType.VEC2,
-            "minecraft:angle" => JMCSyntaxNodeType.ANGLE,
-            "minecraft:block_state" => JMCSyntaxNodeType.BLOCK_STATE,
-            "minecraft:color" => JMCSyntaxNodeType.COLOR,
-            "minecraft:column_pos" => JMCSyntaxNodeType.VEC2,
-            "minecraft:entity" => JMCSyntaxNodeType.ENTITY,
-            "minecraft:entity_anchor" => JMCSyntaxNodeType.ENTITY_ANCHOR,
-            "minecraft:float_range" => JMCSyntaxNodeType.FLOAT_RANGE,
-            "minecraft:function" => JMCSyntaxNodeType.FUNCTION_CALL,
-            "minecraft:game_profile" => JMCSyntaxNodeType.ENTITY,
-            "minecraft:gamemode" => JMCSyntaxNodeType.LITERAL,
-            "minecraft:heightmap" => JMCSyntaxNodeType.LITERAL,
-            "minecraft:int_range" => JMCSyntaxNodeType.INT_RANGE,
-            "minecraft:item_predicate" => JMCSyntaxNodeType.ITEM_PREDICATE,
-            "minecraft:item_slot" => JMCSyntaxNodeType.ITEM_SLOT,
-            "minecraft:item_stack" => JMCSyntaxNodeType.ITEM_STACK,
-            "minecraft:message" => JMCSyntaxNodeType.MESSAGE,
+            "brigadier:bool" => JMCSyntaxNodeType.Bool,
+            "brigadier:double" => JMCSyntaxNodeType.Double,
+            "brigadier:float" => JMCSyntaxNodeType.Float,
+            "brigadier:integer" => JMCSyntaxNodeType.Int,
+            "brigadier:long" => JMCSyntaxNodeType.Long,
+            "brigadier:string" => JMCSyntaxNodeType.CommandString,
+            "minecraft:block_pos" => JMCSyntaxNodeType.Vec3,
+            "minecraft:vec3" => JMCSyntaxNodeType.Vec3,
+            "minecraft:vec2" => JMCSyntaxNodeType.Vec2,
+            "minecraft:angle" => JMCSyntaxNodeType.Angle,
+            "minecraft:block_state" => JMCSyntaxNodeType.BlockState,
+            "minecraft:color" => JMCSyntaxNodeType.Color,
+            "minecraft:column_pos" => JMCSyntaxNodeType.Vec2,
+            "minecraft:entity" => JMCSyntaxNodeType.Entity,
+            "minecraft:entity_anchor" => JMCSyntaxNodeType.EntityAnchor,
+            "minecraft:float_range" => JMCSyntaxNodeType.FloatRange,
+            "minecraft:function" => JMCSyntaxNodeType.FunctionCall,
+            "minecraft:game_profile" => JMCSyntaxNodeType.Entity,
+            "minecraft:gamemode" => JMCSyntaxNodeType.Literal,
+            "minecraft:heightmap" => JMCSyntaxNodeType.Literal,
+            "minecraft:int_range" => JMCSyntaxNodeType.IntRange,
+            "minecraft:item_predicate" => JMCSyntaxNodeType.ItemPredicate,
+            "minecraft:item_slot" => JMCSyntaxNodeType.ItemSlot,
+            "minecraft:item_stack" => JMCSyntaxNodeType.ItemStack,
+            "minecraft:message" => JMCSyntaxNodeType.Message,
             "minecraft:nbt_compound_tag" => JMCSyntaxNodeType.NBT,
-            "minecraft:nbt_path" => JMCSyntaxNodeType.NBT_PATH,
-            "minecraft:nbt_tag" => JMCSyntaxNodeType.NBT_TAG,
-            "minecraft:objective" => JMCSyntaxNodeType.LITERAL,
-            "minecraft:objective_criteria" => JMCSyntaxNodeType.OBJECTIVE_CRITERIA,
-            "minecraft:operation" => JMCSyntaxNodeType.OPERATOR,
-            "minecraft:particle" => JMCSyntaxNodeType.PARTICLE,
-            "minecraft:resource" => JMCSyntaxNodeType.RESOURCE,
-            "minecraft:resource_key" => JMCSyntaxNodeType.RESOURCE,
-            "minecraft:resource_location" => JMCSyntaxNodeType.RESOURCE,
-            "minecraft:resource_or_tag" => JMCSyntaxNodeType.RESOURCE_TAG,
-            "minecraft:resource_or_tag_key" => JMCSyntaxNodeType.RESOURCE_TAG,
-            "minecraft:rotation" => JMCSyntaxNodeType.ROTATION,
-            "minecraft:score_holder" => JMCSyntaxNodeType.ENTITY,
-            "minecraft:scoreboard_slot" => JMCSyntaxNodeType.LITERAL,
-            "minecraft:swizzle" => JMCSyntaxNodeType.LITERAL,
-            "minecraft:team" => JMCSyntaxNodeType.TEAM,
-            "minecraft:template_mirror" => JMCSyntaxNodeType.LITERAL,
-            "minecraft:template_rotation" => JMCSyntaxNodeType.LITERAL,
-            "minecraft:time" => JMCSyntaxNodeType.TIME,
+            "minecraft:nbt_path" => JMCSyntaxNodeType.NBTPath,
+            "minecraft:nbt_tag" => JMCSyntaxNodeType.NbtTag,
+            "minecraft:objective" => JMCSyntaxNodeType.Literal,
+            "minecraft:objective_criteria" => JMCSyntaxNodeType.ObjectCriteria,
+            "minecraft:operation" => JMCSyntaxNodeType.Operator,
+            "minecraft:particle" => JMCSyntaxNodeType.Particle,
+            "minecraft:resource" => JMCSyntaxNodeType.Resource,
+            "minecraft:resource_key" => JMCSyntaxNodeType.Resource,
+            "minecraft:resource_location" => JMCSyntaxNodeType.Resource,
+            "minecraft:resource_or_tag" => JMCSyntaxNodeType.ResourceTag,
+            "minecraft:resource_or_tag_key" => JMCSyntaxNodeType.ResourceTag,
+            "minecraft:rotation" => JMCSyntaxNodeType.Rotation,
+            "minecraft:score_holder" => JMCSyntaxNodeType.Entity,
+            "minecraft:scoreboard_slot" => JMCSyntaxNodeType.Literal,
+            "minecraft:swizzle" => JMCSyntaxNodeType.Literal,
+            "minecraft:team" => JMCSyntaxNodeType.Team,
+            "minecraft:template_mirror" => JMCSyntaxNodeType.Literal,
+            "minecraft:template_rotation" => JMCSyntaxNodeType.Literal,
+            "minecraft:time" => JMCSyntaxNodeType.Time,
             "minecraft:uuid" => JMCSyntaxNodeType.UUID,
-            _ => JMCSyntaxNodeType.UNKNOWN
+            _ => JMCSyntaxNodeType.Unknown
         };
 
         private bool Expect(string value, CommandNode node)
@@ -301,12 +301,12 @@ namespace JMC.Parser.JMC.Command
                 if (value != null) return value;
                 if (cmd.StartsWith('$') && VariableCallRegex().IsMatch(cmd))
                 {
-                    Nodes.Add(GetSyntaxNode(cmd, JMCSyntaxNodeType.VARIABLE_CALL));
+                    Nodes.Add(GetSyntaxNode(cmd, JMCSyntaxNodeType.VariableCall));
                     return null;
                 }
                 else if (ExpectFunction(cmd))
                 {
-                    Nodes.Add(GetSyntaxNode(cmd, JMCSyntaxNodeType.FUNCTION_CALL));
+                    Nodes.Add(GetSyntaxNode(cmd, JMCSyntaxNodeType.FunctionCall));
                     return null;
                 }
             }
