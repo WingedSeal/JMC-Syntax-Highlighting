@@ -12,6 +12,8 @@ namespace JMC.Parser.JMC
             JMCSyntaxNodeType.While,
             JMCSyntaxNodeType.For
         ];
+
+        //TODO it is not detecting closing bracket
         /// <summary>
         /// Parse a block
         /// </summary>

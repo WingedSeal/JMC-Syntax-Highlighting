@@ -32,7 +32,7 @@ namespace JMC.Parser.JMC
             return this;
         }
 
-        //TODO: after lsp is done
+        //TODO: Not Finished
         public void ModifyIncremental(TextDocumentContentChangeEvent eventArgs)
         {
             if (eventArgs.Range == null)
@@ -43,6 +43,10 @@ namespace JMC.Parser.JMC
 
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
         public Diagnostic[] GetDiagnostics()
         {
             var diagnostics = new List<Diagnostic>();
@@ -62,7 +66,13 @@ namespace JMC.Parser.JMC
             return [.. diagnostics];
         }
 
+        /// <summary>
+        /// Reset a tree
+        /// </summary>
+        /// <param name="changedText"></param>
         public void ModifyFull(string changedText) => InitializeAsync(changedText).Wait();
+
+        /// <inheritdoc cref="ModifyFull(string)"/>
         public async Task ModifyFullAsync(string changedText) => await InitializeAsync(changedText);
 
         /// <summary>

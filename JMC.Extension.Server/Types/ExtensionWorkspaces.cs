@@ -8,6 +8,12 @@ namespace JMC.Extension.Server.Types
         public ExtensionWorkspaces() { }
         public ExtensionWorkspaces(IEnumerable<ExtensionWorkspace> extensions) : base(extensions) { }
 
+        public ExtensionWorkspace? GetWorkspaceByUri(DocumentUri documentUri) => 
+            this.FirstOrDefault(v => 
+                v.JMCFiles.Any(v => v.DocumentUri == documentUri) || 
+                v.HJMCFiles.Any(v => v.DocumentUri == documentUri)
+            );
+
         public JMCFile? GetJMCFile(DocumentUri documentUri) =>
             Find(v => v.GetJMCFile(documentUri) != null)?.GetJMCFile(documentUri);
         public HJMCFile? GetHJMCFile(DocumentUri documentUri) =>

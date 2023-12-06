@@ -19,26 +19,51 @@ namespace JMC.Extension.Server.Handler.JMC
             var documentUri = request.TextDocument.Uri;
 
             if (documentUri.Path.EndsWith(".jmc"))
-                return GetJMC(request, cancellationToken);
+                return GetJMCAsync(request, cancellationToken);
             else if (documentUri.Path.EndsWith(".hjmc"))
-                return GetHJMC(request, cancellationToken);
+                return GetHJMCAsync(request, cancellationToken);
             else
                 throw new NotImplementedException();
         }
 
-        private Task<CompletionList> GetJMC(CompletionParams request, CancellationToken cancellationToken)
+        private Task<CompletionList> GetJMCAsync(CompletionParams request, CancellationToken cancellationToken)
         {
             var list = new List<CompletionItem>();
+            var file = ExtensionDatabase.Workspaces.GetJMCFile(request.TextDocument.Uri);
 
-            if (request.Context == null)
+            if (request.Context == null || file == null)
                 return Task.FromResult(CompletionList.From(list));
+
+            var workspace = ExtensionDatabase.Workspaces.GetWorkspaceByUri(file.DocumentUri);
+            if (workspace == null)
+                return Task.FromResult(CompletionList.From(list));
+
+            var tree = file.SyntaxTree;
+
             var triggerChar = request.Context.TriggerCharacter;
             var triggerType = request.Context.TriggerKind;
+
+            if (triggerChar != null &&
+                triggerChar == "$" &&
+                triggerType == CompletionTriggerKind.TriggerCharacter)
+            {
+                var arr = workspace.GetAllJMCVariableNames().AsSpan();
+                for (var i = 0; i < arr.Length; i++)
+                {
+                    ref var v = ref arr[i];
+                    list.Add(new()
+                    {
+                        Label = v[1..],
+                        Kind = CompletionItemKind.Variable
+                    });
+                }
+
+            }
 
             return Task.FromResult(CompletionList.From(list));
         }
 
-        private Task<CompletionList> GetHJMC(CompletionParams request, CancellationToken cancellationToken)
+        private Task<CompletionList> GetHJMCAsync(CompletionParams request, CancellationToken cancellationToken)
         {
             return Task.FromResult(new CompletionList());
         }

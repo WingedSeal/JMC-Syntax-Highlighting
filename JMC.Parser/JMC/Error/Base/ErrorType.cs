@@ -8,6 +8,7 @@ namespace JMC.Parser.JMC.Error.Base
 {
     internal enum ErrorType
     {
-        IDE
+        IDE,
+        Parser
     }
 }
