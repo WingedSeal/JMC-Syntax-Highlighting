@@ -3,6 +3,7 @@ using JMC.Parser.JMC.Types;
 using JMC.Shared;
 using JMC.Shared.Datas.BuiltIn;
 using System.Collections.Immutable;
+using System.Diagnostics;
 
 namespace JMC.Parser.JMC
 {
@@ -32,7 +33,29 @@ namespace JMC.Parser.JMC
                 if (exp.Node != null) next.Add(exp.Node);
                 index = exp.EndIndex;
                 if (TrimmedText[index] == "}" && 
-                    !ParseBlockExcluded.Contains(exp.Node?.NodeType)) break;
+                    !ParseBlockExcluded.Contains(exp.Node?.NodeType))
+                {
+                    //check if index needs to move
+                    var stackTrace = new StackTrace();
+                    var frames = stackTrace.GetFrames();
+                    var funcCount = frames.Where(v => v.GetMethod().Name == nameof(ParseBlock)).Count() - 1;
+                    
+                    if (funcCount > 0)
+                    {
+                        var nextIndex = NextIndex(index, out var errorCode);
+
+                        if (errorCode > 0)
+                            Errors.Add(new JMCSyntaxError(GetRangeByIndex(index), "Missing '}'"));
+
+                        var nextString = TrimmedText[nextIndex];
+                        if (nextString == "}")
+                        {
+                            index = nextIndex;
+                        }
+                    }
+
+                    break;
+                }
             }
 
             var end = GetIndexEndPos(index);

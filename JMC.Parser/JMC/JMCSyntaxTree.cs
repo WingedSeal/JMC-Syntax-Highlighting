@@ -131,6 +131,9 @@ namespace JMC.Parser.JMC
         /// <exception cref="OperationCanceledException"/>
         public async Task ParseNextAsync(int index, CancellationToken token)
         {
+            if (index == -1)
+                return;
+
             var result = Parse(index, isStart: true);
             index = NextIndex(result.EndIndex);
             if (result.Node != null) Nodes.Add(result.Node);
@@ -454,18 +457,28 @@ namespace JMC.Parser.JMC
         /// </summary>
         /// <param name="index"></param>
         /// <returns></returns>
-        internal Position GetIndexEndPos(int index, bool isError = false) =>
-            (ToOffset(index) + TrimmedText[index].Length - (isError ? 0 : 1)).ToPosition(RawText);
+        internal Position GetIndexEndPos(int index, bool isError = false)
+        {
+            var errorOffset = isError ? 0 : 1;
+            var offset = ToOffset(index);
+            var posOffset = offset + TrimmedText[index].Length - errorOffset;
+            return posOffset.ToPosition(RawText);
+        }
+
 
         /// <summary>
         /// Skip to a non-space index
         /// </summary>
         /// <param name="index"></param>
-        /// <returns></returns>
-        internal int SkipToValue(int index)
+        /// <param name="errorCode">0 if success, 1 if out of range</param>
+        internal int SkipToValue(int index, out int errorCode)
         {
+            errorCode = 0;
             if (index >= TrimmedText.Length - 1)
+            {
+                errorCode = 1;
                 return TrimmedText.Length - 1;
+            }
 
             var arr = TrimmedText.AsSpan();
 
@@ -481,12 +494,17 @@ namespace JMC.Parser.JMC
             return nextIndex;
         }
 
+        /// <inheritdoc cref="SkipToValue(int, out int)"/>
+        internal int SkipToValue(int index) => SkipToValue(index, out _);
+
         /// <summary>
         /// Get next non-space character index
         /// </summary>
         /// <param name="index"></param>
         /// <returns></returns>
         internal int NextIndex(int index) => SkipToValue(index + 1);
+
+        internal int NextIndex(int index, out int errorCode) => SkipToValue(index, out errorCode);
 
         /// <summary>
         /// index of <seealso cref="TrimmedText"/> to offset

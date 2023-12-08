@@ -267,13 +267,16 @@ namespace JMC.Parser.JMC
             {
                 //parse case
                 var cr = ParseCase(index);
-                if (cr.Node  != null)
+                if (cr.Node != null)
                     next.Add(cr.Node);
                 index = cr.EndIndex;
                 currentText = ref texts[index]!;
             }
 
             var end = GetIndexEndPos(index);
+            index = NextIndex(index, out var errorCode);
+            if (errorCode > 0)
+                Errors.Add(new JMCSyntaxError(GetRangeByIndex(index), "Missing '}'"));
 
             //set next
             node.Next = next.Count != 0 ? next : null;
@@ -283,7 +286,7 @@ namespace JMC.Parser.JMC
 
             return new(node, index);
         }
-        
+
         /// <summary>
         /// 
         /// </summary>
@@ -298,7 +301,7 @@ namespace JMC.Parser.JMC
             var query = this.AsParseQuery(index);
 
             //test for syntax
-            var match = 
+            var match =
                 query.ExpectList(out var syntaxNodes, true, JMCSyntaxNodeType.Number, JMCSyntaxNodeType.Colon);
 
             index = NextIndex(query.Index);
