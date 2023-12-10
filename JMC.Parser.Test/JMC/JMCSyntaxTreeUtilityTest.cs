@@ -1,9 +1,10 @@
 using JMC.Parser.JMC;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
+using Xunit.Abstractions;
 
 namespace JMC.Parser.Test.JMC
 {
-    public class JMCSyntaxTreeUtilityTest : JMCSyntaxTreeTestBase
+    public class JMCSyntaxTreeUtilityTest(ITestOutputHelper testOutputHelper) : JMCSyntaxTreeTestBase(testOutputHelper)
     {
         [Theory]
         [MemberData(nameof(JMCSyntaxTreeUtilityTestCase.ToOffsetTests), MemberType = typeof(JMCSyntaxTreeUtilityTestCase))]

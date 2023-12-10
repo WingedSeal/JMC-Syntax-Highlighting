@@ -156,9 +156,11 @@ namespace JMC.Parser.JMC
 
             var node = new JMCSyntaxNode();
 
+            var offset = ToOffset(index);
             var range = new Range(GetIndexStartPos(index), GetIndexEndPos(index));
             node.Range = range;
             node.Value = value;
+            node.Offset = offset;
 
             switch (value)
             {
@@ -307,7 +309,10 @@ namespace JMC.Parser.JMC
             }
 
             if (result != default)
-                return new(new(result, range: range, value: value), nextIndex);
+            {
+                node.NodeType = result;
+                return new(node, nextIndex);
+            }
 
             return new(null, nextIndex);
         }

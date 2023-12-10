@@ -14,7 +14,6 @@ namespace JMC.Parser.JMC
             JMCSyntaxNodeType.For
         ];
 
-        //TODO it is not detecting closing bracket
         /// <summary>
         /// Parse a block
         /// </summary>
@@ -32,14 +31,14 @@ namespace JMC.Parser.JMC
                 var exp = ParseExpression(NextIndex(index));
                 if (exp.Node != null) next.Add(exp.Node);
                 index = exp.EndIndex;
-                if (TrimmedText[index] == "}" && 
+                if (TrimmedText[index] == "}" &&
                     !ParseBlockExcluded.Contains(exp.Node?.NodeType))
                 {
                     //check if index needs to move
                     var stackTrace = new StackTrace();
                     var frames = stackTrace.GetFrames();
                     var funcCount = frames.Where(v => v.GetMethod().Name == nameof(ParseBlock)).Count() - 1;
-                    
+
                     if (funcCount > 0)
                     {
                         var nextIndex = NextIndex(index, out var errorCode);
@@ -167,6 +166,7 @@ namespace JMC.Parser.JMC
             var next = new List<JMCSyntaxNode>();
             var value = TrimmedText[index];
             //start position
+            var startOffset = ToOffset(index);
             var startPos = GetIndexStartPos(index);
             //parse assignment
             var result = ParseAssignmentExpression(NextIndex(index));
@@ -192,6 +192,7 @@ namespace JMC.Parser.JMC
             node.Range = new Range(startPos, endPos);
             node.Value = value;
             node.NodeType = JMCSyntaxNodeType.Variable;
+            node.Offset = startOffset;
 
             return new(node, index);
         }
@@ -213,8 +214,11 @@ namespace JMC.Parser.JMC
             var query = this.AsParseQuery(index);
             var match = query.ExpectList(out _, true, JMCSyntaxNodeType.Colon, JMCSyntaxNodeType.Selector);
             var value = string.Join("", TrimmedText[index..(query.Index + 1)].Where(v => !string.IsNullOrEmpty(v)));
-            index = query.Index;
+
+            var startOffset = ToOffset(index);
             var startPos = GetIndexStartPos(index);
+            index = query.Index;
+
             //parse assignment
             var result = ParseAssignmentExpression(NextIndex(index));
             if (result.Node?.Next != null)
@@ -239,6 +243,26 @@ namespace JMC.Parser.JMC
             node.Range = new Range(startPos, endPos);
             node.NodeType = JMCSyntaxNodeType.Scoreboard;
             node.Value = value;
+            node.Offset = startOffset;
+
+            return new(node, index);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="index"></param>
+        /// <returns></returns>
+        private JMCParseResult ParseAssignment(int index)
+        {
+            var node = new JMCSyntaxNode();
+            var next = new List<JMCSyntaxNode>();
+
+            var query = this.AsParseQuery(index);
+            //TODO:
+
+            //set next
+            node.Next = next.Count != 0 ? next : null;
 
             return new(node, index);
         }
@@ -256,6 +280,7 @@ namespace JMC.Parser.JMC
             var query = this.AsParseQuery(index);
             var match = query.ExpectOr(out _, [.. OperatorsAssignTokens]);
 
+            //TODO I forgor y = x + z;
             if (match)
             {
                 next.Add((Parse(index)).Node!);

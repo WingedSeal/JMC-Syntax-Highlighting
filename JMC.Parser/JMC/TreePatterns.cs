@@ -26,11 +26,20 @@ namespace JMC.Parser.JMC
             JMCSyntaxNodeType.OpPlusEqual,
             JMCSyntaxNodeType.OpSubtractEqual,
             JMCSyntaxNodeType.OpMultiplyEqual,
+            JMCSyntaxNodeType.OpRemainderEqual,
             JMCSyntaxNodeType.OpDivideEqual,
             JMCSyntaxNodeType.OpNullcoale,
             JMCSyntaxNodeType.OpSuccess,
             JMCSyntaxNodeType.EqualTo,
-            JMCSyntaxNodeType.OpSwap
+            JMCSyntaxNodeType.OpSwap,
+        ];
+
+        private static readonly ImmutableArray<JMCSyntaxNodeType> OperatorTokens = [
+            JMCSyntaxNodeType.OpPlus,
+            JMCSyntaxNodeType.OpSubtract,
+            JMCSyntaxNodeType.OpMultiply,
+            JMCSyntaxNodeType.OpRemainder,
+            JMCSyntaxNodeType.OpDivide,
         ];
 
         private static readonly ImmutableArray<JMCSyntaxNodeType> ConditionalOperatorTokens = [
