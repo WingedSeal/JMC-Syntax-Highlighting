@@ -253,7 +253,7 @@ namespace JMC.Parser.JMC
         /// </summary>
         /// <param name="index"></param>
         /// <returns></returns>
-        private JMCParseResult ParseAssignment(int index)
+        private JMCParseResult ParseNumber(int index)
         {
             var node = new JMCSyntaxNode();
             var next = new List<JMCSyntaxNode>();
@@ -278,10 +278,11 @@ namespace JMC.Parser.JMC
             var next = new List<JMCSyntaxNode>();
 
             var query = this.AsParseQuery(index);
-            var match = query.ExpectOr(out _, [.. OperatorsAssignTokens]);
+            var isOperatorAssign = query.ExpectOr(out _, [.. OperatorsAssignTokens]);
+            var isOperator = query.ExpectOr(out _, [.. OperatorTokens]);
 
             //TODO I forgor y = x + z;
-            if (match)
+            if (isOperatorAssign)
             {
                 next.Add((Parse(index)).Node!);
                 query.Next();
@@ -304,6 +305,10 @@ namespace JMC.Parser.JMC
                     next.Add(r.Node!);
                     index = r.EndIndex;
                 }
+            }
+            else if (isOperator)
+            {
+
             }
 
             //set next

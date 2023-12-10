@@ -30,10 +30,10 @@ namespace JMC
             sw.Start();
             var tree = await new JMCSyntaxTree().InitializeAsync(content);
             sw.Stop();
-            Console.WriteLine($"Time escalped (Parsing): {sw.ElapsedMilliseconds}ms");
             tree.PrintPretty();
             Console.WriteLine($"Error Count: {tree.Errors.Count}");
             tree.Errors.ForEach(v => Console.WriteLine($"{v.Message}"));
+            Console.WriteLine($"Time escalped (Parsing): {sw.ElapsedMilliseconds}ms");
         }
 
         static async Task TestingAsync()

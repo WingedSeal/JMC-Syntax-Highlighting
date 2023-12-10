@@ -1,6 +1,7 @@
 ﻿using JMC.Parser.JMC.Error;
 using JMC.Parser.JMC.Types;
 using JMC.Shared;
+using System.Diagnostics;
 
 namespace JMC.Parser.JMC
 {
@@ -238,6 +239,7 @@ namespace JMC.Parser.JMC
             return new(node, index);
         }
 
+        //TODO have bugs
         /// <summary>
         /// 
         /// </summary>
@@ -274,9 +276,18 @@ namespace JMC.Parser.JMC
             }
 
             var end = GetIndexEndPos(index);
-            index = NextIndex(index, out var errorCode);
-            if (errorCode > 0)
-                Errors.Add(new JMCSyntaxError(GetRangeByIndex(index), "Missing '}'"));
+
+            //check closing
+            var stackTrace = new StackTrace();
+            var frames = stackTrace.GetFrames();
+            var funcCount = frames.Where(v => v.GetMethod().Name == nameof(ParseBlock)).Count();
+
+            if (funcCount > 0)
+            {
+                index = NextIndex(index, out var errorCode);
+                if (TrimmedText[index] != "}" || errorCode > 0)
+                    Errors.Add(new JMCSyntaxError(GetRangeByIndex(index), "Missing '}'"));
+            }
 
             //set next
             node.Next = next.Count != 0 ? next : null;

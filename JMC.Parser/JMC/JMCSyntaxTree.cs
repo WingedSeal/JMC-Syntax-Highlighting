@@ -509,7 +509,7 @@ namespace JMC.Parser.JMC
         /// <returns></returns>
         internal int NextIndex(int index) => SkipToValue(index + 1);
 
-        internal int NextIndex(int index, out int errorCode) => SkipToValue(index, out errorCode);
+        internal int NextIndex(int index, out int errorCode) => SkipToValue(index + 1, out errorCode);
 
         /// <summary>
         /// index of <seealso cref="TrimmedText"/> to offset

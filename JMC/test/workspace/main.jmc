@@ -64,8 +64,8 @@ function logic.loops() {
 	switch ($test) {
 		case 1:
 			$test = 4;
-		case 2:
-			$test = 5;
 			break;
 	}
 }
+
+function test2() {}
