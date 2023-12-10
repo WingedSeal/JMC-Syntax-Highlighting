@@ -160,7 +160,7 @@ namespace JMC.Parser.JMC
         /// <param name="index"></param>
         /// <param name="isRecursion"></param>
         /// <returns></returns>
-        private JMCParseResult ParseVariableExpression(int index, bool isRecursion = false, bool isForLoop = false)
+        private JMCParseResult ParseVariableExpression(int index, bool isRecursion = false, bool isForLoop = false, bool isOp = false)
         {
             var node = new JMCSyntaxNode();
             var next = new List<JMCSyntaxNode>();
@@ -175,7 +175,7 @@ namespace JMC.Parser.JMC
             index = result.EndIndex;
 
             //check for semi
-            if (!isRecursion)
+            if (!isOp && !isRecursion)
             {
                 var query = this.AsParseQuery(index);
                 if (!isForLoop)
@@ -206,7 +206,7 @@ namespace JMC.Parser.JMC
         /// <param name="index"></param>
         /// <param name="isRecursion"></param>
         /// <returns></returns>
-        private JMCParseResult ParseScoreboardObjExpression(int index, bool isRecursion = false, bool isForLoop = false)
+        private JMCParseResult ParseScoreboardObjExpression(int index, bool isRecursion = false, bool isForLoop = false, bool isOp = false)
         {
             var node = new JMCSyntaxNode();
             var next = new List<JMCSyntaxNode>();
@@ -226,7 +226,7 @@ namespace JMC.Parser.JMC
             index = result.EndIndex;
 
             //check for semi
-            if (!isRecursion)
+            if (!isOp && !isRecursion)
             {
                 query.Reset(this, index);
                 if (!isForLoop)
@@ -253,33 +253,14 @@ namespace JMC.Parser.JMC
         /// </summary>
         /// <param name="index"></param>
         /// <returns></returns>
-        private JMCParseResult ParseNumber(int index)
-        {
-            var node = new JMCSyntaxNode();
-            var next = new List<JMCSyntaxNode>();
-
-            var query = this.AsParseQuery(index);
-            //TODO:
-
-            //set next
-            node.Next = next.Count != 0 ? next : null;
-
-            return new(node, index);
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="index"></param>
-        /// <returns></returns>
         private JMCParseResult ParseAssignmentExpression(int index)
         {
             var node = new JMCSyntaxNode();
             var next = new List<JMCSyntaxNode>();
 
             var query = this.AsParseQuery(index);
-            var isOperatorAssign = query.ExpectOr(out _, [.. OperatorsAssignTokens]);
-            var isOperator = query.ExpectOr(out _, [.. OperatorTokens]);
+            var isOperatorAssign = query.ExpectOr(out var opAssignNode, [.. OperatorsAssignTokens]);
+            var isOperator = query.ExpectOr(out var opNode, [.. OperatorTokens]);
 
             //TODO I forgor y = x + z;
             if (isOperatorAssign)
@@ -308,7 +289,34 @@ namespace JMC.Parser.JMC
             }
             else if (isOperator)
             {
-
+                var n = (Parse(index)).Node!;
+                next.Add(n);
+                query.Next();
+                index = query.Index;
+                if (query.ExpectInt())
+                {
+                    var r = ParseAssignmentExpression(NextIndex(index));
+                    if (r.Node != null)
+                    {
+                        r.Node.NodeType = JMCSyntaxNodeType.Number;
+                        r.Node.Value = TrimmedText[index];
+                        r.Node.Range = GetRangeByIndex(index);
+                        next.Add(r.Node);
+                    }
+                    index = r.EndIndex;
+                }
+                else if (query.Expect(JMCSyntaxNodeType.Variable, out _, false))
+                {
+                    var r = ParseVariableExpression(index, true, false, true);
+                    next.Add(r.Node!);
+                    index = r.EndIndex;
+                }
+                else if (query.Expect(JMCSyntaxNodeType.Literal, out _, false))
+                {
+                    var r = ParseScoreboardObjExpression(index, true, false, true);
+                    next.Add(r.Node!);
+                    index = r.EndIndex;
+                }
             }
 
             //set next

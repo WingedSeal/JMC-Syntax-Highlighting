@@ -68,4 +68,6 @@ function logic.loops() {
 	}
 }
 
-function test2() {}
+function gTest() {
+	$test = $v + 4 + scp:@s;
+}
