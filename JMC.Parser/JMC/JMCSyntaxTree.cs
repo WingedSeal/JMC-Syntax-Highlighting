@@ -5,7 +5,6 @@ using System.Runtime.InteropServices;
 
 namespace JMC.Parser.JMC
 {
-    //TODO: cancel when encounter error
     /// <summary>
     /// Use <see cref="InitializeAsync(string)"/> for constructor
     /// </summary>
@@ -152,7 +151,7 @@ namespace JMC.Parser.JMC
         public JMCParseResult Parse(int index, bool noNext = false, bool isStart = false)
         {
             var value = TrimmedText[index];
-            var nextIndex = NextIndex(index);
+            var nextIndex = NextIndex(index, out var errorCode);
 
             var node = new JMCSyntaxNode();
 
@@ -493,7 +492,15 @@ namespace JMC.Parser.JMC
             while (string.IsNullOrEmpty(value) || value.StartsWith("//"))
             {
                 nextIndex++;
-                value = ref arr[nextIndex]!;
+                try
+                {
+                    value = ref arr[nextIndex]!;
+                }
+                catch (IndexOutOfRangeException)
+                {
+                    errorCode = 1;
+                    return TrimmedText.Length - 1;
+                }
             }
 
             return nextIndex;

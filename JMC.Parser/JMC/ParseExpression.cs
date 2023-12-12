@@ -26,9 +26,10 @@ namespace JMC.Parser.JMC
 
             var start = GetIndexStartPos(index);
 
-            while (index < TrimmedText.Length)
+            var errorCode = 0;
+            while (index < TrimmedText.Length && errorCode == 0)
             {
-                var exp = ParseExpression(NextIndex(index));
+                var exp = ParseExpression(NextIndex(index, out var blockError));
                 if (exp.Node != null) next.Add(exp.Node);
                 index = exp.EndIndex;
                 if (TrimmedText[index] == "}" &&
@@ -41,7 +42,7 @@ namespace JMC.Parser.JMC
 
                     if (funcCount > 0)
                     {
-                        var nextIndex = NextIndex(index, out var errorCode);
+                        var nextIndex = NextIndex(index, out errorCode);
 
                         if (errorCode > 0)
                             Errors.Add(new JMCSyntaxError(GetRangeByIndex(index), "Missing '}'"));
@@ -53,6 +54,11 @@ namespace JMC.Parser.JMC
                         }
                     }
 
+                    break;
+                }
+                else if (blockError > 0)
+                {
+                    Errors.Add(new JMCSyntaxError(GetRangeByIndex(index), "Missing '}'"));
                     break;
                 }
             }
@@ -151,7 +157,7 @@ namespace JMC.Parser.JMC
             if (current.Node.NodeType != JMCSyntaxNodeType.RCP)
                 Errors.Add(new JMCSyntaxError(GetRangeByIndex(index), "Unexpected Expression"));
 
-            return new(null, index);
+            return new(node, index);
         }
 
         /// <summary>
@@ -262,7 +268,6 @@ namespace JMC.Parser.JMC
             var isOperatorAssign = query.ExpectOr(out var opAssignNode, [.. OperatorsAssignTokens]);
             var isOperator = query.ExpectOr(out var opNode, [.. OperatorTokens]);
 
-            //TODO I forgor y = x + z;
             if (isOperatorAssign)
             {
                 next.Add((Parse(index)).Node!);

@@ -38,8 +38,6 @@ namespace JMC.Extension.Server.Handler.JMC
             if (workspace == null)
                 return Task.FromResult(CompletionList.From(list));
 
-            var tree = file.SyntaxTree;
-
             var triggerChar = request.Context.TriggerCharacter;
             var triggerType = request.Context.TriggerKind;
 
@@ -57,7 +55,19 @@ namespace JMC.Extension.Server.Handler.JMC
                         Kind = CompletionItemKind.Variable
                     });
                 }
-
+            }
+            else
+            {
+                var arr = workspace.GetAllJMCFunctionNames().AsSpan();
+                for (var i = 0; i < arr.Length; i++)
+                {
+                    ref var v = ref arr[i];
+                    list.Add(new()
+                    {
+                        Label = v,
+                        Kind = CompletionItemKind.Function
+                    });
+                }
             }
 
             return Task.FromResult(CompletionList.From(list));

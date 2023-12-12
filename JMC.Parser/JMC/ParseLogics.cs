@@ -239,7 +239,6 @@ namespace JMC.Parser.JMC
             return new(node, index);
         }
 
-        //TODO have bugs
         /// <summary>
         /// 
         /// </summary>

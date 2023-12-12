@@ -14,7 +14,7 @@ function cmd() {
 	data get entity @s;
 	execute run $test.get();
 }
- 
+
 class test {
 	function vars.assigns() {
 		$num = 3;
@@ -56,7 +56,7 @@ function logic.loops() {
 	while ($test == 2) {
 		$test = 3;
 	}
-
+	
 	for ($test=1;$test>1;$test++) {
 		$test = 3;
 	}
@@ -69,5 +69,5 @@ function logic.loops() {
 }
 
 function gTest() {
-	$test = $v + 4 + scp:@s;
+	$test = 4;
 }

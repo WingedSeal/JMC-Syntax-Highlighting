@@ -13,7 +13,7 @@ namespace JMC.Extension.Server.Types
             Root = root;
             JMCFiles = InitJMCFiles();
         }
-
+        #region JMC
         public List<JMCFile> InitJMCFiles()
         {
             var files = new List<JMCFile>();
@@ -62,7 +62,11 @@ namespace JMC.Extension.Server.Types
         public JMCFile? GetJMCFile(DocumentUri documentUri) => JMCFiles.Find(v => v.DocumentUri == documentUri);
 
         public string[] GetAllJMCVariableNames() => JMCFiles.SelectMany(v => v.SyntaxTree.GetVariableNames()).ToArray();
+        public string[] GetAllJMCFunctionNames() => JMCFiles.SelectMany(v => v.SyntaxTree.GetFunctionNames()).ToArray();
+        #endregion
 
+        #region HJMC
         public HJMCFile? GetHJMCFile(DocumentUri documentUri) => HJMCFiles.Find(v => v.DocumentUri == documentUri);
+        #endregion
     }
 }
