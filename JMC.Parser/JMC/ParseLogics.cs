@@ -19,7 +19,7 @@ namespace JMC.Parser.JMC
             var query = this.AsParseQuery(index);
             var start = GetIndexStartPos(index);
 
-            while (true)
+            while (index < TrimmedText.Length)
             {
                 var isVar = query.Expect(JMCSyntaxNodeType.Variable, out var sn, false);
 

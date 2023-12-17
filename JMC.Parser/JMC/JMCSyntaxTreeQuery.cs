@@ -7,10 +7,10 @@ namespace JMC.Parser.JMC
         public string[] GetVariableNames()
         {
             var vars = from node in FlattenedNodes
-                       where node.NodeType == Types.JMCSyntaxNodeType.Variable
+                       where node.NodeType == JMCSyntaxNodeType.Variable
                        select node.Value;
             var varCalls = from node in FlattenedNodes
-                           where node.NodeType == Types.JMCSyntaxNodeType.VariableCall
+                           where node.NodeType == JMCSyntaxNodeType.VariableCall
                            select node.Value[..^6] ?? null;
             var q = vars.Concat(varCalls).Where(v => v != null).Distinct().ToArray();
             return q!;
@@ -18,20 +18,21 @@ namespace JMC.Parser.JMC
 
         public string[] GetFunctionNames()
         {
-            var arr = FlattenedNodes.AsSpan();
-            List<string> result = [];
-            for (var i = 0; i < arr.Length; i++)
-            {
-                ref var current = ref arr[i];
-                var previousValue = i - 1 != -1 ? arr[i - 1] : null;
-                if (previousValue != null &&
-                    previousValue.NodeType == JMCSyntaxNodeType.Function &&
-                    current.NodeType == JMCSyntaxNodeType.Literal &&
-                    current.Value != null)
-                    result.Add(current.Value);
+            return FlattenedNodes
+                .Where(v => v.NodeType == JMCSyntaxNodeType.Function && v.Value != null && v.Value.Split('.').Length == 1)
+                .Select(v => v.Value!)
+                .ToArray();
+        }
 
-            }
-            return [.. result];
+        public string[] GetClassNames()
+        {
+            var funcClass = FlattenedNodes
+                .Where(v => v.NodeType == JMCSyntaxNodeType.Function && v.Value != null && v.Value.Split('.').Length > 1)
+                .Select(v => v.Value!.Split('.').First());
+            var @class = FlattenedNodes
+                .Where(v => v.NodeType == JMCSyntaxNodeType.Class && v.Value != null)
+                .Select(v => v.Value!.Split('.').First());
+            return @class.Concat(funcClass).ToArray();
         }
     }
 }

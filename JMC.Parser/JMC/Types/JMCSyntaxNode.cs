@@ -49,7 +49,7 @@
         {
             var current = new JMCSyntaxNode[] { this };
             if (Next == null) return current;
-            else return current.Concat(Next.SelectMany(v => v.ToFlattenNodes()));
+            else return current.Concat(Next.Where(v => v != null).SelectMany(v => v.ToFlattenNodes()));
         }
     }
 }

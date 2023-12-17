@@ -40,7 +40,7 @@ class test {
 	}
 }
 
-function function.calls() {
+function func.calls() {
 	call(a=a,a=3);
 }
 

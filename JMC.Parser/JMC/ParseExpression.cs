@@ -52,6 +52,10 @@ namespace JMC.Parser.JMC
                         {
                             index = nextIndex;
                         }
+                        else if (nextString == "function" || nextString == "class")
+                        {
+                            Errors.Add(new JMCSyntaxError(GetRangeByIndex(index), "Missing '}'"));
+                        }
                     }
 
                     break;
@@ -157,7 +161,7 @@ namespace JMC.Parser.JMC
             if (current.Node.NodeType != JMCSyntaxNodeType.RCP)
                 Errors.Add(new JMCSyntaxError(GetRangeByIndex(index), "Unexpected Expression"));
 
-            return new(node, index);
+            return new(null, index);
         }
 
         /// <summary>
@@ -353,7 +357,8 @@ namespace JMC.Parser.JMC
             index = param.EndIndex;
             var query = this.AsParseQuery(index);
             query.Expect(JMCSyntaxNodeType.RParen, out _);
-            index = NextIndex(query.Index);
+            query.Next().Expect(JMCSyntaxNodeType.Semi, out _);
+            index = query.Index;
 
             //get end pos
             var end = GetIndexStartPos(index);
@@ -380,7 +385,7 @@ namespace JMC.Parser.JMC
             var split = funcLiteral.Split('.');
             var builtinFunc = ExtensionData.JMCBuiltInFunctions.GetFunction(split.First(), split.Last());
             var pos = GetIndexStartPos(index);
-            while (TrimmedText[index] != ")")
+            while (TrimmedText[index] != ")" && index < TrimmedText.Length)
             {
                 var param = builtinFunc != null ? ParseParameter(index, builtinFunc, next) : ParseParameter(index);
                 if (param.Node != null)

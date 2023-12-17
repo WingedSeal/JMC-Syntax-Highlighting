@@ -1,8 +1,10 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using JMC.Shared;
+using Microsoft.Extensions.Logging;
 using OmniSharp.Extensions.LanguageServer.Protocol.Client.Capabilities;
 using OmniSharp.Extensions.LanguageServer.Protocol.Document;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 using System.Collections.Immutable;
+using System.Runtime.InteropServices;
 
 namespace JMC.Extension.Server.Handler.JMC
 {
@@ -60,16 +62,48 @@ namespace JMC.Extension.Server.Handler.JMC
             //normal case
             else
             {
-                var arr = workspace.GetAllJMCFunctionNames().AsSpan();
-                for (var i = 0; i < arr.Length; i++)
+                //from .jmc
+                var funcs = workspace.GetAllJMCFunctionNames().AsSpan();
+                for (var i = 0; i < funcs.Length; i++)
                 {
-                    ref var v = ref arr[i];
+                    ref var v = ref funcs[i];
                     list.Add(new()
                     {
                         Label = v,
                         Kind = CompletionItemKind.Function
                     });
                 }
+                var cls = workspace.GetAllJMCClassNames().AsSpan();
+                for (var i = 0; i < funcs.Length; i++)
+                {
+                    ref var v = ref cls[i];
+                    list.Add(new()
+                    {
+                        Label = v,
+                        Kind = CompletionItemKind.Class
+                    });
+                }
+                //from built-in
+                var builtIn = ExtensionData.JMCBuiltInFunctions.DistinctBy(v => v.Class).ToArray().AsSpan();
+                for (var i = 0; i < builtIn.Length; i++)
+                {
+                    ref var v = ref builtIn[i];
+                    list.Add(new()
+                    {
+                        Label = v.Class,
+                        Kind = CompletionItemKind.Class
+                    });
+                }
+                list.Add(new()
+                {
+                    Label = "print",
+                    Kind = CompletionItemKind.Function
+                });
+                list.Add(new()
+                {
+                    Label = "printf",
+                    Kind = CompletionItemKind.Function
+                });
             }
 
             return Task.FromResult(CompletionList.From(list));
