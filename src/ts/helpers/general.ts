@@ -181,7 +181,7 @@ export async function getFunctions(lexer: Lexer): Promise<TokenData[]> {
 		const token = lexer.tokens[v + 1];
 		let i = v + 1;
 		const value: string[] = [];
-		while (lexer.tokens[i].type != TokenType.LPAREN) {
+		while (lexer.tokens[i] && lexer.tokens[i].type != TokenType.LPAREN) {
 			let sv = "";
 			for (const range of classRanges) {
 				if (token.pos > range.range[0] && token.pos < range.range[1]) {
