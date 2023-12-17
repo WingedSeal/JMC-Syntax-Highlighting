@@ -4,7 +4,7 @@
   "description": "language support for jmc",
   "author": "WingedSeal, bdke",
   "license": "MIT",
-  "version": "4.0.0",
+  "version": "1.0.0",
   "publisher": "WingedSeal",
   "engines": {
     "vscode": "^1.8.0"
