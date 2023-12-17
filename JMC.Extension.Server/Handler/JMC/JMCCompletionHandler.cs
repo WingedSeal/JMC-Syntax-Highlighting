@@ -41,6 +41,7 @@ namespace JMC.Extension.Server.Handler.JMC
             var triggerChar = request.Context.TriggerCharacter;
             var triggerType = request.Context.TriggerKind;
 
+            //variables
             if (triggerChar != null &&
                 triggerChar == "$" &&
                 triggerType == CompletionTriggerKind.TriggerCharacter)
@@ -56,6 +57,7 @@ namespace JMC.Extension.Server.Handler.JMC
                     });
                 }
             }
+            //normal case
             else
             {
                 var arr = workspace.GetAllJMCFunctionNames().AsSpan();

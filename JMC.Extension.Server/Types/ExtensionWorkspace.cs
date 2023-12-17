@@ -61,8 +61,8 @@ namespace JMC.Extension.Server.Types
 
         public JMCFile? GetJMCFile(DocumentUri documentUri) => JMCFiles.Find(v => v.DocumentUri == documentUri);
 
-        public string[] GetAllJMCVariableNames() => JMCFiles.SelectMany(v => v.SyntaxTree.GetVariableNames()).ToArray();
-        public string[] GetAllJMCFunctionNames() => JMCFiles.SelectMany(v => v.SyntaxTree.GetFunctionNames()).ToArray();
+        public string[] GetAllJMCVariableNames() => JMCFiles.SelectMany(v => v.SyntaxTree.GetVariableNames()).Distinct().ToArray();
+        public string[] GetAllJMCFunctionNames() => JMCFiles.SelectMany(v => v.SyntaxTree.GetFunctionNames()).Distinct().ToArray();
         #endregion
 
         #region HJMC

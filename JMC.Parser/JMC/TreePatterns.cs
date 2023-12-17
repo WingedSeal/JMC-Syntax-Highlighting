@@ -58,6 +58,18 @@ namespace JMC.Parser.JMC
             JMCSyntaxNodeType.LParen,
         ];
 
+        private readonly ImmutableArray<JMCSyntaxNodeType> LogicTokens = [
+            JMCSyntaxNodeType.CompOr,
+            JMCSyntaxNodeType.CompAnd,
+            JMCSyntaxNodeType.CompNot,
+            JMCSyntaxNodeType.Equal,
+            JMCSyntaxNodeType.EqualTo,
+            JMCSyntaxNodeType.GreaterThan,
+            JMCSyntaxNodeType.GreaterThanEqual,
+            JMCSyntaxNodeType.LessThan,
+            JMCSyntaxNodeType.LessThanEqual,
+        ];
+
         private static readonly RegexOptions _regexOptions = RegexOptions.Compiled;
     }
 }
