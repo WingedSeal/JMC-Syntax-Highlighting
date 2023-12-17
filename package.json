@@ -5,7 +5,7 @@
 	"repository": {
 		"url": "https://github.com/WingedSeal/JMC-Syntax-Highlighting"
 	},
-	"version": "0.3.3",
+	"version": "0.4.1",
 	"main": "./src/js/client/source",
 	"publisher": "WingedSeal",
 	"engines": {
