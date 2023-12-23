@@ -49,7 +49,7 @@
       ]
     },
     "functions": {
-      "match": "([a-zA-Z_][a-zA-Z0-9_]*)\\s*(\\()",
+      "match": "([a-zA-Z_]\\w*)\\s*(\\()",
       "captures": {
         "1": {
           "name": "entity.name.function.jmc"
@@ -60,7 +60,7 @@
       }
     },
     "classFunction": {
-      "match": "((?:(?:[a-zA-Z_][a-zA-Z0-9_]*)?\\.\\s*)+)\\s*([a-zA-Z_][a-zA-Z0-9_]*)\\s*\\(",
+      "match": "((?:(?:[a-zA-Z_]\\w*)?\\.\\s*)+)\\s*([a-zA-Z_]\\w*)\\s*\\(",
       "captures": {
         "1": {
           "name": "entity.name.class.jmc"
@@ -73,7 +73,7 @@
     "keywords": {
       "patterns": [
         {
-          "match": "((class)\\s*([a-zA-Z_][a-zA-Z0-9_]*))",
+          "match": "\\b((class)\\s+([a-zA-Z_]\\w*))",
           "captures": {
             "2": {
               "name": "keyword.control.jmc"
