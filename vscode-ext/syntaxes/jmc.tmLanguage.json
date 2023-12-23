@@ -85,7 +85,19 @@
         },
         {
           "name": "keyword.control.jmc",
-          "match": "\\b(if|else|while|for|do|switch|case|class|true|false|import|break)\\b"
+          "match": "\\b(if|unless|else|while|for|do|switch|case|default|break|return|schedule|expand|with|extends)\\b"
+        },
+        {
+          "name": "keyword.control.less.jmc",
+          "match": "(import)"
+        },
+        {
+          "name": "constant.language.jmc",
+          "match": "(true|false)"
+        },
+        {
+          "name": "entity.name.this.jmc",
+          "match": "(this)"
         },
         {
           "name": "storage.type.function.jmc",
