@@ -45,6 +45,10 @@
         {
           "name": "constant.numeric.jmc",
           "match": "(@[parse])"
+        },
+        {
+          "name": "constant.numeric.jmc",
+          "match": "(@add|@lazy)"
         }
       ]
     },
