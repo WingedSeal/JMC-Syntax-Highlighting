@@ -159,7 +159,7 @@
       "patterns": [
         {
           "name": "constant.numeric.jmc",
-          "match": "\\b(\\d+(?:[\\.]\\d+)?)\\b"
+          "match": "\\b(\\d+(?:\\.\\d+)?[bslfdBSLFD]?)\\b"
         }
       ]
     },
