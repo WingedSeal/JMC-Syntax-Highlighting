@@ -117,7 +117,7 @@
       "patterns": [
         {
           "name": "keyword.operator.jmc",
-          "match": "([=*\\-/+%.><!?,:]|\\|\\||&&|matches)"
+          "match": "([=*\\-/+%.><!?,:~^]|\\|\\||&&|matches)"
         }
       ]
     },
