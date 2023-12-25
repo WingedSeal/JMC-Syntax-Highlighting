@@ -501,6 +501,10 @@ namespace JMC.Parser.JMC
                         match = query.Expect(JMCSyntaxNodeType.Number, out _);
                         expectedType = match ? JMCSyntaxNodeType.Number : null;
                         break;
+                    case "Boolean":
+                        match = query.ExpectOr(out syntaxNode, JMCSyntaxNodeType.True, JMCSyntaxNodeType.False);
+                        expectedType = match ? syntaxNode?.NodeType : null;
+                        break;
                     case "Keyword":
                     case "Objective":
                         match = query.Expect(JMCSyntaxNodeType.Literal, out _);

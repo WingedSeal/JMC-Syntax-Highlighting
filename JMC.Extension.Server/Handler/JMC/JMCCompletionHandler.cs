@@ -4,7 +4,6 @@ using OmniSharp.Extensions.LanguageServer.Protocol.Client.Capabilities;
 using OmniSharp.Extensions.LanguageServer.Protocol.Document;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 using System.Collections.Immutable;
-using System.Runtime.InteropServices;
 
 namespace JMC.Extension.Server.Handler.JMC
 {
@@ -60,6 +59,10 @@ namespace JMC.Extension.Server.Handler.JMC
                 }
             }
             //normal case
+            else if (triggerChar != null &&
+                triggerChar == "$" &&
+                triggerType == CompletionTriggerKind.TriggerCharacter)
+                return GetJMCHirechyCompletionAsync(request, cancellationToken);
             else
             {
                 //from .jmc
@@ -85,6 +88,7 @@ namespace JMC.Extension.Server.Handler.JMC
                 }
                 //from built-in
                 var builtIn = ExtensionData.JMCBuiltInFunctions.DistinctBy(v => v.Class).ToArray().AsSpan();
+                //classes
                 for (var i = 0; i < builtIn.Length; i++)
                 {
                     ref var v = ref builtIn[i];
@@ -94,6 +98,7 @@ namespace JMC.Extension.Server.Handler.JMC
                         Kind = CompletionItemKind.Class
                     });
                 }
+                //functions
                 list.Add(new()
                 {
                     Label = "print",
@@ -107,6 +112,13 @@ namespace JMC.Extension.Server.Handler.JMC
             }
 
             return Task.FromResult(CompletionList.From(list));
+        }
+
+        private Task<CompletionList> GetJMCHirechyCompletionAsync(CompletionParams request, CancellationToken cancellationToken)
+        {
+            var list = new List<CompletionItem>();
+
+            return Task.FromResult(new CompletionList(list));
         }
 
         private Task<CompletionList> GetHJMCAsync(CompletionParams request, CancellationToken cancellationToken)
