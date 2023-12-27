@@ -45,11 +45,15 @@
         {
           "name": "constant.numeric.jmc",
           "match": "(@[parse])"
+        },
+        {
+          "name": "constant.numeric.jmc",
+          "match": "(@add|@lazy)"
         }
       ]
     },
     "functions": {
-      "match": "([a-zA-Z_][a-zA-Z0-9_]*)\\s*(\\()",
+      "match": "([a-zA-Z_]\\w*)\\s*(\\()",
       "captures": {
         "1": {
           "name": "entity.name.function.jmc"
@@ -60,7 +64,7 @@
       }
     },
     "classFunction": {
-      "match": "((?:(?:[a-zA-Z_][a-zA-Z0-9_]*)?\\.\\s*)+)\\s*([a-zA-Z_][a-zA-Z0-9_]*)\\s*\\(",
+      "match": "((?:(?:[a-zA-Z_]\\w*)?\\.\\s*)+)\\s*([a-zA-Z_]\\w*)\\s*\\(",
       "captures": {
         "1": {
           "name": "entity.name.class.jmc"
@@ -73,7 +77,7 @@
     "keywords": {
       "patterns": [
         {
-          "match": "((class)\\s*([a-zA-Z_][a-zA-Z0-9_]*))",
+          "match": "\\b((class)\\s+([a-zA-Z_]\\w*))",
           "captures": {
             "2": {
               "name": "keyword.control.jmc"
@@ -85,7 +89,19 @@
         },
         {
           "name": "keyword.control.jmc",
-          "match": "\\b(if|else|while|for|do|switch|case|class|true|false|import|break)\\b"
+          "match": "\\b(if|unless|else|while|for|do|switch|case|default|break|return|schedule|expand|with|extends)\\b"
+        },
+        {
+          "name": "keyword.control.less.jmc",
+          "match": "(import)"
+        },
+        {
+          "name": "constant.language.jmc",
+          "match": "(true|false)"
+        },
+        {
+          "name": "entity.name.this.jmc",
+          "match": "(this)"
         },
         {
           "name": "storage.type.function.jmc",
@@ -105,7 +121,7 @@
       "patterns": [
         {
           "name": "keyword.operator.jmc",
-          "match": "([=\\*\\-\\/\\+\\%\\.><(?:\\|\\|)(?:\\&\\&)\\!,]|matches|\\~|\\^)"
+          "match": "([=*\\-/+%.><!?,:~^]|\\|\\||&&|matches)"
         }
       ]
     },
@@ -143,7 +159,7 @@
       "patterns": [
         {
           "name": "constant.numeric.jmc",
-          "match": "\\b(\\d+(?:[\\.]\\d+)?)\\b"
+          "match": "\\b(\\d+(?:\\.\\d+)?[bslfdBSLFD]?)\\b"
         }
       ]
     },
