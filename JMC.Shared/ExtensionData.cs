@@ -1,9 +1,9 @@
 using JMC.Shared.Datas.BuiltIn;
-using JMC.Shared.Datas.Minecraft.Blocks;
+using JMC.Shared.Datas.Minecraft;
 using JMC.Shared.Datas.Minecraft.Command;
-using JMC.Shared.Datas.Minecraft.Items;
-using Newtonsoft.Json;
-using System.Reflection;
+using OmniSharp.Extensions.LanguageServer.Protocol.Models;
+using System.Text;
+using System.Text.Json;
 
 namespace JMC.Shared
 {
@@ -19,12 +19,17 @@ namespace JMC.Shared
         public static List<string> ItemTags { get; private set; }
         public static List<string> ScoreboardCriterions { get; private set; }
         public static List<string> Particles { get; private set; }
+        public static JMCBuiltInFunctionContainer JMCBuiltInFunctions { get; private set; }
 #pragma warning restore CS8618
-        public static JMCBuiltInFunctionContainer JMCBuiltInFunctions { get; private set; } =
-            new JMCBuiltInFunctionContainer(GetJMCBuiltInFunctions());
         private static string ModifiedVersion = string.Empty;
-
-        public ExtensionData() => UpdateVersion("1.20.1");
+        private static readonly JMCDatabase Database = new();
+        public ExtensionData()
+        {
+            Database.DatabaseConnection.Open();
+            JMCBuiltInFunctions = new(GetJMCBuiltInFunctions());
+            UpdateVersion("1.20.1");
+            Database.DatabaseConnection.Close();
+        }
 
         /// <summary>
         /// Update a minecraft version
@@ -34,58 +39,21 @@ namespace JMC.Shared
         {
             MinecraftVersion = version;
             ModifiedVersion = version.Replace(".", "_") ?? throw new NotImplementedException();
-            
+            Database.Version = ModifiedVersion;
 
-            CommandTree = new(GetCommandNodes(MinecraftVersion));
-            BlockDatas = new(GetBlockDatas(MinecraftVersion));
-            ItemDatas = new(GetItemDatas(MinecraftVersion));
-            BlockTags = new(GetBlockTags(MinecraftVersion));
-            ItemTags = new(GetItemTags(MinecraftVersion));
-            ScoreboardCriterions = new(GetCustomStatistics(MinecraftVersion));
-            Particles = new(GetParticles(MinecraftVersion));
+            CommandTree = new(GetCommandNodes());
+            ScoreboardCriterions = new(GetCustomStatistics());
         }
 
         /// <summary>
         /// Json command tree to memory data
         /// </summary>
-        /// <param name="version"></param>
         /// <returns></returns>
-        private static IEnumerable<string> GetParticles(string version)
+        private static IEnumerable<string> GetCustomStatistics()
         {
-            var asm = Assembly.GetExecutingAssembly();
-            //commands
-            var resouceStream =
-                asm.GetManifestResourceStream($"JMC.Shared.Resource._{ModifiedVersion}.particles.json") ??
-                throw new NotImplementedException();
-            var reader = new StreamReader(resouceStream);
-            var jsonText = reader.ReadToEnd();
+            var jsonText = Database.GetMinecraftFileString("custom_statistics");
 
-            reader.Dispose();
-
-            var root = JsonConvert.DeserializeObject<Dictionary<string, object>>(jsonText) ?? throw new NotImplementedException();
-            return root.Keys ?? throw new NotImplementedException(); ;
-        }
-
-        /// <summary>
-        /// Json command tree to memory data
-        /// </summary>
-        /// <param name="version"></param>
-        /// <returns></returns>
-        private static IEnumerable<string> GetCustomStatistics(string version)
-        {
-
-            var asm = Assembly.GetExecutingAssembly();
-
-            //commands
-            var resouceStream =
-                asm.GetManifestResourceStream($"JMC.Shared.Resource._{ModifiedVersion}.custom_statistics.json") ??
-                throw new NotImplementedException();
-            var reader = new StreamReader(resouceStream);
-            var jsonText = reader.ReadToEnd();
-
-            reader.Dispose();
-
-            var root = JsonConvert.DeserializeObject<Dictionary<string, object>>(jsonText) ?? throw new NotImplementedException();
+            var root = JsonSerializer.Deserialize<Dictionary<string, object>>(jsonText) ?? throw new NotImplementedException();
             var values = root.Keys.ToList();
             string[] str = ["dummy", "trigger", "deathCount", "playerKillCount", "totalKillCount", "health", "xp", "level", "food", "air", "armor"];
             str = str.Select(v => $"minecraft:{v}").ToArray();
@@ -93,119 +61,19 @@ namespace JMC.Shared
             return values ?? throw new NotImplementedException(); ;
         }
 
-        /// <summary>
-        /// Json command tree to memory data
-        /// </summary>
-        /// <param name="version"></param>
-        /// <returns></returns>
-        private static IEnumerable<string> GetItemTags(string version)
-        {
 
-
-            var asm = Assembly.GetExecutingAssembly();
-            //commands
-            var resouceStream =
-                asm.GetManifestResourceStream($"JMC.Shared.Resource._{ModifiedVersion}.item_tags.json") ??
-                throw new NotImplementedException();
-            var reader = new StreamReader(resouceStream);
-            var jsonText = reader.ReadToEnd();
-
-            reader.Dispose();
-
-            var root = JsonConvert.DeserializeObject<Dictionary<string, object>>(jsonText) ?? throw new NotImplementedException(); ;
-            return root.Keys ?? throw new NotImplementedException(); ;
-        }
 
         /// <summary>
         /// Json command tree to memory data
         /// </summary>
         /// <param name="version"></param>
         /// <returns></returns>
-        private static IEnumerable<string> GetBlockTags(string version)
+        private static Dictionary<string, CommandNode> GetCommandNodes()
         {
+            var jsonText = Database.GetMinecraftFileString("commands");
 
-
-            var asm = Assembly.GetExecutingAssembly();
-            //commands
-            var resouceStream =
-                asm.GetManifestResourceStream($"JMC.Shared.Resource._{ModifiedVersion}.block_tags.json") ??
-                throw new NotImplementedException();
-            var reader = new StreamReader(resouceStream);
-            var jsonText = reader.ReadToEnd();
-
-            reader.Dispose();
-
-            var root = JsonConvert.DeserializeObject<Dictionary<string, object>>(jsonText) ?? throw new NotImplementedException(); ;
-            return root.Keys ?? throw new NotImplementedException(); ;
-        }
-
-        /// <summary>
-        /// Json command tree to memory data
-        /// </summary>
-        /// <param name="version"></param>
-        /// <returns></returns>
-        private static Dictionary<string, CommandNode> GetCommandNodes(string version)
-        {
-
-
-            var asm = Assembly.GetExecutingAssembly();
-            //commands
-            var resouceStream =
-                asm.GetManifestResourceStream($"JMC.Shared.Resource._{ModifiedVersion}.commands.json") ??
-                throw new NotImplementedException();
-            var reader = new StreamReader(resouceStream);
-            var jsonText = reader.ReadToEnd();
-
-            reader.Dispose();
-
-            var root = JsonConvert.DeserializeObject<CommandNode>(jsonText) ?? throw new NotImplementedException(); ;
-            return root.Children ?? throw new NotImplementedException(); ;
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="version"></param>
-        /// <returns></returns>
-        /// <exception cref="NotImplementedException"></exception>
-        private static List<BlockData> GetBlockDatas(string version)
-        {
-            var asm = Assembly.GetExecutingAssembly();
-            //commands
-            var resouceStream =
-                asm.GetManifestResourceStream($"JMC.Shared.Resource._{ModifiedVersion}.blocks.json") ??
-                throw new NotImplementedException();
-            var reader = new StreamReader(resouceStream);
-            var jsonText = reader.ReadToEnd();
-
-            reader.Dispose();
-
-            var data = JsonConvert.DeserializeObject<List<BlockData>>(jsonText) ?? throw new NotImplementedException(); ;
-            return data ?? throw new NotImplementedException(); ;
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="version"></param>
-        /// <returns></returns>
-        /// <exception cref="NotImplementedException"></exception>
-        private static Dictionary<string, ItemData> GetItemDatas(string version)
-        {
-
-
-            var asm = Assembly.GetExecutingAssembly();
-            //commands
-            var resouceStream =
-                asm.GetManifestResourceStream($"JMC.Shared.Resource._{ModifiedVersion}.items.json") ??
-                throw new NotImplementedException();
-            var reader = new StreamReader(resouceStream);
-            var jsonText = reader.ReadToEnd();
-
-            reader.Dispose();
-
-            var data = JsonConvert.DeserializeObject<Dictionary<string, ItemData>>(jsonText) ?? throw new NotImplementedException(); ;
-            return data ?? throw new NotImplementedException(); ;
+            var root = JsonSerializer.Deserialize<CommandNode>(jsonText) ?? throw new NotImplementedException();
+            return root.Children ?? throw new NotImplementedException();
         }
 
         /// <summary>
@@ -214,13 +82,9 @@ namespace JMC.Shared
         /// <returns></returns>
         private static JMCBuiltInFunction[] GetJMCBuiltInFunctions()
         {
-            var asm = Assembly.GetExecutingAssembly();
-            var resouceStream = asm.GetManifestResourceStream($"JMC.Shared.Resource.BuiltInFunctions.json") ?? throw new NotImplementedException();
-            var reader = new StreamReader(resouceStream);
-            var jsonText = reader.ReadToEnd();
-            reader.Dispose();
+            var jsonText = Database.GetBuiltinFunctionString();
 
-            var data = JsonConvert.DeserializeObject<JMCBuiltInFunction[]>(jsonText) ?? throw new NotImplementedException();
+            var data = JsonSerializer.Deserialize<JMCBuiltInFunction[]>(jsonText) ?? throw new NotImplementedException();
             return data;
         }
     }

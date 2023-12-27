@@ -38,17 +38,9 @@ namespace JMC
 
         static async Task TestingAsync()
         {
-            var content = File.ReadAllText("test/workspace/main.jmc");
-            var tree = await new JMCSyntaxTree().InitializeAsync(content);
-            var sw = new Stopwatch();
-            sw.Start();
-            tree.ModifyIncremental(new()
-            {
-                Range = new(1, 1, 2, 2),
-                Text = "amogus",
-            });
-            sw.Stop();
-            Console.WriteLine($"Time escalped (Parsing): {sw.ElapsedMilliseconds}ms");
+            var tree = await new JMCSyntaxTree().InitializeAsync(@"()=>{}");
+            var q = tree.AsParseQuery();
+            var m = q.ExpectArrowFunction(out var s);
         }
     }
 }

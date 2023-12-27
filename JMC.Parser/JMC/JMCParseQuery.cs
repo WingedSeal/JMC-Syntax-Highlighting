@@ -1,5 +1,6 @@
 ﻿using JMC.Parser.JMC.Error;
 using JMC.Parser.JMC.Types;
+using Newtonsoft.Json;
 
 namespace JMC.Parser.JMC
 {
@@ -46,7 +47,7 @@ namespace JMC.Parser.JMC
                 return false;
             }
         }
-
+        public bool Expect(JMCSyntaxNodeType syntaxNodeType, bool throwError = true) => Expect(syntaxNodeType, out _, throwError);
         public bool Expect(string value, out JMCSyntaxNode? syntaxNode, bool throwError = true)
         {
             syntaxNode = null;
@@ -70,7 +71,7 @@ namespace JMC.Parser.JMC
                 return false;
             }
         }
-
+        public bool Expect(string value, bool throwError = true) => Expect(value, out _, throwError);
         public bool ExpectList(out List<JMCSyntaxNode> nodes, bool throwError = true, params string[] values)
         {
             nodes = [];
@@ -98,7 +99,7 @@ namespace JMC.Parser.JMC
                 return false;
             }
         }
-
+        public bool ExpectList(bool throwError = true, params string[] values) => ExpectList(out _, throwError, values);
         public bool ExpectList(out List<JMCSyntaxNode> nodes, bool throwError = true, params JMCSyntaxNodeType[] nodeTypes)
         {
             nodes = [];
@@ -127,6 +128,7 @@ namespace JMC.Parser.JMC
                 return false;
             }
         }
+        public bool ExpectList(bool throwError = true, params JMCSyntaxNodeType[] nodeTypes) => ExpectList(out _, throwError, nodeTypes);
 
         public bool ExpectOr(out JMCSyntaxNode? syntaxNode, params JMCSyntaxNodeType[] nodeTypes)
         {
@@ -149,7 +151,7 @@ namespace JMC.Parser.JMC
             }
             return false;
         }
-
+        public bool ExpectOr(params JMCSyntaxNodeType[] nodeTypes) => ExpectOr(out _, nodeTypes);
         /// <summary>
         /// Expect <seealso cref="CurrentText"/> to be <seealso cref="int"/> or <seealso cref="bool"/>
         /// </summary>
@@ -172,6 +174,78 @@ namespace JMC.Parser.JMC
             return true;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        /// <remarks>start at '{'</remarks>
+        public bool ExpectJSON(out string JString)
+        {
+            JString = CurrentText;
+            var counter = 1;
+            while (Index < SyntaxTree.TrimmedText.Length)
+            {
+                Next();
+                counter += CurrentText switch
+                {
+                    "{" => 1,
+                    "}" => -1,
+                    _ => 0
+                };
+                JString += CurrentText;
+                if (counter == 0) break;
+            }
+            try
+            {
+                JsonConvert.DeserializeObject(JString);
+                return true;
+            }
+            catch (JsonException)
+            {
+                return false;
+            }
+        }
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        /// <remarks>start at '['</remarks>
+        public bool ExpectJSONList(out string LString)
+        {
+            LString = CurrentText;
+            var counter = 1;
+            while (Index < SyntaxTree.TrimmedText.Length)
+            {
+                Next();
+                counter += CurrentText switch
+                {
+                    "[" => 1,
+                    "]" => -1,
+                    _ => 0
+                };
+                LString += CurrentText;
+                if (counter == 0) break;
+            }
+            try
+            {
+                JsonConvert.DeserializeObject<List<object>>(LString);
+                return true;
+            }
+            catch (JsonException)
+            {
+                return false;
+            }
+        }
+        public bool ExpectArrowFunction(out JMCSyntaxNode? syntaxNode)
+        {
+            syntaxNode = null;
+            var match = Expect(JMCSyntaxNodeType.LParen) && ExpectList(true, JMCSyntaxNodeType.RParen, JMCSyntaxNodeType.Arrow);
+            if (!match) return false;
+            Next();
+            var block = SyntaxTree.ParseBlock(Index);
+            syntaxNode = block.Node;
+            return true;
+        }
         public bool ExpectIntRange()
         {
             var text = CurrentText;

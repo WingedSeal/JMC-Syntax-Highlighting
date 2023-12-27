@@ -65,7 +65,7 @@ namespace JMC.Parser.Test.JMC
             [")", JMCSyntaxNodeType.RParen],
             [";", JMCSyntaxNodeType.Semi],
             [":", JMCSyntaxNodeType.Colon],
-            ["=>", JMCSyntaxNodeType.ArrowFunction],
+            ["=>", JMCSyntaxNodeType.Arrow],
 
             [">", JMCSyntaxNodeType.GreaterThan],
             ["<", JMCSyntaxNodeType.LessThan],

@@ -269,7 +269,7 @@ namespace JMC.Parser.JMC.Command
 
             return h && t;
         }
-        private static bool ExpectItemPredicate(string value) => ExtensionData.ItemDatas.IsExists(value);
+        private static bool ExpectItemPredicate(string value) => ExtensionData.ItemDatas.IsExist(value);
         private bool ExpectItemSlot(string value)
         {
             if (int.TryParse(value, out int v))

@@ -1,0 +1,2234 @@
+[
+  {
+    "Class": "Timer",
+    "Function": "isOver",
+    "Summary": "",
+    "Arguments": [
+      {
+        "Name": "objective",
+        "ArgumentType": "Keyword",
+        "Summary": ""
+      },
+      {
+        "Name": "selector",
+        "ArgumentType": "Selector",
+        "Summary": "",
+        "DefaultValue": "@s"
+      }
+    ],
+    "ReturnType": 0
+  },
+  {
+    "Class": "String",
+    "Function": "isEqual",
+    "Summary": "",
+    "Arguments": [
+      {
+        "Name": "type",
+        "ArgumentType": "Keyword",
+        "Summary": ""
+      },
+      {
+        "Name": "source",
+        "ArgumentType": "String",
+        "Summary": ""
+      },
+      {
+        "Name": "path",
+        "ArgumentType": "Keyword",
+        "Summary": ""
+      },
+      {
+        "Name": "string",
+        "ArgumentType": "String",
+        "Summary": ""
+      }
+    ],
+    "ReturnType": 0
+  },
+  {
+    "Class": "Object",
+    "Function": "isEqual",
+    "Summary": "",
+    "Arguments": [
+      {
+        "Name": "type1",
+        "ArgumentType": "Keyword",
+        "Summary": ""
+      },
+      {
+        "Name": "source1",
+        "ArgumentType": "String",
+        "Summary": ""
+      },
+      {
+        "Name": "path1",
+        "ArgumentType": "Keyword",
+        "Summary": ""
+      },
+      {
+        "Name": "type2",
+        "ArgumentType": "Keyword",
+        "Summary": ""
+      },
+      {
+        "Name": "source2",
+        "ArgumentType": "String",
+        "Summary": ""
+      },
+      {
+        "Name": "path2",
+        "ArgumentType": "Keyword",
+        "Summary": ""
+      }
+    ],
+    "ReturnType": 0
+  },
+  {
+    "Class": "Predicate",
+    "Function": "locations",
+    "Summary": "",
+    "Arguments": [
+      {
+        "Name": "name",
+        "ArgumentType": "String",
+        "Summary": ""
+      },
+      {
+        "Name": "predicate",
+        "ArgumentType": "JSON",
+        "Summary": ""
+      },
+      {
+        "Name": "xMin",
+        "ArgumentType": "Integer",
+        "Summary": ""
+      },
+      {
+        "Name": "xMax",
+        "ArgumentType": "Integer",
+        "Summary": ""
+      },
+      {
+        "Name": "yMin",
+        "ArgumentType": "Integer",
+        "Summary": ""
+      },
+      {
+        "Name": "yMax",
+        "ArgumentType": "Integer",
+        "Summary": ""
+      },
+      {
+        "Name": "zMin",
+        "ArgumentType": "Integer",
+        "Summary": ""
+      },
+      {
+        "Name": "zMax",
+        "ArgumentType": "Integer",
+        "Summary": ""
+      }
+    ],
+    "ReturnType": 4
+  },
+  {
+    "Class": "RightClick",
+    "Function": "setup",
+    "Summary": "",
+    "Arguments": [
+      {
+        "Name": "idName",
+        "ArgumentType": "Keyword",
+        "Summary": ""
+      },
+      {
+        "Name": "functionMap",
+        "ArgumentType": "JSObject",
+        "Summary": ""
+      }
+    ],
+    "ReturnType": 4
+  },
+  {
+    "Class": "Item",
+    "Function": "create",
+    "Summary": "",
+    "Arguments": [
+      {
+        "Name": "itemId",
+        "ArgumentType": "Keyword",
+        "Summary": ""
+      },
+      {
+        "Name": "itemType",
+        "ArgumentType": "Keyword",
+        "Summary": ""
+      },
+      {
+        "Name": "displayName",
+        "ArgumentType": "String",
+        "Summary": "",
+        "DefaultValue": "\"\""
+      },
+      {
+        "Name": "lore",
+        "ArgumentType": "List<FormattedString>",
+        "Summary": "",
+        "DefaultValue": "[]"
+      },
+      {
+        "Name": "nbt",
+        "ArgumentType": "JSObject",
+        "Summary": "",
+        "DefaultValue": "{}"
+      },
+      {
+        "Name": "onClick",
+        "ArgumentType": "Function",
+        "Summary": "",
+        "DefaultValue": "()=>{}"
+      }
+    ],
+    "ReturnType": 4
+  },
+  {
+    "Class": "Item",
+    "Function": "createSpawnEgg",
+    "Summary": "",
+    "Arguments": [
+      {
+        "Name": "itemId",
+        "ArgumentType": "Keyword",
+        "Summary": ""
+      },
+      {
+        "Name": "mobType",
+        "ArgumentType": "Keyword",
+        "Summary": ""
+      },
+      {
+        "Name": "displayName",
+        "ArgumentType": "String",
+        "Summary": "",
+        "DefaultValue": "\"\""
+      },
+      {
+        "Name": "onPlace",
+        "ArgumentType": "Function",
+        "Summary": ""
+      },
+      {
+        "Name": "lore",
+        "ArgumentType": "List<FormattedString>",
+        "Summary": "",
+        "DefaultValue": "[]"
+      },
+      {
+        "Name": "nbt",
+        "ArgumentType": "JSObject",
+        "Summary": "",
+        "DefaultValue": "{}"
+      }
+    ],
+    "ReturnType": 4
+  },
+  {
+    "Class": "Item",
+    "Function": "createSign",
+    "Summary": "",
+    "Arguments": [
+      {
+        "Name": "itemId",
+        "ArgumentType": "Keyword",
+        "Summary": ""
+      },
+      {
+        "Name": "variant",
+        "ArgumentType": "Keyword",
+        "Summary": ""
+      },
+      {
+        "Name": "displayName",
+        "ArgumentType": "String",
+        "Summary": "",
+        "DefaultValue": "\"\""
+      },
+      {
+        "Name": "lore",
+        "ArgumentType": "List<FormattedString>",
+        "Summary": "",
+        "DefaultValue": "[]"
+      },
+      {
+        "Name": "texts",
+        "ArgumentType": "List<FormattedString>",
+        "Summary": "",
+        "DefaultValue": "[]"
+      },
+      {
+        "Name": "nbt",
+        "ArgumentType": "JSObject",
+        "Summary": "",
+        "DefaultValue": "{}"
+      },
+      {
+        "Name": "onClick",
+        "ArgumentType": "Function",
+        "Summary": "",
+        "DefaultValue": "()=>{}"
+      }
+    ],
+    "ReturnType": 4
+  },
+  {
+    "Class": "Player",
+    "Function": "onEvent",
+    "Summary": "",
+    "Arguments": [
+      {
+        "Name": "criteria",
+        "ArgumentType": "Keyword",
+        "Summary": ""
+      },
+      {
+        "Name": "function",
+        "ArgumentType": "Function",
+        "Summary": ""
+      }
+    ],
+    "ReturnType": 4
+  },
+  {
+    "Class": "Trigger",
+    "Function": "setup",
+    "Summary": "",
+    "Arguments": [
+      {
+        "Name": "objective",
+        "ArgumentType": "Keyword",
+        "Summary": ""
+      },
+      {
+        "Name": "triggers",
+        "ArgumentType": "JSObject",
+        "Summary": ""
+      }
+    ],
+    "ReturnType": 4
+  },
+  {
+    "Class": "Trigger",
+    "Function": "add",
+    "Summary": "",
+    "Arguments": [
+      {
+        "Name": "objective",
+        "ArgumentType": "Keyword",
+        "Summary": ""
+      },
+      {
+        "Name": "function",
+        "ArgumentType": "Function",
+        "Summary": ""
+      }
+    ],
+    "ReturnType": 4
+  },
+  {
+    "Class": "Timer",
+    "Function": "add",
+    "Summary": "",
+    "Arguments": [
+      {
+        "Name": "objective",
+        "ArgumentType": "Keyword",
+        "Summary": ""
+      },
+      {
+        "Name": "mode",
+        "ArgumentType": "Keyword",
+        "Summary": ""
+      },
+      {
+        "Name": "selector",
+        "ArgumentType": "Selector",
+        "Summary": ""
+      },
+      {
+        "Name": "function",
+        "ArgumentType": "Function",
+        "Summary": "",
+        "DefaultValue": "()=>{}"
+      }
+    ],
+    "ReturnType": 4
+  },
+  {
+    "Class": "Recipe",
+    "Function": "table",
+    "Summary": "",
+    "Arguments": [
+      {
+        "Name": "recipe",
+        "ArgumentType": "JSON",
+        "Summary": ""
+      },
+      {
+        "Name": "baseItem",
+        "ArgumentType": "Keyword",
+        "Summary": "",
+        "DefaultValue": "minecraft:knowledge_book"
+      },
+      {
+        "Name": "onCraft",
+        "ArgumentType": "Function",
+        "Summary": "",
+        "DefaultValue": "()=>{}"
+      }
+    ],
+    "ReturnType": 4
+  },
+  {
+    "Class": "GUI",
+    "Function": "template",
+    "Summary": "",
+    "Arguments": [
+      {
+        "Name": "name",
+        "ArgumentType": "Keyword",
+        "Summary": ""
+      },
+      {
+        "Name": "template",
+        "ArgumentType": "List<string>",
+        "Summary": ""
+      },
+      {
+        "Name": "mode",
+        "ArgumentType": "Keyword",
+        "Summary": ""
+      }
+    ],
+    "ReturnType": 4
+  },
+  {
+    "Class": "GUI",
+    "Function": "registers",
+    "Summary": "",
+    "Arguments": [
+      {
+        "Name": "name",
+        "ArgumentType": "Keyword",
+        "Summary": ""
+      },
+      {
+        "Name": "id",
+        "ArgumentType": "String",
+        "Summary": ""
+      },
+      {
+        "Name": "items",
+        "ArgumentType": "List<Keyword>",
+        "Summary": ""
+      },
+      {
+        "Name": "variable",
+        "ArgumentType": "Scoreboard",
+        "Summary": ""
+      },
+      {
+        "Name": "onClick",
+        "ArgumentType": "Function",
+        "Summary": "",
+        "DefaultValue": "()=>{}"
+      },
+      {
+        "Name": "onClickAsGUI",
+        "ArgumentType": "Function",
+        "Summary": "",
+        "DefaultValue": "()=>{}"
+      }
+    ],
+    "ReturnType": 4
+  },
+  {
+    "Class": "GUI",
+    "Function": "register",
+    "Summary": "",
+    "Arguments": [
+      {
+        "Name": "name",
+        "ArgumentType": "Keyword",
+        "Summary": ""
+      },
+      {
+        "Name": "id",
+        "ArgumentType": "String",
+        "Summary": ""
+      },
+      {
+        "Name": "item",
+        "ArgumentType": "Keyword",
+        "Summary": ""
+      },
+      {
+        "Name": "displayName",
+        "ArgumentType": "String",
+        "Summary": "",
+        "DefaultValue": "\"\""
+      },
+      {
+        "Name": "lore",
+        "ArgumentType": "List<FormattedString>",
+        "Summary": "",
+        "DefaultValue": "[]"
+      },
+      {
+        "Name": "nbt",
+        "ArgumentType": "JSObject",
+        "Summary": "",
+        "DefaultValue": "{}"
+      },
+      {
+        "Name": "onClick",
+        "ArgumentType": "Function",
+        "Summary": "",
+        "DefaultValue": "()=>{}"
+      },
+      {
+        "Name": "onClickAsGUI",
+        "ArgumentType": "Function",
+        "Summary": "",
+        "DefaultValue": "()=>{}"
+      }
+    ],
+    "ReturnType": 4
+  },
+  {
+    "Class": "GUI",
+    "Function": "create",
+    "Summary": "",
+    "Arguments": [
+      {
+        "Name": "name",
+        "ArgumentType": "Keyword",
+        "Summary": ""
+      }
+    ],
+    "ReturnType": 4
+  },
+  {
+    "Class": "Team",
+    "Function": "add",
+    "Summary": "",
+    "Arguments": [
+      {
+        "Name": "team",
+        "ArgumentType": "Keyword",
+        "Summary": ""
+      },
+      {
+        "Name": "displayName",
+        "ArgumentType": "String",
+        "Summary": "",
+        "DefaultValue": "\"\""
+      },
+      {
+        "Name": "properties",
+        "ArgumentType": "JSObject",
+        "Summary": "",
+        "DefaultValue": "{}"
+      }
+    ],
+    "ReturnType": 4
+  },
+  {
+    "Class": "TextProp",
+    "Function": "clickCommand",
+    "Summary": "",
+    "Arguments": [
+      {
+        "Name": "propertyName",
+        "ArgumentType": "String",
+        "Summary": ""
+      },
+      {
+        "Name": "function",
+        "ArgumentType": "ArrowFunction",
+        "Summary": ""
+      },
+      {
+        "Name": "local",
+        "ArgumentType": "Keyword",
+        "Summary": "",
+        "DefaultValue": "false"
+      }
+    ],
+    "ReturnType": 4
+  },
+  {
+    "Class": "TextProps",
+    "Function": "clickCommand",
+    "Summary": "",
+    "Arguments": [
+      {
+        "Name": "propertyName",
+        "ArgumentType": "String",
+        "Summary": ""
+      },
+      {
+        "Name": "indexString",
+        "ArgumentType": "String",
+        "Summary": ""
+      },
+      {
+        "Name": "function",
+        "ArgumentType": "ArrowFunction",
+        "Summary": ""
+      },
+      {
+        "Name": "local",
+        "ArgumentType": "Keyword",
+        "Summary": "",
+        "DefaultValue": "false"
+      }
+    ],
+    "ReturnType": 4
+  },
+  {
+    "Class": "TextProp",
+    "Function": "suggestCommand",
+    "Summary": "",
+    "Arguments": [
+      {
+        "Name": "propertyName",
+        "ArgumentType": "String",
+        "Summary": ""
+      },
+      {
+        "Name": "function",
+        "ArgumentType": "ArrowFunction",
+        "Summary": ""
+      },
+      {
+        "Name": "local",
+        "ArgumentType": "Keyword",
+        "Summary": "",
+        "DefaultValue": "false"
+      }
+    ],
+    "ReturnType": 4
+  },
+  {
+    "Class": "TextProps",
+    "Function": "suggestCommand",
+    "Summary": "",
+    "Arguments": [
+      {
+        "Name": "propertyName",
+        "ArgumentType": "String",
+        "Summary": ""
+      },
+      {
+        "Name": "indexString",
+        "ArgumentType": "String",
+        "Summary": ""
+      },
+      {
+        "Name": "function",
+        "ArgumentType": "ArrowFunction",
+        "Summary": ""
+      },
+      {
+        "Name": "local",
+        "ArgumentType": "Keyword",
+        "Summary": "",
+        "DefaultValue": "false"
+      }
+    ],
+    "ReturnType": 4
+  },
+  {
+    "Class": "TextProp",
+    "Function": "clickURL",
+    "Summary": "",
+    "Arguments": [
+      {
+        "Name": "propertyName",
+        "ArgumentType": "String",
+        "Summary": ""
+      },
+      {
+        "Name": "url",
+        "ArgumentType": "String",
+        "Summary": ""
+      },
+      {
+        "Name": "local",
+        "ArgumentType": "Keyword",
+        "Summary": "",
+        "DefaultValue": "false"
+      }
+    ],
+    "ReturnType": 4
+  },
+  {
+    "Class": "TextProps",
+    "Function": "clickURL",
+    "Summary": "",
+    "Arguments": [
+      {
+        "Name": "propertyName",
+        "ArgumentType": "String",
+        "Summary": ""
+      },
+      {
+        "Name": "indexString",
+        "ArgumentType": "String",
+        "Summary": ""
+      },
+      {
+        "Name": "url",
+        "ArgumentType": "String",
+        "Summary": ""
+      },
+      {
+        "Name": "local",
+        "ArgumentType": "Keyword",
+        "Summary": "",
+        "DefaultValue": "false"
+      }
+    ],
+    "ReturnType": 4
+  },
+  {
+    "Class": "TextProp",
+    "Function": "clickPage",
+    "Summary": "",
+    "Arguments": [
+      {
+        "Name": "propertyName",
+        "ArgumentType": "String",
+        "Summary": ""
+      },
+      {
+        "Name": "page",
+        "ArgumentType": "Integer",
+        "Summary": ""
+      },
+      {
+        "Name": "local",
+        "ArgumentType": "Keyword",
+        "Summary": "",
+        "DefaultValue": "false"
+      }
+    ],
+    "ReturnType": 4
+  },
+  {
+    "Class": "TextProps",
+    "Function": "clickPage",
+    "Summary": "",
+    "Arguments": [
+      {
+        "Name": "propertyName",
+        "ArgumentType": "String",
+        "Summary": ""
+      },
+      {
+        "Name": "local",
+        "ArgumentType": "Keyword",
+        "Summary": "",
+        "DefaultValue": "false"
+      }
+    ],
+    "ReturnType": 4
+  },
+  {
+    "Class": "TextProp",
+    "Function": "clipboard",
+    "Summary": "",
+    "Arguments": [
+      {
+        "Name": "propertyName",
+        "ArgumentType": "String",
+        "Summary": ""
+      },
+      {
+        "Name": "text",
+        "ArgumentType": "String",
+        "Summary": ""
+      },
+      {
+        "Name": "local",
+        "ArgumentType": "Keyword",
+        "Summary": "",
+        "DefaultValue": "false"
+      }
+    ],
+    "ReturnType": 4
+  },
+  {
+    "Class": "TextProps",
+    "Function": "clipboard",
+    "Summary": "",
+    "Arguments": [
+      {
+        "Name": "propertyName",
+        "ArgumentType": "String",
+        "Summary": ""
+      },
+      {
+        "Name": "indexString",
+        "ArgumentType": "String",
+        "Summary": ""
+      },
+      {
+        "Name": "text",
+        "ArgumentType": "String",
+        "Summary": ""
+      },
+      {
+        "Name": "local",
+        "ArgumentType": "Keyword",
+        "Summary": "",
+        "DefaultValue": "false"
+      }
+    ],
+    "ReturnType": 4
+  },
+  {
+    "Class": "TextProp",
+    "Function": "hoverText",
+    "Summary": "",
+    "Arguments": [
+      {
+        "Name": "propertyName",
+        "ArgumentType": "String",
+        "Summary": ""
+      },
+      {
+        "Name": "text",
+        "ArgumentType": "String",
+        "Summary": ""
+      },
+      {
+        "Name": "local",
+        "ArgumentType": "Keyword",
+        "Summary": "",
+        "DefaultValue": "false"
+      }
+    ],
+    "ReturnType": 4
+  },
+  {
+    "Class": "TextProps",
+    "Function": "hoverText",
+    "Summary": "",
+    "Arguments": [
+      {
+        "Name": "propertyName",
+        "ArgumentType": "String",
+        "Summary": ""
+      },
+      {
+        "Name": "indexString",
+        "ArgumentType": "String",
+        "Summary": ""
+      },
+      {
+        "Name": "text",
+        "ArgumentType": "String",
+        "Summary": ""
+      },
+      {
+        "Name": "local",
+        "ArgumentType": "Keyword",
+        "Summary": "",
+        "DefaultValue": "false"
+      }
+    ],
+    "ReturnType": 4
+  },
+  {
+    "Class": "TextProp",
+    "Function": "hoverItem",
+    "Summary": "",
+    "Arguments": [
+      {
+        "Name": "propertyName",
+        "ArgumentType": "String",
+        "Summary": ""
+      },
+      {
+        "Name": "item",
+        "ArgumentType": "JSON",
+        "Summary": ""
+      },
+      {
+        "Name": "local",
+        "ArgumentType": "Keyword",
+        "Summary": "",
+        "DefaultValue": "false"
+      }
+    ],
+    "ReturnType": 4
+  },
+  {
+    "Class": "TextProps",
+    "Function": "hoverItem",
+    "Summary": "",
+    "Arguments": [
+      {
+        "Name": "propertyName",
+        "ArgumentType": "String",
+        "Summary": ""
+      },
+      {
+        "Name": "indexString",
+        "ArgumentType": "String",
+        "Summary": ""
+      },
+      {
+        "Name": "item",
+        "ArgumentType": "JSON",
+        "Summary": ""
+      },
+      {
+        "Name": "local",
+        "ArgumentType": "Keyword",
+        "Summary": "",
+        "DefaultValue": "false"
+      }
+    ],
+    "ReturnType": 4
+  },
+  {
+    "Class": "TextProp",
+    "Function": "hoverEntity",
+    "Summary": "",
+    "Arguments": [
+      {
+        "Name": "propertyName",
+        "ArgumentType": "String",
+        "Summary": ""
+      },
+      {
+        "Name": "entity",
+        "ArgumentType": "JSON",
+        "Summary": ""
+      },
+      {
+        "Name": "local",
+        "ArgumentType": "Keyword",
+        "Summary": "",
+        "DefaultValue": "false"
+      }
+    ],
+    "ReturnType": 4
+  },
+  {
+    "Class": "TextProps",
+    "Function": "hoverEntity",
+    "Summary": "",
+    "Arguments": [
+      {
+        "Name": "propertyName",
+        "ArgumentType": "String",
+        "Summary": ""
+      },
+      {
+        "Name": "indexString",
+        "ArgumentType": "String",
+        "Summary": ""
+      },
+      {
+        "Name": "entity",
+        "ArgumentType": "JSON",
+        "Summary": ""
+      },
+      {
+        "Name": "local",
+        "ArgumentType": "Keyword",
+        "Summary": "",
+        "DefaultValue": "false"
+      }
+    ],
+    "ReturnType": 4
+  },
+  {
+    "Class": "TextProp",
+    "Function": "font",
+    "Summary": "",
+    "Arguments": [
+      {
+        "Name": "propertyName",
+        "ArgumentType": "String",
+        "Summary": ""
+      },
+      {
+        "Name": "font",
+        "ArgumentType": "String",
+        "Summary": ""
+      },
+      {
+        "Name": "local",
+        "ArgumentType": "Keyword",
+        "Summary": "",
+        "DefaultValue": "false"
+      }
+    ],
+    "ReturnType": 4
+  },
+  {
+    "Class": "TextProps",
+    "Function": "font",
+    "Summary": "",
+    "Arguments": [
+      {
+        "Name": "propertyName",
+        "ArgumentType": "String",
+        "Summary": ""
+      },
+      {
+        "Name": "indexString",
+        "ArgumentType": "String",
+        "Summary": ""
+      },
+      {
+        "Name": "font",
+        "ArgumentType": "String",
+        "Summary": ""
+      },
+      {
+        "Name": "local",
+        "ArgumentType": "Keyword",
+        "Summary": "",
+        "DefaultValue": "false"
+      }
+    ],
+    "ReturnType": 4
+  },
+  {
+    "Class": "TextProp",
+    "Function": "keybind",
+    "Summary": "",
+    "Arguments": [
+      {
+        "Name": "propertyName",
+        "ArgumentType": "String",
+        "Summary": ""
+      },
+      {
+        "Name": "keybind",
+        "ArgumentType": "String",
+        "Summary": ""
+      },
+      {
+        "Name": "local",
+        "ArgumentType": "Keyword",
+        "Summary": "",
+        "DefaultValue": "false"
+      }
+    ],
+    "ReturnType": 4
+  },
+  {
+    "Class": "TextProps",
+    "Function": "keybind",
+    "Summary": "",
+    "Arguments": [
+      {
+        "Name": "propertyName",
+        "ArgumentType": "String",
+        "Summary": ""
+      },
+      {
+        "Name": "indexString",
+        "ArgumentType": "String",
+        "Summary": ""
+      },
+      {
+        "Name": "keybind",
+        "ArgumentType": "String",
+        "Summary": ""
+      },
+      {
+        "Name": "local",
+        "ArgumentType": "Keyword",
+        "Summary": "",
+        "DefaultValue": "false"
+      }
+    ],
+    "ReturnType": 4
+  },
+  {
+    "Class": "TextProp",
+    "Function": "nbt",
+    "Summary": "",
+    "Arguments": [
+      {
+        "Name": "propertyName",
+        "ArgumentType": "String",
+        "Summary": ""
+      },
+      {
+        "Name": "type",
+        "ArgumentType": "Keyword",
+        "Summary": ""
+      },
+      {
+        "Name": "source",
+        "ArgumentType": "String",
+        "Summary": ""
+      },
+      {
+        "Name": "path",
+        "ArgumentType": "Keyword",
+        "Summary": ""
+      },
+      {
+        "Name": "separator",
+        "ArgumentType": "String",
+        "Summary": "",
+        "DefaultValue": ", "
+      },
+      {
+        "Name": "interpret",
+        "ArgumentType": "Keyword",
+        "Summary": "",
+        "DefaultValue": "false"
+      },
+      {
+        "Name": "local",
+        "ArgumentType": "Keyword",
+        "Summary": "",
+        "DefaultValue": "false"
+      }
+    ],
+    "ReturnType": 4
+  },
+  {
+    "Class": "TextProps",
+    "Function": "nbt",
+    "Summary": "",
+    "Arguments": [
+      {
+        "Name": "propertyName",
+        "ArgumentType": "String",
+        "Summary": ""
+      },
+      {
+        "Name": "indexString",
+        "ArgumentType": "String",
+        "Summary": ""
+      },
+      {
+        "Name": "type",
+        "ArgumentType": "Keyword",
+        "Summary": ""
+      },
+      {
+        "Name": "source",
+        "ArgumentType": "String",
+        "Summary": ""
+      },
+      {
+        "Name": "path",
+        "ArgumentType": "Keyword",
+        "Summary": ""
+      },
+      {
+        "Name": "separator",
+        "ArgumentType": "String",
+        "Summary": "",
+        "DefaultValue": ", "
+      },
+      {
+        "Name": "interpret",
+        "ArgumentType": "Keyword",
+        "Summary": "",
+        "DefaultValue": "false"
+      },
+      {
+        "Name": "local",
+        "ArgumentType": "Keyword",
+        "Summary": "",
+        "DefaultValue": "false"
+      }
+    ],
+    "ReturnType": 4
+  },
+  {
+    "Class": "Player",
+    "Function": "firstJoin",
+    "Summary": "",
+    "Arguments": [
+      {
+        "Name": "function",
+        "ArgumentType": "Function",
+        "Summary": ""
+      }
+    ],
+    "ReturnType": 3
+  },
+  {
+    "Class": "Player",
+    "Function": "join",
+    "Summary": "",
+    "Arguments": [
+      {
+        "Name": "function",
+        "ArgumentType": "Function",
+        "Summary": ""
+      }
+    ],
+    "ReturnType": 3
+  },
+  {
+    "Class": "Player",
+    "Function": "rejoin",
+    "Summary": "",
+    "Arguments": [
+      {
+        "Name": "function",
+        "ArgumentType": "Function",
+        "Summary": ""
+      }
+    ],
+    "ReturnType": 3
+  },
+  {
+    "Class": "Player",
+    "Function": "die",
+    "Summary": "",
+    "Arguments": [
+      {
+        "Name": "onDeath",
+        "ArgumentType": "Function",
+        "Summary": "",
+        "DefaultValue": "()=>{}"
+      },
+      {
+        "Name": "onRespawn",
+        "ArgumentType": "Function",
+        "Summary": "",
+        "DefaultValue": "()=>{}"
+      }
+    ],
+    "ReturnType": 3
+  },
+  {
+    "Class": "Timer",
+    "Function": "set",
+    "Summary": "",
+    "Arguments": [
+      {
+        "Name": "objective",
+        "ArgumentType": "Keyword",
+        "Summary": ""
+      },
+      {
+        "Name": "selector",
+        "ArgumentType": "Selector",
+        "Summary": ""
+      },
+      {
+        "Name": "tick",
+        "ArgumentType": "ScoreboardPlayer",
+        "Summary": ""
+      }
+    ],
+    "ReturnType": 2
+  },
+  {
+    "Class": "Item",
+    "Function": "clear",
+    "Summary": "",
+    "Arguments": [
+      {
+        "Name": "itemId",
+        "ArgumentType": "Keyword",
+        "Summary": ""
+      },
+      {
+        "Name": "selector",
+        "ArgumentType": "Selector",
+        "Summary": "",
+        "DefaultValue": "@s"
+      },
+      {
+        "Name": "amount",
+        "ArgumentType": "Integer",
+        "Summary": "",
+        "DefaultValue": "-1"
+      }
+    ],
+    "ReturnType": 2
+  },
+  {
+    "Class": "Item",
+    "Function": "give",
+    "Summary": "",
+    "Arguments": [
+      {
+        "Name": "itemId",
+        "ArgumentType": "Keyword",
+        "Summary": ""
+      },
+      {
+        "Name": "selector",
+        "ArgumentType": "Selector",
+        "Summary": "",
+        "DefaultValue": "@s"
+      },
+      {
+        "Name": "amount",
+        "ArgumentType": "Integer",
+        "Summary": "",
+        "DefaultValue": "1"
+      }
+    ],
+    "ReturnType": 2
+  },
+  {
+    "Class": "Item",
+    "Function": "summon",
+    "Summary": "",
+    "Arguments": [
+      {
+        "Name": "itemId",
+        "ArgumentType": "Keyword",
+        "Summary": ""
+      },
+      {
+        "Name": "pos",
+        "ArgumentType": "String",
+        "Summary": "",
+        "DefaultValue": "~ ~ ~"
+      },
+      {
+        "Name": "count",
+        "ArgumentType": "Integer",
+        "Summary": "",
+        "DefaultValue": "1"
+      },
+      {
+        "Name": "nbt",
+        "ArgumentType": "JSObject",
+        "Summary": "",
+        "DefaultValue": "{}"
+      }
+    ],
+    "ReturnType": 2
+  },
+  {
+    "Class": "Item",
+    "Function": "replaceBlock",
+    "Summary": "",
+    "Arguments": [
+      {
+        "Name": "itemId",
+        "ArgumentType": "Keyword",
+        "Summary": ""
+      },
+      {
+        "Name": "pos",
+        "ArgumentType": "String",
+        "Summary": ""
+      },
+      {
+        "Name": "slot",
+        "ArgumentType": "String",
+        "Summary": ""
+      },
+      {
+        "Name": "count",
+        "ArgumentType": "Integer",
+        "Summary": "",
+        "DefaultValue": "1"
+      }
+    ],
+    "ReturnType": 2
+  },
+  {
+    "Class": "Item",
+    "Function": "replaceEntity",
+    "Summary": "",
+    "Arguments": [
+      {
+        "Name": "itemId",
+        "ArgumentType": "Keyword",
+        "Summary": ""
+      },
+      {
+        "Name": "selector",
+        "ArgumentType": "Selector",
+        "Summary": ""
+      },
+      {
+        "Name": "slot",
+        "ArgumentType": "String",
+        "Summary": ""
+      },
+      {
+        "Name": "count",
+        "ArgumentType": "Integer",
+        "Summary": "",
+        "DefaultValue": "1"
+      }
+    ],
+    "ReturnType": 2
+  },
+  {
+    "Class": "JMC",
+    "Function": "put",
+    "Summary": "",
+    "Arguments": [
+      {
+        "Name": "command",
+        "ArgumentType": "String",
+        "Summary": ""
+      }
+    ],
+    "ReturnType": 2
+  },
+  {
+    "Class": "Text",
+    "Function": "tellraw",
+    "Summary": "",
+    "Arguments": [
+      {
+        "Name": "selector",
+        "ArgumentType": "Selector",
+        "Summary": ""
+      },
+      {
+        "Name": "message",
+        "ArgumentType": "String",
+        "Summary": ""
+      }
+    ],
+    "ReturnType": 2
+  },
+  {
+    "Class": "Text",
+    "Function": "title",
+    "Summary": "",
+    "Arguments": [
+      {
+        "Name": "selector",
+        "ArgumentType": "Selector",
+        "Summary": ""
+      },
+      {
+        "Name": "message",
+        "ArgumentType": "String",
+        "Summary": ""
+      }
+    ],
+    "ReturnType": 2
+  },
+  {
+    "Class": "Text",
+    "Function": "subtitle",
+    "Summary": "",
+    "Arguments": [
+      {
+        "Name": "selector",
+        "ArgumentType": "Selector",
+        "Summary": ""
+      },
+      {
+        "Name": "message",
+        "ArgumentType": "String",
+        "Summary": ""
+      }
+    ],
+    "ReturnType": 2
+  },
+  {
+    "Class": "Text",
+    "Function": "actionbar",
+    "Summary": "",
+    "Arguments": [
+      {
+        "Name": "selector",
+        "ArgumentType": "Selector",
+        "Summary": ""
+      },
+      {
+        "Name": "message",
+        "ArgumentType": "String",
+        "Summary": ""
+      }
+    ],
+    "ReturnType": 2
+  },
+  {
+    "Class": "Particle",
+    "Function": "circle",
+    "Summary": "",
+    "Arguments": [
+      {
+        "Name": "particle",
+        "ArgumentType": "String",
+        "Summary": ""
+      },
+      {
+        "Name": "radius",
+        "ArgumentType": "Float",
+        "Summary": ""
+      },
+      {
+        "Name": "spread",
+        "ArgumentType": "Integer",
+        "Summary": ""
+      },
+      {
+        "Name": "speed",
+        "ArgumentType": "Integer",
+        "Summary": "",
+        "DefaultValue": "1"
+      },
+      {
+        "Name": "count",
+        "ArgumentType": "Integer",
+        "Summary": "",
+        "DefaultValue": "1"
+      },
+      {
+        "Name": "mode",
+        "ArgumentType": "Keyword",
+        "Summary": "",
+        "DefaultValue": "normal"
+      }
+    ],
+    "ReturnType": 2
+  },
+  {
+    "Class": "Particle",
+    "Function": "sphere",
+    "Summary": "",
+    "Arguments": [
+      {
+        "Name": "particle",
+        "ArgumentType": "String",
+        "Summary": ""
+      },
+      {
+        "Name": "radius",
+        "ArgumentType": "Float",
+        "Summary": ""
+      },
+      {
+        "Name": "spread",
+        "ArgumentType": "Integer",
+        "Summary": ""
+      },
+      {
+        "Name": "speed",
+        "ArgumentType": "Integer",
+        "Summary": "",
+        "DefaultValue": "1"
+      },
+      {
+        "Name": "count",
+        "ArgumentType": "Integer",
+        "Summary": "",
+        "DefaultValue": "1"
+      },
+      {
+        "Name": "mode",
+        "ArgumentType": "Keyword",
+        "Summary": "",
+        "DefaultValue": "normal"
+      }
+    ],
+    "ReturnType": 2
+  },
+  {
+    "Class": "Particle",
+    "Function": "square",
+    "Summary": "",
+    "Arguments": [
+      {
+        "Name": "particle",
+        "ArgumentType": "String",
+        "Summary": ""
+      },
+      {
+        "Name": "length",
+        "ArgumentType": "Float",
+        "Summary": ""
+      },
+      {
+        "Name": "spread",
+        "ArgumentType": "Integer",
+        "Summary": ""
+      },
+      {
+        "Name": "align",
+        "ArgumentType": "Keyword",
+        "Summary": "",
+        "DefaultValue": "corner"
+      },
+      {
+        "Name": "speed",
+        "ArgumentType": "Integer",
+        "Summary": "",
+        "DefaultValue": "1"
+      },
+      {
+        "Name": "count",
+        "ArgumentType": "Integer",
+        "Summary": "",
+        "DefaultValue": "1"
+      },
+      {
+        "Name": "mode",
+        "ArgumentType": "Keyword",
+        "Summary": "",
+        "DefaultValue": "normal"
+      }
+    ],
+    "ReturnType": 2
+  },
+  {
+    "Class": "Particle",
+    "Function": "cube",
+    "Summary": "",
+    "Arguments": [
+      {
+        "Name": "particle",
+        "ArgumentType": "String",
+        "Summary": ""
+      },
+      {
+        "Name": "length",
+        "ArgumentType": "Float",
+        "Summary": ""
+      },
+      {
+        "Name": "spread",
+        "ArgumentType": "Integer",
+        "Summary": ""
+      },
+      {
+        "Name": "align",
+        "ArgumentType": "Keyword",
+        "Summary": "",
+        "DefaultValue": "corner"
+      },
+      {
+        "Name": "speed",
+        "ArgumentType": "Integer",
+        "Summary": "",
+        "DefaultValue": "1"
+      },
+      {
+        "Name": "count",
+        "ArgumentType": "Integer",
+        "Summary": "",
+        "DefaultValue": "1"
+      },
+      {
+        "Name": "mode",
+        "ArgumentType": "Keyword",
+        "Summary": "",
+        "DefaultValue": "normal"
+      }
+    ],
+    "ReturnType": 2
+  },
+  {
+    "Class": "Particle",
+    "Function": "spiral",
+    "Summary": "",
+    "Arguments": [
+      {
+        "Name": "particle",
+        "ArgumentType": "String",
+        "Summary": ""
+      },
+      {
+        "Name": "radius",
+        "ArgumentType": "Float",
+        "Summary": ""
+      },
+      {
+        "Name": "height",
+        "ArgumentType": "Float",
+        "Summary": ""
+      },
+      {
+        "Name": "spread",
+        "ArgumentType": "Integer",
+        "Summary": ""
+      },
+      {
+        "Name": "speed",
+        "ArgumentType": "Integer",
+        "Summary": "",
+        "DefaultValue": "1"
+      },
+      {
+        "Name": "count",
+        "ArgumentType": "Integer",
+        "Summary": "",
+        "DefaultValue": "1"
+      },
+      {
+        "Name": "mode",
+        "ArgumentType": "Keyword",
+        "Summary": "",
+        "DefaultValue": "normal"
+      }
+    ],
+    "ReturnType": 2
+  },
+  {
+    "Class": "Particle",
+    "Function": "helix",
+    "Summary": "",
+    "Arguments": [
+      {
+        "Name": "particle",
+        "ArgumentType": "String",
+        "Summary": ""
+      },
+      {
+        "Name": "radius",
+        "ArgumentType": "Float",
+        "Summary": ""
+      },
+      {
+        "Name": "height",
+        "ArgumentType": "Float",
+        "Summary": ""
+      },
+      {
+        "Name": "spread",
+        "ArgumentType": "Integer",
+        "Summary": ""
+      },
+      {
+        "Name": "speed",
+        "ArgumentType": "Integer",
+        "Summary": "",
+        "DefaultValue": "1"
+      },
+      {
+        "Name": "count",
+        "ArgumentType": "Integer",
+        "Summary": "",
+        "DefaultValue": "1"
+      },
+      {
+        "Name": "mode",
+        "ArgumentType": "Keyword",
+        "Summary": "",
+        "DefaultValue": "normal"
+      }
+    ],
+    "ReturnType": 2
+  },
+  {
+    "Class": "Particle",
+    "Function": "cylinder",
+    "Summary": "",
+    "Arguments": [
+      {
+        "Name": "particle",
+        "ArgumentType": "String",
+        "Summary": ""
+      },
+      {
+        "Name": "radius",
+        "ArgumentType": "Float",
+        "Summary": ""
+      },
+      {
+        "Name": "height",
+        "ArgumentType": "Float",
+        "Summary": ""
+      },
+      {
+        "Name": "spreadXZ",
+        "ArgumentType": "Integer",
+        "Summary": ""
+      },
+      {
+        "Name": "spreadY",
+        "ArgumentType": "Integer",
+        "Summary": ""
+      },
+      {
+        "Name": "speed",
+        "ArgumentType": "Integer",
+        "Summary": "",
+        "DefaultValue": "1"
+      },
+      {
+        "Name": "count",
+        "ArgumentType": "Integer",
+        "Summary": "",
+        "DefaultValue": "1"
+      },
+      {
+        "Name": "mode",
+        "ArgumentType": "Keyword",
+        "Summary": "",
+        "DefaultValue": "normal"
+      }
+    ],
+    "ReturnType": 2
+  },
+  {
+    "Class": "Particle",
+    "Function": "line",
+    "Summary": "",
+    "Arguments": [
+      {
+        "Name": "particle",
+        "ArgumentType": "String",
+        "Summary": ""
+      },
+      {
+        "Name": "distance",
+        "ArgumentType": "Float",
+        "Summary": ""
+      },
+      {
+        "Name": "spread",
+        "ArgumentType": "Integer",
+        "Summary": ""
+      },
+      {
+        "Name": "speed",
+        "ArgumentType": "Integer",
+        "Summary": "",
+        "DefaultValue": "1"
+      },
+      {
+        "Name": "count",
+        "ArgumentType": "Integer",
+        "Summary": "",
+        "DefaultValue": "1"
+      },
+      {
+        "Name": "mode",
+        "ArgumentType": "Keyword",
+        "Summary": "",
+        "DefaultValue": "normal"
+      }
+    ],
+    "ReturnType": 2
+  },
+  {
+    "Class": "Scoreboard",
+    "Function": "add",
+    "Summary": "",
+    "Arguments": [
+      {
+        "Name": "objective",
+        "ArgumentType": "Keyword",
+        "Summary": ""
+      },
+      {
+        "Name": "criteria",
+        "ArgumentType": "Keyword",
+        "Summary": "",
+        "DefaultValue": "dummy"
+      },
+      {
+        "Name": "displayName",
+        "ArgumentType": "String",
+        "Summary": "",
+        "DefaultValue": "\"\""
+      }
+    ],
+    "ReturnType": 2
+  },
+  {
+    "Class": "Bossbar",
+    "Function": "add",
+    "Summary": "",
+    "Arguments": [
+      {
+        "Name": "id",
+        "ArgumentType": "Keyword",
+        "Summary": ""
+      },
+      {
+        "Name": "name",
+        "ArgumentType": "String",
+        "Summary": ""
+      }
+    ],
+    "ReturnType": 2
+  },
+  {
+    "Class": "GUI",
+    "Function": "run",
+    "Summary": "",
+    "Arguments": [
+      {
+        "Name": "name",
+        "ArgumentType": "Keyword",
+        "Summary": ""
+      }
+    ],
+    "ReturnType": 2
+  },
+  {
+    "Class": "Advancement",
+    "Function": "revoke",
+    "Summary": "",
+    "Arguments": [
+      {
+        "Name": "target",
+        "ArgumentType": "Selector",
+        "Summary": ""
+      },
+      {
+        "Name": "type",
+        "ArgumentType": "Keyword",
+        "Summary": ""
+      },
+      {
+        "Name": "advancement",
+        "ArgumentType": "Keyword",
+        "Summary": "",
+        "DefaultValue": "\"\""
+      },
+      {
+        "Name": "namespace",
+        "ArgumentType": "Keyword",
+        "Summary": "",
+        "DefaultValue": "\"\""
+      }
+    ],
+    "ReturnType": 2
+  },
+  {
+    "Class": "Advancement",
+    "Function": "grant",
+    "Summary": "",
+    "Arguments": [
+      {
+        "Name": "target",
+        "ArgumentType": "Selector",
+        "Summary": ""
+      },
+      {
+        "Name": "type",
+        "ArgumentType": "Keyword",
+        "Summary": ""
+      },
+      {
+        "Name": "advancement",
+        "ArgumentType": "Keyword",
+        "Summary": "",
+        "DefaultValue": "\"\""
+      },
+      {
+        "Name": "namespace",
+        "ArgumentType": "Keyword",
+        "Summary": "",
+        "DefaultValue": "\"\""
+      }
+    ],
+    "ReturnType": 2
+  },
+  {
+    "Class": "Entity",
+    "Function": "launch",
+    "Summary": "",
+    "Arguments": [
+      {
+        "Name": "power",
+        "ArgumentType": "Float",
+        "Summary": "",
+        "DefaultValue": "1"
+      }
+    ],
+    "ReturnType": 2
+  },
+  {
+    "Class": "JMC",
+    "Function": "python",
+    "Summary": "",
+    "Arguments": [
+      {
+        "Name": "pythonCode",
+        "ArgumentType": "String",
+        "Summary": ""
+      },
+      {
+        "Name": "env",
+        "ArgumentType": "String",
+        "Summary": "",
+        "DefaultValue": "\"\""
+      }
+    ],
+    "ReturnType": 2
+  },
+  {
+    "Class": "Math",
+    "Function": "sqrt",
+    "Summary": "",
+    "Arguments": [
+      {
+        "Name": "n",
+        "ArgumentType": "Scoreboard",
+        "Summary": ""
+      }
+    ],
+    "ReturnType": 5
+  },
+  {
+    "Class": "Math",
+    "Function": "random",
+    "Summary": "",
+    "Arguments": [
+      {
+        "Name": "min",
+        "ArgumentType": "Integer",
+        "Summary": "",
+        "DefaultValue": "1"
+      },
+      {
+        "Name": "max",
+        "ArgumentType": "Integer",
+        "Summary": "",
+        "DefaultValue": "2147483647"
+      }
+    ],
+    "ReturnType": 5
+  },
+  {
+    "Class": "Hardcode",
+    "Function": "repeat",
+    "Summary": "",
+    "Arguments": [
+      {
+        "Name": "indexString",
+        "ArgumentType": "String",
+        "Summary": ""
+      },
+      {
+        "Name": "function",
+        "ArgumentType": "ArrowFunction",
+        "Summary": ""
+      },
+      {
+        "Name": "start",
+        "ArgumentType": "Integer",
+        "Summary": ""
+      },
+      {
+        "Name": "stop",
+        "ArgumentType": "Integer",
+        "Summary": ""
+      },
+      {
+        "Name": "step",
+        "ArgumentType": "Integer",
+        "Summary": "",
+        "DefaultValue": "1"
+      }
+    ],
+    "ReturnType": 1
+  },
+  {
+    "Class": "Hardcode",
+    "Function": "repeatList",
+    "Summary": "",
+    "Arguments": [
+      {
+        "Name": "indexString",
+        "ArgumentType": "String",
+        "Summary": ""
+      },
+      {
+        "Name": "function",
+        "ArgumentType": "ArrowFunction",
+        "Summary": ""
+      },
+      {
+        "Name": "strings",
+        "ArgumentType": "List<string>",
+        "Summary": ""
+      }
+    ],
+    "ReturnType": 1
+  },
+  {
+    "Class": "Hardcode",
+    "Function": "repeatLists",
+    "Summary": "",
+    "Arguments": [
+      {
+        "Name": "indexStrings",
+        "ArgumentType": "List<string>",
+        "Summary": ""
+      },
+      {
+        "Name": "function",
+        "ArgumentType": "ArrowFunction",
+        "Summary": ""
+      },
+      {
+        "Name": "stringLists",
+        "ArgumentType": "List<List<string>>",
+        "Summary": ""
+      }
+    ],
+    "ReturnType": 1
+  },
+  {
+    "Class": "Hardcode",
+    "Function": "switch",
+    "Summary": "",
+    "Arguments": [
+      {
+        "Name": "switch",
+        "ArgumentType": "Scoreboard",
+        "Summary": ""
+      },
+      {
+        "Name": "indexString",
+        "ArgumentType": "String",
+        "Summary": ""
+      },
+      {
+        "Name": "function",
+        "ArgumentType": "ArrowFunction",
+        "Summary": ""
+      },
+      {
+        "Name": "count",
+        "ArgumentType": "Integer",
+        "Summary": ""
+      },
+      {
+        "Name": "begin_at",
+        "ArgumentType": "Integer",
+        "Summary": "",
+        "DefaultValue": "1"
+      }
+    ],
+    "ReturnType": 1
+  },
+  {
+    "Class": "Raycast",
+    "Function": "simple",
+    "Summary": "",
+    "Arguments": [
+      {
+        "Name": "onHit",
+        "ArgumentType": "Function",
+        "Summary": ""
+      },
+      {
+        "Name": "onStep",
+        "ArgumentType": "Function",
+        "Summary": "",
+        "DefaultValue": "()=>{}"
+      },
+      {
+        "Name": "onBeforeStep",
+        "ArgumentType": "Function",
+        "Summary": "",
+        "DefaultValue": "()=>{}"
+      },
+      {
+        "Name": "interval",
+        "ArgumentType": "Float",
+        "Summary": "",
+        "DefaultValue": "0.1"
+      },
+      {
+        "Name": "maxIter",
+        "ArgumentType": "ScoreboardPlayer",
+        "Summary": "",
+        "DefaultValue": "1000"
+      },
+      {
+        "Name": "boxSize",
+        "ArgumentType": "Float",
+        "Summary": "",
+        "DefaultValue": "0.1"
+      },
+      {
+        "Name": "target",
+        "ArgumentType": "Selector",
+        "Summary": "",
+        "DefaultValue": "@e"
+      },
+      {
+        "Name": "startAtEye",
+        "ArgumentType": "Keyword",
+        "Summary": "",
+        "DefaultValue": "true"
+      },
+      {
+        "Name": "stopAtEntity",
+        "ArgumentType": "Keyword",
+        "Summary": "",
+        "DefaultValue": "true"
+      },
+      {
+        "Name": "stopAtBlock",
+        "ArgumentType": "Keyword",
+        "Summary": "",
+        "DefaultValue": "true"
+      },
+      {
+        "Name": "runAtEnd",
+        "ArgumentType": "Keyword",
+        "Summary": "",
+        "DefaultValue": "false"
+      },
+      {
+        "Name": "casterTag",
+        "ArgumentType": "Keyword",
+        "Summary": "",
+        "DefaultValue": "__self__"
+      },
+      {
+        "Name": "removeCasterTag",
+        "ArgumentType": "Keyword",
+        "Summary": "",
+        "DefaultValue": "true"
+      },
+      {
+        "Name": "modifyExecuteBeforeStep",
+        "ArgumentType": "String",
+        "Summary": "",
+        "DefaultValue": "\"\""
+      },
+      {
+        "Name": "modifyExecuteAfterStep",
+        "ArgumentType": "String",
+        "Summary": "",
+        "DefaultValue": "\"\""
+      },
+      {
+        "Name": "overideString",
+        "ArgumentType": "String",
+        "Summary": "",
+        "DefaultValue": "\"\""
+      },
+      {
+        "Name": "overideRecursion",
+        "ArgumentType": "ArrowFunction",
+        "Summary": "",
+        "DefaultValue": "()=>{}"
+      }
+    ],
+    "ReturnType": 1
+  }
+]

@@ -5,46 +5,27 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
-
+  
   <ItemGroup>
-    <None Remove="Resource\1_20_1\blocks.json" />
-    <None Remove="Resource\1_20_1\block_tags.json" />
-    <None Remove="Resource\1_20_1\custom_statistics.json" />
-    <None Remove="Resource\1_20_1\items.json" />
-    <None Remove="Resource\1_20_1\item_tags.json" />
-    <None Remove="Resource\1_20_1\particles.json" />
+    <None Remove="Resource\jmc.db" />
   </ItemGroup>
   
   <ItemGroup>
-    <EmbeddedResource Include="Resource\1_20_1\blocks.json" />
-    <EmbeddedResource Include="Resource\1_20_1\block_tags.json">
-      <CustomToolNamespace>JMC.Shared.Resouce.1_20_1</CustomToolNamespace>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Resource\1_20_1\commands.json">
-      <CustomToolNamespace>JMC.Shared.Resouce.1_20_1</CustomToolNamespace>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Resource\1_20_1\custom_statistics.json">
-      <CustomToolNamespace>JMC.Shared.Resouce.1_20_1</CustomToolNamespace>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Resource\1_20_1\items.json">
+    <EmbeddedResource Include="Resource\jmc.db">
+      <CustomToolNamespace>JMC.Shared.Resource</CustomToolNamespace>
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-      <CustomToolNamespace>JMC.Shared.Resouce.1_20_1</CustomToolNamespace>
     </EmbeddedResource>
-    <EmbeddedResource Include="Resource\1_20_1\item_tags.json">
-      <CustomToolNamespace>JMC.Shared.Resouce.1_20_1</CustomToolNamespace>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Resource\1_20_1\particles.json">
-      <CustomToolNamespace>JMC.Shared.Resouce.1_20_1</CustomToolNamespace>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Resource\BuiltInFunctions.json" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="OmniSharp.Extensions.LanguageProtocol" Version="0.19.7" />
     <PackageReference Include="OmniSharp.Extensions.LanguageProtocol.Proposals" Version="0.19.7" />
     <PackageReference Include="OmniSharp.Extensions.LanguageServer" Version="0.19.7" />
     <PackageReference Include="OmniSharp.Extensions.LanguageServer.Shared" Version="0.19.7" />
+    <PackageReference Include="System.Data.SQLite" Version="1.0.118" />
+    <PackageReference Include="System.Text.Json" Version="8.0.0" />
   </ItemGroup>
+
+  <ProjectExtensions><VisualStudio><UserProperties /></VisualStudio></ProjectExtensions>
 
 </Project>

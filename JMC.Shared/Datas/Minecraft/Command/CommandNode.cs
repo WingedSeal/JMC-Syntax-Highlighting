@@ -1,38 +1,38 @@
-using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 
 namespace JMC.Shared.Datas.Minecraft.Command
 {
     internal partial class CommandNode
     {
-        [JsonProperty("type")]
+        [JsonPropertyName("type")]
         [JsonRequired]
 #pragma warning disable CS8618
         public string Type { get; set; }
 #pragma warning restore CS8618
-        [JsonProperty("children")]
+        [JsonPropertyName("children")]
         public Dictionary<string, CommandNode>? Children { get; set; }
-        [JsonProperty("executable")]
+        [JsonPropertyName("executable")]
         public bool? Executable { get; set; }
-        [JsonProperty("parser")]
+        [JsonPropertyName("parser")]
         public string? Parser { get; set; }
 
-        [JsonProperty("properties")]
+        [JsonPropertyName("properties")]
         public Propety? Properties { get; set; }
-        [JsonProperty("redirect")]
-        public string[]? Redirect {  get; set; }
+        [JsonPropertyName("redirect")]
+        public string[]? Redirect { get; set; }
 
         public class Propety
         {
-            [JsonProperty("type")]
+            [JsonPropertyName("type")]
             public string? Type { get; set; }
-            [JsonProperty("registry")]
+            [JsonPropertyName("registry")]
             public string? Registry { get; set; }
-            [JsonProperty("amount")]
+            [JsonPropertyName("amount")]
             public string? Amount { get; set; }
-            [JsonProperty("min")]
+            [JsonPropertyName("min")]
             public double? Min { get; set; }
-            [JsonProperty("max")]
+            [JsonPropertyName("max")]
             public double? Max { get; set; }
         }
 

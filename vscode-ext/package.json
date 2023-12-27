@@ -9,6 +9,7 @@
   "engines": {
     "vscode": "^1.8.0"
   },
+  "icon": "icons/jmc_icon.ico",
   "categories": [
     "Programming Languages",
     "Snippets"
@@ -33,8 +34,8 @@
         ],
         "configuration": "./language-configuration.json",
         "icon": {
-          "dark": "./images/jmc_icon.png",
-          "light": "./images/jmc_icon.png"
+          "dark": "./icons/jmc_icon.ico",
+          "light": "./icons/jmc_icon.ico"
         }
       },
       {
@@ -48,8 +49,8 @@
         ],
         "configuration": "./language-configuration.json",
         "icon": {
-          "dark": "./images/hjmc_icon.ico",
-          "light": "./images/hjmc_icon.ico"
+          "dark": "./icons/hjmc_icon.ico",
+          "light": "./icons/hjmc_icon.ico"
         }
       }
     ],

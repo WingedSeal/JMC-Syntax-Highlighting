@@ -270,7 +270,7 @@ namespace JMC.Parser.JMC
                     node.NodeType = JMCSyntaxNodeType.Colon;
                     return new(node, nextIndex);
                 case "=>":
-                    node.NodeType = JMCSyntaxNodeType.ArrowFunction;
+                    node.NodeType = JMCSyntaxNodeType.Arrow;
                     return new(node, nextIndex);
                 #endregion
 

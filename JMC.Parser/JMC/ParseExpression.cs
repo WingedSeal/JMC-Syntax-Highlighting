@@ -19,7 +19,7 @@ namespace JMC.Parser.JMC
         /// </summary>
         /// <param name="index"></param>
         /// <returns></returns>
-        private JMCParseResult ParseBlock(int index)
+        internal JMCParseResult ParseBlock(int index)
         {
             var node = new JMCSyntaxNode();
             var next = new List<JMCSyntaxNode>();
@@ -482,10 +482,13 @@ namespace JMC.Parser.JMC
                 //TODO: not fully supported
                 JMCSyntaxNodeType? expectedType = default;
                 bool match = false;
-                switch (targetArg.ArgumentType)
+                var argString = targetArg.ArgumentType;
+                var jString = string.Empty;
+                JMCSyntaxNode? syntaxNode = null;
+                switch (argString)
                 {
                     case "String":
-                        var success = query.ExpectOr(out var syntaxNode, JMCSyntaxNodeType.String, JMCSyntaxNodeType.MultilineString);
+                        var success = query.ExpectOr(out syntaxNode, JMCSyntaxNodeType.String, JMCSyntaxNodeType.MultilineString);
                         expectedType = syntaxNode?.NodeType;
                         match = success;
                         break;
@@ -505,15 +508,56 @@ namespace JMC.Parser.JMC
                         match = query.ExpectOr(out syntaxNode, JMCSyntaxNodeType.True, JMCSyntaxNodeType.False);
                         expectedType = match ? syntaxNode?.NodeType : null;
                         break;
+                    case "JSObject":
+                    case "JSON":
+                        match = query.ExpectJSON(out jString);
+                        expectedType = match ? JMCSyntaxNodeType.Json : null;
+                        break;
+                    case "FunctionName":
                     case "Keyword":
                     case "Objective":
                         match = query.Expect(JMCSyntaxNodeType.Literal, out _);
                         expectedType = match ? JMCSyntaxNodeType.Literal : null;
                         break;
+                    case "ArrowFunction":
+                        match = query.ExpectArrowFunction(out syntaxNode);
+                        expectedType = match ? JMCSyntaxNodeType.ArrowFunction : null;
+                        break;
+                    case "Function":
+                        if (TrimmedText[index].StartsWith('('))
+                        {
+                            match = query.ExpectArrowFunction(out syntaxNode);
+                            expectedType = match ? JMCSyntaxNodeType.ArrowFunction : null;
+                        }
+                        else
+                        {
+                            match = query.Expect(JMCSyntaxNodeType.Literal, out _);
+                            expectedType = match ? JMCSyntaxNodeType.Literal : null;
+                        }
+                        break;
                     default:
+                        if (argString.StartsWith("List"))
+                        {
+                            match = query.Expect(JMCSyntaxNodeType.List, out _);
+                            expectedType = match ? JMCSyntaxNodeType.List : null;
+                        }
                         break;
                 }
-                if (match && expectedType != default)
+                JMCSyntaxNodeType[] specialTypes = [JMCSyntaxNodeType.Json, JMCSyntaxNodeType.List];
+                //add node
+                if (match && expectedType != default && specialTypes.Contains((JMCSyntaxNodeType)expectedType!))
+                {
+                    var isArrowFunc = expectedType == JMCSyntaxNodeType.ArrowFunction;
+                    var r = new JMCSyntaxNode
+                    {
+                        NodeType = (JMCSyntaxNodeType)expectedType,
+                        Range = new(GetIndexStartPos(index), GetIndexEndPos(query.Index)),
+                        Value = jString,
+                        Next = isArrowFunc ? syntaxNode?.Next : null
+                    };
+                    next.Add(r);
+                }
+                else if (match && expectedType != default)
                 {
                     index = query.Index;
                     var r = Parse(index);

@@ -87,7 +87,7 @@
         UUID,
         Command,
         Parameter,
-        ArrowFunction,
+        Arrow,
         CompAnd,
         Condition,
         If,
@@ -98,5 +98,8 @@
         Case,
         OpRemainderEqual,
         OpRemainder,
+        Json,
+        List,
+        ArrowFunction,
     }
 }
