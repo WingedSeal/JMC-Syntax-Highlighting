@@ -1,8 +1,6 @@
 using JMC.Shared.Datas.BuiltIn;
 using JMC.Shared.Datas.Minecraft;
 using JMC.Shared.Datas.Minecraft.Command;
-using OmniSharp.Extensions.LanguageServer.Protocol.Models;
-using System.Text;
 using System.Text.Json;
 
 namespace JMC.Shared

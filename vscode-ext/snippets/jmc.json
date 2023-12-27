@@ -1,0 +1,7 @@
+{
+  "Function": {
+    "prefix": ["function (regular)"],
+    "body": ["function ${1:FUNCNAME}() {\n${2}\n}"],
+    "description": "A regular function"
+  }
+}

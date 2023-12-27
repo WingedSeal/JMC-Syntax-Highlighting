@@ -156,6 +156,7 @@ namespace JMC.Extension.Server
         private static void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
         {
             var expString = e.ExceptionObject.ToString();
+            Server.ShowError(expString);
             Log.Fatal(expString);
             Console.WriteLine(expString);
         }

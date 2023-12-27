@@ -9,7 +9,7 @@ namespace JMC.Shared
         public string Version { get; set; } = "1_20_1";
         public JMCDatabase()
         {
-            string path = Path.Combine(Environment.CurrentDirectory, "jmc.db");
+            string path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "jmc.db");
             using var rs = Assembly.GetExecutingAssembly().GetManifestResourceStream("JMC.Shared.Resource.jmc.db") ??
                 throw new NotImplementedException();
             using var fs = File.OpenWrite(path);

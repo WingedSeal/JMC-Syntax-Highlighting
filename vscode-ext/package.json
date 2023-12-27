@@ -69,7 +69,7 @@
     "snippets": [
       {
         "language": "jmc",
-        "path": "./snippets/snippets.json"
+        "path": "./snippets/jmc.json"
       }
     ],
     "configurationDefaults": {
