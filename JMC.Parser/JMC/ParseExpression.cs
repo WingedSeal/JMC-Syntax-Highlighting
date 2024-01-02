@@ -535,9 +535,16 @@ namespace JMC.Parser.JMC
                             expectedType = match ? JMCSyntaxNodeType.Literal : null;
                         }
                         break;
+                    case "TargetSelector":
+                    case "Scoreboard":
+                    case "ScoreboardInteger":
+                    case "Criteria":
+                    case "Item":
+                        break;
                     default:
                         if (argString.StartsWith("List"))
                         {
+                            //TODO Not implemented
                             match = query.Expect(JMCSyntaxNodeType.List, out _);
                             expectedType = match ? JMCSyntaxNodeType.List : null;
                         }

@@ -18,6 +18,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="NJsonSchema" Version="10.9.0" />
     <PackageReference Include="OmniSharp.Extensions.LanguageProtocol" Version="0.19.7" />
     <PackageReference Include="OmniSharp.Extensions.LanguageProtocol.Proposals" Version="0.19.7" />
     <PackageReference Include="OmniSharp.Extensions.LanguageServer" Version="0.19.7" />

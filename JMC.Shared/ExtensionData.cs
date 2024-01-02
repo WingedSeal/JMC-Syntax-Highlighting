@@ -40,7 +40,7 @@ namespace JMC.Shared
             Database.Version = ModifiedVersion;
 
             CommandTree = new(GetCommandNodes());
-            ScoreboardCriterions = new(GetCustomStatistics());
+            ScoreboardCriterions = new(GetCustomStatistics().Concat(["minecraft:dummy", "minecraft:trigger", "minecraft:deathCount", "minecraft:playerKillCount", "minecraft:totalKillCount", "minecraft:health", "minecraft:xp", "minecraft:level", "minecraft:food", "minecraft:air", "minecraft:armor"]));
         }
 
         /// <summary>
@@ -53,9 +53,6 @@ namespace JMC.Shared
 
             var root = JsonSerializer.Deserialize<Dictionary<string, object>>(jsonText) ?? throw new NotImplementedException();
             var values = root.Keys.ToList();
-            string[] str = ["dummy", "trigger", "deathCount", "playerKillCount", "totalKillCount", "health", "xp", "level", "food", "air", "armor"];
-            str = str.Select(v => $"minecraft:{v}").ToArray();
-            values.AddRange(str);
             return values ?? throw new NotImplementedException(); ;
         }
 

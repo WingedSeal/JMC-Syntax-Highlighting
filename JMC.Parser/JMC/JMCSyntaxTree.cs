@@ -1,5 +1,8 @@
-﻿using JMC.Parser.JMC.Error.Base;
+﻿using JMC.Parser.JMC.Error;
+using JMC.Parser.JMC.Error.Base;
 using JMC.Parser.JMC.Types;
+using Newtonsoft.Json;
+using NJsonSchema;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 using System.Runtime.InteropServices;
 
@@ -18,6 +21,11 @@ namespace JMC.Parser.JMC
         public List<JMCBaseError> Errors { get; set; } = [];
         public CancellationTokenSource CancellationSource { get; private set; } = new();
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="text"></param>
+        /// <returns></returns>
         public async Task<JMCSyntaxTree> InitializeAsync(string text)
         {
             Errors.Clear();
@@ -104,13 +112,11 @@ namespace JMC.Parser.JMC
 
             return -1;
         }
-
         /// <summary>
         /// 
         /// </summary>
         /// <returns></returns>
         public async Task InitAsync() => await ParseNextAsync(SkipToValue(0), CancellationSource.Token);
-
         /// <summary>
         /// print a tree view
         /// </summary>
@@ -120,7 +126,6 @@ namespace JMC.Parser.JMC
         /// </summary>
         /// <returns></returns>
         public IEnumerable<JMCSyntaxNode> GetFlattenNodes() => Nodes.SelectMany(v => v.ToFlattenNodes());
-
         /// <summary>
         /// parse next expression
         /// </summary>
@@ -140,7 +145,6 @@ namespace JMC.Parser.JMC
             if (index < TrimmedText.Length - 1)
                 await ParseNextAsync(index, token);
         }
-
         /// <summary>
         /// Parse a text
         /// </summary>
@@ -170,6 +174,8 @@ namespace JMC.Parser.JMC
                     return noNext ? new(node, index) : ParseFunction(index);
                 case "import":
                     return noNext ? new(node, index) : ParseImport(index);
+                case "new":
+                    return noNext ? new(node, index) : ParseNew(index);
                 case "true":
                     node.NodeType = JMCSyntaxNodeType.True;
                     return new(node, nextIndex);
@@ -315,61 +321,6 @@ namespace JMC.Parser.JMC
 
             return new(null, nextIndex);
         }
-
-        /// <summary>
-        /// parse a class expression
-        /// </summary>
-        /// <remarks>
-        /// literal '{' function* '}'
-        /// </remarks>
-        /// <param name="index"></param>
-        /// <returns></returns>
-        private JMCParseResult ParseClass(int index)
-        {
-            var node = new JMCSyntaxNode();
-            var next = new List<JMCSyntaxNode>();
-
-            //check for `literal '{'`
-            var query = this.AsParseQuery(index);
-            var match = query.ExpectList(out _, true, JMCSyntaxNodeType.Literal, JMCSyntaxNodeType.LCP);
-
-            //get Key
-            var literal = TrimmedText[NextIndex(index)];
-
-            //get start pos
-            index = SkipToValue(query.Index);
-            var start = GetIndexStartPos(index);
-
-            //parse functions
-            query.Reset(this, index);
-            while (index < TrimmedText.Length && match)
-            {
-                var funcTest = query.Next().Expect("function", out _, false);
-                if (funcTest)
-                {
-                    var result = ParseFunction(query.Index);
-                    if (result.Node != null) next.Add(result.Node);
-                    index = result.EndIndex;
-                    query.Reset(this, index);
-                }
-                else
-                {
-                    index = NextIndex(index);
-                    if (TrimmedText[index] == "}") break;
-                    query.Reset(this, index);
-                }
-            }
-            var end = GetIndexStartPos(index);
-
-            //set next
-            node.NodeType = JMCSyntaxNodeType.Class;
-            node.Next = next.Count != 0 ? next : null;
-            node.Range = new Range(start, end);
-            node.Value = literal;
-
-            return new(node, index);
-        }
-
         /// <summary>
         /// parse a import expression
         /// </summary>
@@ -399,7 +350,68 @@ namespace JMC.Parser.JMC
 
             return new(node, index);
         }
+        /// <summary>
+        /// parse a class expression
+        /// </summary>
+        /// <remarks>
+        /// literal '{' function* '}'
+        /// </remarks>
+        /// <param name="index"></param>
+        /// <returns></returns>
+        private JMCParseResult ParseClass(int index)
+        {
+            var node = new JMCSyntaxNode();
+            var next = new List<JMCSyntaxNode>();
 
+            //check for `literal '{'`
+            var query = this.AsParseQuery(index);
+            var match = query.ExpectList(out _, true, JMCSyntaxNodeType.Literal, JMCSyntaxNodeType.LCP);
+
+            //get Key
+            var literal = TrimmedText[NextIndex(index)];
+
+            //get start pos
+            index = SkipToValue(query.Index);
+            var start = GetIndexStartPos(index);
+
+            //parse functions
+            query.Reset(this, index);
+            while (index < TrimmedText.Length && match)
+            {
+                query.Next();
+                var funcTest = query.Expect("function", out _, false);
+                var newTest = query.Expect("new", out _, false);
+                if (funcTest)
+                {
+                    var result = ParseFunction(query.Index);
+                    if (result.Node != null) next.Add(result.Node);
+                    index = result.EndIndex;
+                    query.Reset(this, index);
+                }
+                else if (newTest)
+                {
+                    var result = ParseNew(query.Index);
+                    if (result.Node != null) next.Add(result.Node);
+                    index = result.EndIndex;
+                    query.Reset(this, index);
+                }
+                else
+                {
+                    index = NextIndex(index);
+                    if (TrimmedText[index] == "}") break;
+                    query.Reset(this, index);
+                }
+            }
+            var end = GetIndexStartPos(index);
+
+            //set next
+            node.NodeType = JMCSyntaxNodeType.Class;
+            node.Next = next.Count != 0 ? next : null;
+            node.Range = new Range(start, end);
+            node.Value = literal;
+
+            return new(node, index);
+        }
         /// <summary>
         /// parse a function expression
         /// </summary>
@@ -443,7 +455,64 @@ namespace JMC.Parser.JMC
 
             return new(node, index);
         }
+        private JMCParseResult ParseNew(int index)
+        {
+            var node = new JMCSyntaxNode();
+            var next = new List<JMCSyntaxNode>();
+            var query = this.AsParseQuery(index);
 
+            var start = GetIndexStartPos(index);
+            var match = query.ExpectList(out var list, true, JMCSyntaxNodeType.Literal, JMCSyntaxNodeType.LParen, JMCSyntaxNodeType.Literal, JMCSyntaxNodeType.RParen, JMCSyntaxNodeType.LCP);
+            index = NextIndex(query.Index);
+            if (match && list != null)
+            {
+                //check file type
+                var lvalue = list.First().Value ?? string.Empty;
+                var isValidType = JSONFileTypes.Contains(lvalue);
+                if (!isValidType)
+                    Errors.Add(new JMCSyntaxError(GetRangeByIndex(index), "Unexpected File Type"));
+
+                //read json
+                var arr = TrimmedText.AsSpan(index);
+                var tempString = "{";
+                var counter = 1;
+                for (var i = 0; i < arr.Length; i++)
+                {
+                    ref var s = ref arr[i];
+                    tempString += s;
+                    counter += s switch
+                    {
+                        "{" => 1,
+                        "}" => -1,
+                        _ => 0
+                    };
+                    if (counter == 0) break;
+                }
+
+                //check json
+                var jsonSchema = @"https://json.schemastore.org/minecraft-advancement.json";
+                var schema = JsonSchema.FromUrlAsync(jsonSchema).Result ?? null;
+                if (tempString.Length < 3)
+                {
+                    Errors.Add(new JMCSyntaxError(GetRangeByIndex(index), "JSON must not be empty"));
+                }
+                else if (schema != null)
+                {
+                    //TODO
+                }
+                else
+                {
+                    //TODO add errror
+                }
+            }
+            var end = GetIndexStartPos(index);
+
+            node.NodeType = JMCSyntaxNodeType.New;
+            node.Next = next.Count != 0 ? next : null;
+            node.Range = new Range(start, end);
+
+            return new(node, index);
+        }
         /// <summary>
         /// Get the <seealso cref="Range"/> of a <seealso cref="string"/> in <seealso cref="TrimmedText"/> by index
         /// </summary>
@@ -455,7 +524,6 @@ namespace JMC.Parser.JMC
             var end = GetIndexEndPos(index, isError);
             return new Range(start, end);
         }
-
         /// <summary>
         /// Get the <seealso cref="Position"/> of a <seealso cref="string"/> in <seealso cref="TrimmedText"/>'s end pos
         /// </summary>
@@ -468,8 +536,6 @@ namespace JMC.Parser.JMC
             var posOffset = offset + TrimmedText[index].Length - errorOffset;
             return posOffset.ToPosition(RawText);
         }
-
-
         /// <summary>
         /// Skip to a non-space index
         /// </summary>
@@ -505,19 +571,21 @@ namespace JMC.Parser.JMC
 
             return nextIndex;
         }
-
         /// <inheritdoc cref="SkipToValue(int, out int)"/>
         internal int SkipToValue(int index) => SkipToValue(index, out _);
-
         /// <summary>
         /// Get next non-space character index
         /// </summary>
         /// <param name="index"></param>
         /// <returns></returns>
         internal int NextIndex(int index) => SkipToValue(index + 1);
-
+        /// <summary>
+        /// Get next index with error code
+        /// </summary>
+        /// <param name="index"></param>
+        /// <param name="errorCode"></param>
+        /// <returns></returns>
         internal int NextIndex(int index, out int errorCode) => SkipToValue(index + 1, out errorCode);
-
         /// <summary>
         /// index of <seealso cref="TrimmedText"/> to offset
         /// </summary>
@@ -536,7 +604,6 @@ namespace JMC.Parser.JMC
 
             return offset;
         }
-
         /// <summary>
         /// <seealso cref="Position"/> to <seealso cref="int"/>
         /// </summary>
@@ -559,7 +626,6 @@ namespace JMC.Parser.JMC
 
             return offset;
         }
-
         /// <summary>
         /// Get the start <seealso cref="Position"/> by index of the <seealso cref="TrimmedText"/>
         /// </summary>

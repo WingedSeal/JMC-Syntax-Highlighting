@@ -68,6 +68,10 @@ function logic.loops() {
 	}
 }
 
+new advancements(asd.ghdi) {
+	"asdw": {}
+}
+
 function gTest() {
 	$test = 4;
 }

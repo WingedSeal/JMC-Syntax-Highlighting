@@ -101,5 +101,6 @@
         Json,
         List,
         ArrowFunction,
+        New,
     }
 }

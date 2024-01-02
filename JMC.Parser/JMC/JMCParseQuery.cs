@@ -21,9 +21,7 @@ namespace JMC.Parser.JMC
             return this;
         }
         private string CurrentText => SyntaxTree.TrimmedText[Index];
-
         private JMCSyntaxNode? GetCurrentNode() => SyntaxTree.Parse(Index, true).Node;
-
         public bool Expect(JMCSyntaxNodeType syntaxNodeType, out JMCSyntaxNode? syntaxNode, bool throwError = true)
         {
             syntaxNode = null;
@@ -272,13 +270,11 @@ namespace JMC.Parser.JMC
                 return false;
             }
         }
-
         public void Reset(JMCSyntaxTree syntaxTree, int startIndex = 0)
         {
             SyntaxTree = syntaxTree;
             Index = startIndex;
         }
-
         public void Reset(int startIndex = 0) => Index = startIndex;
     }
 }

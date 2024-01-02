@@ -16,6 +16,7 @@ namespace JMC
             Console.WriteLine($"Time escalped: {sw.ElapsedMilliseconds}ms");
             return 1;
         }
+
         static void LexerDebug()
         {
             var content = File.ReadAllText("test/workspace/main.jmc");

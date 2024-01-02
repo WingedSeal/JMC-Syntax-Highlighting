@@ -51,14 +51,14 @@ namespace JMC.Parser.JMC
             JMCSyntaxNodeType.LessThanEqual,
         ];
 
-        private readonly ImmutableArray<JMCSyntaxNodeType> LogicOperatorTokens = [
+        private static readonly ImmutableArray<JMCSyntaxNodeType> LogicOperatorTokens = [
             JMCSyntaxNodeType.CompOr,
             JMCSyntaxNodeType.CompAnd,
             JMCSyntaxNodeType.CompNot,
             JMCSyntaxNodeType.LParen,
         ];
 
-        private readonly ImmutableArray<JMCSyntaxNodeType> LogicTokens = [
+        private static readonly ImmutableArray<JMCSyntaxNodeType> LogicTokens = [
             JMCSyntaxNodeType.CompOr,
             JMCSyntaxNodeType.CompAnd,
             JMCSyntaxNodeType.CompNot,
@@ -68,6 +68,10 @@ namespace JMC.Parser.JMC
             JMCSyntaxNodeType.GreaterThanEqual,
             JMCSyntaxNodeType.LessThan,
             JMCSyntaxNodeType.LessThanEqual,
+        ];
+
+        private static readonly ImmutableArray<string> JSONFileTypes = [
+            "advancements", "item_modifiers", "loot_tables", "tags", "recipes", "dimensions", "dimension_types", "predicates"
         ];
 
         private static readonly RegexOptions _regexOptions = RegexOptions.Compiled;
