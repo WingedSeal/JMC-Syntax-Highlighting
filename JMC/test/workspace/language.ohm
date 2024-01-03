@@ -1,0 +1,122 @@
+JSON {
+  JsonStart = Value
+
+  Value =
+    Object
+    | Array
+    | String
+    | Number
+    | True
+    | False
+    | Null
+
+  Object =
+    "{" "}" -- empty
+    | "{" Pair ("," Pair)* "}" -- nonEmpty
+
+  Pair =
+    String ":" Value
+
+  Array =
+    "[" "]" -- empty
+    | "[" Value ("," Value)* "]" -- nonEmpty
+
+  String (String) =
+    stringLiteral
+
+  stringLiteral =
+    "\"" doubleStringCharacter* "\""
+
+  doubleStringCharacter (character) =
+    ~("\"" | "\\") any -- nonEscaped
+    | "\\" escapeSequence -- escaped
+
+  escapeSequence =
+    "\"" -- doubleQuote
+    | "\\" -- reverseSolidus
+    | "/" -- solidus
+    | "b" -- backspace
+    | "f" -- formfeed
+    | "n" -- newline
+    | "r" -- carriageReturn
+    | "t" -- horizontalTab
+    | "u" fourHexDigits -- codePoint
+
+  fourHexDigits = hexDigit hexDigit hexDigit hexDigit
+
+  Number (Number) =
+    numberLiteral
+
+  numberLiteral =
+    decimal exponent -- withExponent
+    | decimal -- withoutExponent
+
+  decimal =
+    wholeNumber "." digit+ -- withFract
+    | wholeNumber -- withoutFract
+
+  wholeNumber =
+    "-" unsignedWholeNumber -- negative
+    | unsignedWholeNumber -- nonNegative
+
+  unsignedWholeNumber =
+    "0" -- zero
+    | nonZeroDigit digit* -- nonZero
+
+  nonZeroDigit = "1".."9"
+
+  exponent =
+    exponentMark ("+"|"-") digit+ -- signed
+    | exponentMark digit+ -- unsigned
+
+  exponentMark = "e" | "E"
+
+  True = "true"
+  False = "false"
+  Null = "null"
+}
+
+jmc <: JSON {
+    //expressions
+	TopLevels = Import | Variable | Comment | Function | Class | New | FunctionCall
+	Expr = Import | Variable | Comment | FunctionCall
+
+    //arthematic
+	ArithExp = Operation | NumOnly | ParenOperation
+    NumOnly = number
+    Operation = (Variable | number|ParenOperation) ops (Variable | number|ParenOperation)
+    ParenOperation = "(" ArithExp ")"
+    
+    //normal
+    Comment = ("//"|"#") (~"\n" any)*
+    Import = "import" whitespaces string whitespaces ";"
+    Variable = "$" literal ValueOperation
+    ScoreboardObj = literal:selector ValueOperation
+    ValueOperation = (whitespaces (eqops whitespaces (ArithExp|Variable) | ("++"|"--")) whitespaces ";")?
+    Function = "function" whitespaces literal "("whitespaces")" Block
+    
+    FunctionCall = literal whitespaces "("(Elements|NewJSON)")" whitespaces ("with" ~";" any)? ";"
+    Elements =DeclarativeElement | Element
+    Element = Parameter whitespaces ("," Elements whitespaces)?
+    DeclarativeElement = literal whitespaces "=" whitespaces Parameter whitespaces ("," Elements whitespaces)?
+    Parameter = literal
+
+    Class = "class" whitespaces literal whitespaces ((Function|New) whitespaces)*
+
+    New = "new" whitespaces literal whitespaces "("literal")" whitespaces NewJSON
+    NewJSON = JsonStart
+
+    Block = "{" Expr* "}"
+    
+    //consts
+    //TODO
+    selector = "@[parse]"
+    literal = (letter|"_"|".")+
+    eqops = (ops ~space)? "="
+    ops = "+" | "-" | "*" | "/" | "%"
+    number = int | float
+    int = digit+
+    float = digit* "." digit+
+    whitespaces = space*
+    string = "\"" (~"\"" any)* "\""
+}

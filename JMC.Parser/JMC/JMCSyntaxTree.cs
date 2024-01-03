@@ -1,7 +1,6 @@
 ﻿using JMC.Parser.JMC.Error;
 using JMC.Parser.JMC.Error.Base;
 using JMC.Parser.JMC.Types;
-using Newtonsoft.Json;
 using NJsonSchema;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 using System.Runtime.InteropServices;
@@ -304,7 +303,7 @@ namespace JMC.Parser.JMC
                     break;
             }
 
-            var result = TokenPatterns.FirstOrDefault(v => v.Value.IsMatch(value)).Key;
+            var result = ParseSpecialToken(value);
 
             if (isStart)
             {
@@ -320,6 +319,52 @@ namespace JMC.Parser.JMC
             }
 
             return new(null, nextIndex);
+        }
+        private static JMCSyntaxNodeType ParseSpecialToken(string text)
+        {
+            if ((text.StartsWith("//") || text.StartsWith('#')) && !text.Contains(Environment.NewLine))
+                return JMCSyntaxNodeType.Comment;
+            if (float.TryParse(text, out _))
+                return JMCSyntaxNodeType.Float;
+            if (int.TryParse(text, out _))
+                return JMCSyntaxNodeType.Int;
+            if (text == "~")
+                return JMCSyntaxNodeType.Tilde;
+            if (text == "^")
+                return JMCSyntaxNodeType.Caret;
+
+            //TODO: variable call matching
+
+            //selector matching
+            var selectorChars = "parse";
+            if (text.StartsWith('@') && selectorChars.Contains(text[1]))
+                return JMCSyntaxNodeType.Selector;
+
+            //variable matching
+            if (text.StartsWith('$'))
+            {
+                var vString = text[1..];
+                var isValid = vString.All(LiteralChars.Contains);
+                if (isValid)
+                    return JMCSyntaxNodeType.Variable;
+            }
+            
+            //string matching
+            var splitString = text.Split('"');
+            if (splitString.Length == 3 && !splitString.Contains(Environment.NewLine))
+                return JMCSyntaxNodeType.String;
+            splitString = text.Split('\'');
+            if (splitString.Length == 3 && !splitString.Contains(Environment.NewLine))
+                return JMCSyntaxNodeType.String;
+            if (text.StartsWith('`') && text.EndsWith('`'))
+                return JMCSyntaxNodeType.MultilineString;
+
+            if (text.All(LiteralChars.Contains))
+                return JMCSyntaxNodeType.Literal;
+
+            //literal matching
+
+            return default;
         }
         /// <summary>
         /// parse a import expression
