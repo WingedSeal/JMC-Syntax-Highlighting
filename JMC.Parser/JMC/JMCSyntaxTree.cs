@@ -298,6 +298,9 @@ namespace JMC.Parser.JMC
                 case "==":
                     node.NodeType = JMCSyntaxNodeType.Equal;
                     return new(node, nextIndex);
+                case ".":
+                    node.NodeType = JMCSyntaxNodeType.Dot;
+                    return new(node, nextIndex);
                 #endregion
                 default:
                     break;
@@ -318,22 +321,20 @@ namespace JMC.Parser.JMC
                 return new(node, nextIndex);
             }
 
-            return new(null, nextIndex);
+            return new(node, nextIndex);
         }
         private static JMCSyntaxNodeType ParseSpecialToken(string text)
         {
             if ((text.StartsWith("//") || text.StartsWith('#')) && !text.Contains(Environment.NewLine))
                 return JMCSyntaxNodeType.Comment;
-            if (float.TryParse(text, out _))
-                return JMCSyntaxNodeType.Float;
             if (int.TryParse(text, out _))
                 return JMCSyntaxNodeType.Int;
+            if (float.TryParse(text, out _))
+                return JMCSyntaxNodeType.Float;
             if (text == "~")
                 return JMCSyntaxNodeType.Tilde;
             if (text == "^")
                 return JMCSyntaxNodeType.Caret;
-
-            //TODO: variable call matching
 
             //selector matching
             var selectorChars = "parse";
@@ -344,7 +345,7 @@ namespace JMC.Parser.JMC
             if (text.StartsWith('$'))
             {
                 var vString = text[1..];
-                var isValid = vString.All(LiteralChars.Contains);
+                var isValid = vString.All(LiteralChars[..(LiteralChars.Length - 1)].Contains);
                 if (isValid)
                     return JMCSyntaxNodeType.Variable;
             }

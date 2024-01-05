@@ -102,5 +102,6 @@
         List,
         ArrowFunction,
         New,
+        Dot,
     }
 }

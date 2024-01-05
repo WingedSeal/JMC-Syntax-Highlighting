@@ -175,33 +175,56 @@ namespace JMC.Parser.JMC
             var node = new JMCSyntaxNode();
             var next = new List<JMCSyntaxNode>();
             var value = TrimmedText[index];
+
             //start position
             var startOffset = ToOffset(index);
             var startPos = GetIndexStartPos(index);
-            //parse assignment
-            var result = ParseAssignmentExpression(NextIndex(index));
-            if (result.Node?.Next != null)
-                next.AddRange(result.Node.Next);
-            index = result.EndIndex;
+            if (TrimmedText[NextIndex(index)] != ".")
+            {
+                //parse assignment
+                var result = ParseAssignmentExpression(NextIndex(index));
+                if (result.Node?.Next != null)
+                    next.AddRange(result.Node.Next);
+                index = result.EndIndex;
 
-            //check for semi
-            if (!isOp && !isRecursion)
+                //check for semi
+                if (!isOp && !isRecursion)
+                {
+                    var query = this.AsParseQuery(index);
+                    if (!isForLoop)
+                        query.Expect(JMCSyntaxNodeType.Semi, out _);
+                    else
+                        query.Expect(JMCSyntaxNodeType.RParen, out _);
+                }
+                node.NodeType = JMCSyntaxNodeType.Variable;
+                node.Value = value;
+            }
+            else
             {
                 var query = this.AsParseQuery(index);
-                if (!isForLoop)
-                    query.Expect(JMCSyntaxNodeType.Semi, out _);
-                else
-                    query.Expect(JMCSyntaxNodeType.RParen, out _);
+                var match = query.ExpectList(out var list, true, JMCSyntaxNodeType.Dot, JMCSyntaxNodeType.Literal);
+                index = NextIndex(query.Index);
+                node.Value = value;
+                if (match && list != null)
+                {
+                    var funcValue = list[1]?.Value ?? string.Empty;
+                    var param = ParseParameters(NextIndex(index), funcValue);
+                    if (param.Node?.Next != null)
+                        next.AddRange(param.Node.Next);
+                    index = param.EndIndex;
+                    query.Reset(NextIndex(index));
+                    query.Expect(JMCSyntaxNodeType.Semi);
+                    index = query.Index;
+                    node.Value = $"{value}.{funcValue}";
+                }
+                node.NodeType = JMCSyntaxNodeType.VariableCall;
             }
-
             //end position
             var endPos = GetIndexStartPos(index);
 
             //set next
             node.Next = next.Count != 0 ? next : null;
             node.Range = new Range(startPos, endPos);
-            node.Value = value;
-            node.NodeType = JMCSyntaxNodeType.Variable;
             node.Offset = startOffset;
 
             return new(node, index);
@@ -356,8 +379,8 @@ namespace JMC.Parser.JMC
             //test for RPAREN
             index = param.EndIndex;
             var query = this.AsParseQuery(index);
-            query.Expect(JMCSyntaxNodeType.RParen, out _);
-            query.Next().Expect(JMCSyntaxNodeType.Semi, out _);
+            query.Expect(JMCSyntaxNodeType.RParen);
+            query.Next().Expect(JMCSyntaxNodeType.Semi);
             index = query.Index;
 
             //get end pos

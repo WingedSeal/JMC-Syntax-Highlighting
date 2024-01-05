@@ -1,6 +1,7 @@
 ﻿import "amogus"; 
 //top levels
 $var = 3;
+$var.get();
 obj:@s = 3;
 //funtions & classes
 function test.vars.bools() {
@@ -66,10 +67,6 @@ function logic.loops() {
 			$test = 4;
 			break;
 	}
-}
-
-new advancements(asd.ghdi) {
-	"asdw": {}
 }
 
 function gTest() {

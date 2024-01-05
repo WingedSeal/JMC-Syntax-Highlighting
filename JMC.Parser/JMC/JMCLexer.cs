@@ -103,6 +103,12 @@ namespace JMC.Parser.JMC
                     }
                     strs.Add(temp);
                 }
+                else if (tempString.StartsWith('$') && ch == '.')
+                {
+                    strs.Add(tempString);
+                    strs.Add(".");
+                    tempString = string.Empty;
+                }
                 else if (char.IsWhiteSpace(ch) || ValidChars.Contains(ch) || ValidOpChars.Contains(ch))
                 {
                     if (tempString != string.Empty)

@@ -87,7 +87,7 @@ namespace JMC.Parser.JMC
             if (query.ExpectOr(out var syntaxNode, [.. ConditionalOperatorTokens]))
             {
                 next.Add(syntaxNode!);
-                JMCSyntaxNodeType[] types = [JMCSyntaxNodeType.Number, JMCSyntaxNodeType.Variable, JMCSyntaxNodeType.Scoreboard];
+                JMCSyntaxNodeType[] types = [JMCSyntaxNodeType.Int, JMCSyntaxNodeType.Variable, JMCSyntaxNodeType.Scoreboard];
                 var match = query.Next().
                     ExpectOr(out syntaxNode, types);
 
@@ -312,7 +312,7 @@ namespace JMC.Parser.JMC
 
             //test for syntax
             var match =
-                query.ExpectList(out var syntaxNodes, true, JMCSyntaxNodeType.Number, JMCSyntaxNodeType.Colon);
+                query.ExpectList(out var syntaxNodes, true, JMCSyntaxNodeType.Int, JMCSyntaxNodeType.Colon);
 
             index = NextIndex(query.Index);
 
