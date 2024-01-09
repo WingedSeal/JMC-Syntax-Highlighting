@@ -1,9 +1,11 @@
 ﻿using JMC.Parser.JMC.Error;
 using JMC.Parser.JMC.Error.Base;
 using JMC.Parser.JMC.Types;
-using NJsonSchema;
+using JMC.Shared.Datas.Minecraft.Types;
+using Newtonsoft.Json.Linq;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 using System.Runtime.InteropServices;
+using System.Text.Json;
 
 namespace JMC.Parser.JMC
 {
@@ -80,37 +82,6 @@ namespace JMC.Parser.JMC
 
         /// <inheritdoc cref="ModifyFull(string)"/>
         public async Task ModifyFullAsync(string changedText) => await InitializeAsync(changedText);
-
-        /// <summary>
-        /// return index of <see cref="FlattenedNodes"/>
-        /// </summary>
-        /// <param name="pos"></param>
-        /// <returns>-1 if not found</returns>
-        public int GetIndexByRange(Position pos)
-        {
-            var node = FlattenedNodes.First(v => v.Range != null && v.Range.Contains(pos));
-            return Array.IndexOf(FlattenedNodes, node);
-        }
-
-        /// <summary>
-        /// offset of text to <seealso cref="TrimmedText"/> Index
-        /// </summary>
-        /// <param name="offset"></param>
-        /// <returns></returns>
-        private int ToIndex(int offset)
-        {
-            var current = 0;
-
-            var arr = SplitText.AsSpan();
-            for (var i = 0; i < arr.Length; i++)
-            {
-                ref var text = ref arr[i];
-                current += text.Length;
-                if (current + text.Length > offset + 1) return i;
-            }
-
-            return -1;
-        }
         /// <summary>
         /// 
         /// </summary>
@@ -535,21 +506,33 @@ namespace JMC.Parser.JMC
                     if (counter == 0) break;
                 }
 
-                //check json
-                var jsonSchema = @"https://json.schemastore.org/minecraft-advancement.json";
-                var schema = JsonSchema.FromUrlAsync(jsonSchema).Result ?? null;
-                if (tempString.Length < 3)
+                JsonException? jsonException = null;
+                Type? type = null;
+
+                switch (lvalue)
                 {
-                    Errors.Add(new JMCSyntaxError(GetRangeByIndex(index), "JSON must not be empty"));
+                    case "advancements":
+                        jsonException = Advancement.Validate(tempString);
+                        type = typeof(Advancement);
+                        break;
+                    default:
+                        break;
                 }
-                else if (schema != null)
-                {
-                    //TODO
-                }
-                else
-                {
-                    //TODO add errror
-                }
+
+                var cp = GetIndexStartPos(index - 1);
+
+                //Newtonsoft.Json.IJsonLineInfo lineInfo = current;
+                //var keys = current.GetKeys();
+                //for (var i = 0; i < keys.Length; i++)
+                //{
+
+                //}
+
+                //var token = JToken.Parse(tempString);
+                //var lineInfo = token as Newtonsoft.Json.IJsonLineInfo;
+
+                //if (jsonException != null)
+                //    Errors.Add(new JMCJsonError(GetRangeByIndex(index), jsonException.Message));
             }
             var end = GetIndexStartPos(index);
 
@@ -678,5 +661,34 @@ namespace JMC.Parser.JMC
         /// <param name="index"></param>
         /// <returns></returns>
         internal Position GetIndexStartPos(int index) => ToOffset(index).ToPosition(RawText);
+        /// <summary>
+        /// return index of <see cref="FlattenedNodes"/>
+        /// </summary>
+        /// <param name="pos"></param>
+        /// <returns>-1 if not found</returns>
+        public int GetIndexByRange(Position pos)
+        {
+            var node = FlattenedNodes.First(v => v.Range != null && v.Range.Contains(pos));
+            return Array.IndexOf(FlattenedNodes, node);
+        }
+        /// <summary>
+        /// offset of text to <seealso cref="TrimmedText"/> Index
+        /// </summary>
+        /// <param name="offset"></param>
+        /// <returns></returns>
+        private int ToIndex(int offset)
+        {
+            var current = 0;
+
+            var arr = SplitText.AsSpan();
+            for (var i = 0; i < arr.Length; i++)
+            {
+                ref var text = ref arr[i];
+                current += text.Length;
+                if (current + text.Length > offset + 1) return i;
+            }
+
+            return -1;
+        }
     }
 }

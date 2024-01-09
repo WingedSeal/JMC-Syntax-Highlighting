@@ -8,6 +8,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="JsonRocket" Version="1.0.24" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\JMC.Shared\JMC.Shared.csproj" />
   </ItemGroup>
 

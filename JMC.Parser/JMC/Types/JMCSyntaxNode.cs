@@ -41,6 +41,9 @@
                     Next.ElementAt(i).PrintPretty(indent, i == Next.Count() - 1);
         }
 
+        public bool IsEmpty() => Range == null && Value == string.Empty;
+        
+
         /// <summary>
         /// 
         /// </summary>

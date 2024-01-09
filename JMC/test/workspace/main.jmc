@@ -69,6 +69,8 @@ function logic.loops() {
 	}
 }
 
+new advancements(test) {"display":{"test":[],"string":[}}
+
 function gTest() {
 	$test = 4;
 }
