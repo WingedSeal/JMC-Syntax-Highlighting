@@ -64,9 +64,9 @@ namespace JMC.Extension.Server
                                     provider =>
                                     {
                                         var loggerFactory = provider.GetService<ILoggerFactory>();
-                                        var logger = loggerFactory.CreateLogger<LSPLogger>();
+                                        var logger = loggerFactory?.CreateLogger<LSPLogger>();
 
-                                        logger.LogInformation("logger set up done");
+                                        logger?.LogInformation("logger set up done");
 
                                         return new LSPLogger(logger);
                                     }
@@ -156,9 +156,9 @@ namespace JMC.Extension.Server
         private static void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
         {
             var expString = e.ExceptionObject.ToString();
-            Server.ShowError(expString);
-            Log.Fatal(expString);
-            Console.WriteLine(expString);
+            Server.ShowError(expString ?? "Empty Error Message");
+            Log.Fatal(expString ?? "Empty Error Message");
+            Console.WriteLine(expString ?? "Empty Error Message");
         }
     }
 }

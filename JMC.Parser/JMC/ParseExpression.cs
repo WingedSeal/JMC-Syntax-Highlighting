@@ -38,7 +38,7 @@ namespace JMC.Parser.JMC
                     //check if index needs to move
                     var stackTrace = new StackTrace();
                     var frames = stackTrace.GetFrames();
-                    var funcCount = frames.Where(v => v.GetMethod().Name == nameof(ParseBlock)).Count() - 1;
+                    var funcCount = frames.Where(v => v.GetMethod()?.Name == nameof(ParseBlock)).Count() - 1;
 
                     if (funcCount > 0)
                     {
