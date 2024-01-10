@@ -24,16 +24,16 @@ namespace JMC.Parser.JMC
             var node = new SyntaxNode();
             var next = new List<SyntaxNode>();
 
-            var start = GetIndexStartPos(index);
+            var startPos = GetIndexStartPos(index);
 
             var errorCode = 0;
             while (index < TrimmedText.Length && errorCode == 0)
             {
-                var exp = ParseExpression(NextIndex(index, out var blockError));
-                if (exp.Node != null) next.Add(exp.Node);
-                index = exp.EndIndex;
+                var epxressionParseResult = ParseExpression(NextIndex(index, out var blockError));
+                if (epxressionParseResult.Node != null) next.Add(epxressionParseResult.Node);
+                index = epxressionParseResult.EndIndex;
                 if (TrimmedText[index] == "}" &&
-                    !ParseBlockSpecialCases.Contains(exp.Node?.NodeType))
+                    !ParseBlockSpecialCases.Contains(epxressionParseResult.Node?.NodeType))
                 {
                     //check if index needs to move
                     var stackTrace = new StackTrace();
@@ -71,7 +71,7 @@ namespace JMC.Parser.JMC
 
             //set next
             node.Next = next.Count == 0 ? null : next;
-            node.Range = new(start, end);
+            node.Range = new(startPos, end);
             node.NodeType = SyntaxNodeType.Block;
 
             return new(node, index);
@@ -86,8 +86,8 @@ namespace JMC.Parser.JMC
         {
             var node = new SyntaxNode();
 
-            var text = TrimmedText[index];
-            ParseResult? result = text switch
+            var currentText = TrimmedText[index];
+            ParseResult? result = currentText switch
             {
                 "do" => ParseDo(NextIndex(index)),
                 "while" => ParseWhile(NextIndex(index)),
@@ -103,7 +103,7 @@ namespace JMC.Parser.JMC
             if (currentExpression.Node == null)
                 return new(null, index);
 
-            if (ExtensionData.CommandTree.RootCommands.Contains(text))
+            if (ExtensionData.CommandTree.RootCommands.Contains(currentText))
             {
                 var commandExpressionResult = ParseCommandExpression(index);
                 if (commandExpressionResult?.Node != null)
