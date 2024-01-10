@@ -4,43 +4,43 @@ using JMC.Parser.JMC.Types;
 
 namespace JMC.Parser.JMC
 {
-    internal partial class JMCSyntaxTree
+    internal partial class SyntaxTree
     {
         /// <summary>
         /// Parse a command
         /// </summary>
         /// <param name="index"></param>
         /// <returns></returns>
-        private JMCParseResult ParseCommandExpression(int index)
+        private ParseResult ParseCommandExpression(int index)
         {
-            var node = new JMCSyntaxNode();
-            var next = new List<JMCSyntaxNode>();
-            var exp = "";
+            var node = new SyntaxNode();
+            var next = new List<SyntaxNode>();
+            var comamndString = "";
             var startOffset = ToOffset(index);
             while (TrimmedText[index] != ";")
             {
-                exp += SplitText[index];
+                comamndString += SplitText[index];
                 index++;
             }
-            var parser = new CommandParser(exp, startOffset, RawText);
+            var parser = new CommandParser(comamndString, startOffset, RawText);
             var result = parser.ParseCommand();
             next.AddRange(result);
             Errors.AddRange(parser.Errors.Select(v =>
                 {
-                    var start = (v.Key + startOffset).ToPosition(RawText);
-                    var end = (v.Key + startOffset + RawText.Length).ToPosition(RawText);
-                    var error = new JMCSyntaxError(new(start, end), v.Value);
+                    var startPos = (v.Key + startOffset).ToPosition(RawText);
+                    var endPos = (v.Key + startOffset + RawText.Length).ToPosition(RawText);
+                    var error = new JMCSyntaxError(new(startPos, endPos), v.Value);
                     return error;
                 }
             ));
 
-            var start = startOffset.ToPosition(RawText);
-            var end = GetIndexStartPos(index);
-            var range = new Range(start, end);
+            var startPos = startOffset.ToPosition(RawText);
+            var endPos = GetIndexStartPos(index);
+            var range = new Range(startPos, endPos);
             //set next
             node.Next = next.Count != 0 ? next : null;
             node.Range = range;
-            node.NodeType = JMCSyntaxNodeType.Command;
+            node.NodeType = SyntaxNodeType.Command;
 
             return new(node, index);
         }

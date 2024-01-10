@@ -2,10 +2,10 @@
 
 namespace JMC.Parser.JMC
 {
-    internal class JMCLexer(string text)
+    internal class Lexer(string text)
     {
         private static readonly ImmutableArray<char> ValidChars = [.. "(){}[],:;<>=!"];
-        private static readonly ImmutableArray<char> ValidOpChars = [.. "+-*/%"];
+        private static readonly ImmutableArray<char> ValidOperatorChars = [.. "+-*/%"];
         private static readonly ImmutableArray<string> ValidTwoChars = [
             "=>",
             "==",
@@ -43,83 +43,83 @@ namespace JMC.Parser.JMC
         }
         public IEnumerable<string> StartLexing()
         {
-            var tempString = string.Empty;
-            var strs = new List<string>();
-            var span = RawText.ToCharSpan();
-            for (; Index < span.Length; Index++)
+            var currentString = string.Empty;
+            var lexResult = new List<string>();
+            var rawTextCharSpan = RawText.ToCharSpan();
+            for (; Index < rawTextCharSpan.Length; Index++)
             {
-                ref var ch = ref span[Index];
-                var twoChars = new string(new char[] { ch, PeekChar });
-                var threeChars = new string(new char[] { ch, PeekChar, NextPeekChar });
+                ref var currentChar = ref rawTextCharSpan[Index];
+                var twoChars = new string(new char[] { currentChar, PeekChar });
+                var threeChars = new string(new char[] { currentChar, PeekChar, NextPeekChar });
                 if (threeChars == "??=")
                 {
-                    strs.Add(tempString);
-                    strs.Add(threeChars);
+                    lexResult.Add(currentString);
+                    lexResult.Add(threeChars);
                     Index += 2;
-                    tempString = string.Empty;
+                    currentString = string.Empty;
                 }
                 else if (ValidTwoChars.Contains(twoChars))
                 {
-                    strs.Add(tempString);
-                    strs.Add(twoChars);
+                    lexResult.Add(currentString);
+                    lexResult.Add(twoChars);
                     Index++;
-                    tempString = string.Empty;
+                    currentString = string.Empty;
                 }
                 else if (twoChars == "//")
                 {
                     var temp = string.Empty;
-                    for (; Index < span.Length; Index++)
+                    for (; Index < rawTextCharSpan.Length; Index++)
                     {
-                        ref var c = ref span[Index];
+                        ref var c = ref rawTextCharSpan[Index];
                         temp += c;
                         if (temp.EndsWith(Environment.NewLine)) break;
                     }
                     Index -= Environment.NewLine.Length;
                     var end = temp.Length - Environment.NewLine.Length;
                     temp = temp[..end];
-                    strs.Add(temp);
+                    lexResult.Add(temp);
                 }
-                else if (ch == '`')
+                else if (currentChar == '`')
                 {
                     var temp = "`";
                     Index++;
-                    for (; Index < span.Length; Index++)
+                    for (; Index < rawTextCharSpan.Length; Index++)
                     {
-                        ref var c = ref span[Index];
+                        ref var c = ref rawTextCharSpan[Index];
                         temp += c;
                         if (c == '`') break;
                     }
-                    strs.Add(temp);
+                    lexResult.Add(temp);
                 }
-                else if (ch == '"')
+                else if (currentChar == '"')
                 {
                     var temp = "\"";
                     Index++;
-                    for (; Index < span.Length; Index++)
+                    for (; Index < rawTextCharSpan.Length; Index++)
                     {
-                        ref var c = ref span[Index];
+                        ref var c = ref rawTextCharSpan[Index];
                         temp += c;
                         if (c == '"') break;
                     }
-                    strs.Add(temp);
+                    lexResult.Add(temp);
                 }
-                else if (tempString.StartsWith('$') && ch == '.')
+                else if (currentString.StartsWith('$') && currentChar == '.')
                 {
-                    strs.Add(tempString);
-                    strs.Add(".");
-                    tempString = string.Empty;
+                    lexResult.Add(currentString);
+                    lexResult.Add(".");
+                    currentString = string.Empty;
                 }
-                else if (char.IsWhiteSpace(ch) || ValidChars.Contains(ch) || ValidOpChars.Contains(ch))
+                else if (char.IsWhiteSpace(currentChar) || ValidChars.Contains(currentChar) || ValidOperatorChars.Contains(currentChar))
                 {
-                    if (tempString != string.Empty)
-                        strs.Add(tempString);
-                    strs.Add(ch.ToString());
-                    tempString = string.Empty;
+                    if (currentString != string.Empty)
+                        lexResult.Add(currentString);
+                    lexResult.Add(currentChar.ToString());
+                    currentString = string.Empty;
                 }
-                else tempString += ch;
+                else currentString += currentChar;
             }
 
-            return strs;
+            return lexResult;
         }
     }
 }

@@ -5,36 +5,36 @@ using System.Diagnostics;
 
 namespace JMC.Parser.JMC
 {
-    internal partial class JMCSyntaxTree
+    internal partial class SyntaxTree
     {
         /// <summary>
         /// 
         /// </summary>
         /// <param name="index"></param>
         /// <returns></returns>
-        private JMCParseResult ParseCondition(int index)
+        private ParseResult ParseCondition(int index)
         {
-            var node = new JMCSyntaxNode();
-            var next = new List<JMCSyntaxNode>();
+            var node = new SyntaxNode();
+            var next = new List<SyntaxNode>();
             var query = this.AsParseQuery(index);
-            var start = GetIndexStartPos(index);
+            var startPos = GetIndexStartPos(index);
 
             while (index < TrimmedText.Length)
             {
-                var isVar = query.Expect(JMCSyntaxNodeType.Variable, out var sn, false);
+                var isVariable = query.Expect(SyntaxNodeType.Variable, out var sn, false);
 
-                string[] commands = [.. ExtensionData.CommandTree.Nodes["execute"].Children!["if"].Children!.Keys];
-                var isCommand = commands.Contains(TrimmedText[index]);
+                string[] minecraftCommands = [.. ExtensionData.CommandTree.Nodes["execute"].Children!["if"].Children!.Keys];
+                var isCommand = minecraftCommands.Contains(TrimmedText[index]);
 
                 //parse variable
-                if (isVar)
+                if (isVariable)
                 {
                     next.Add(sn!);
                     index = NextIndex(index);
-                    var r = ParseVariableCondition(index);
-                    if (r.Node?.Next != null)
-                        next.AddRange(r.Node.Next);
-                    index = NextIndex(r.EndIndex);
+                    var variableCondition = ParseVariableCondition(index);
+                    if (variableCondition.Node?.Next != null)
+                        next.AddRange(variableCondition.Node.Next);
+                    index = NextIndex(variableCondition.EndIndex);
                 }
                 else if (isCommand)
                 {
@@ -43,31 +43,31 @@ namespace JMC.Parser.JMC
 
 
                 query.Reset(index);
-                if (!query.ExpectOr(out var syntaxNode, [.. LogicOperatorTokens]) ||
-                    syntaxNode?.NodeType == JMCSyntaxNodeType.RParen)
+                if (!query.ExpectOr(out var logicOperatorNode, [.. LogicOperatorTokens]) ||
+                    logicOperatorNode?.NodeType == SyntaxNodeType.ClosingParenthesis)
                     break;
-                else if (syntaxNode?.NodeType == JMCSyntaxNodeType.LParen)
+                else if (logicOperatorNode?.NodeType == SyntaxNodeType.OpeningParenthesis)
                 {
                     index = NextIndex(index);
-                    var r = ParseCondition(index);
-                    index = NextIndex(r.EndIndex);
-                    if (r.Node != null)
-                        next.Add(r.Node);
+                    var conditionParseResult = ParseCondition(index);
+                    index = NextIndex(conditionParseResult.EndIndex);
+                    if (conditionParseResult.Node != null)
+                        next.Add(conditionParseResult.Node);
                 }
                 else
                 {
-                    next.Add(syntaxNode!);
+                    next.Add(logicOperatorNode!);
                     query.Next();
                     index = NextIndex(index);
                 }
 
             }
 
-            var end = GetIndexEndPos(index);
+            var endPos = GetIndexEndPos(index);
 
             node.Next = next.Count == 0 ? null : next;
-            node.Range = new Range(start, end);
-            node.NodeType = JMCSyntaxNodeType.Condition;
+            node.Range = new Range(startPos, endPos);
+            node.NodeType = SyntaxNodeType.Condition;
 
             return new(node, index);
         }
@@ -77,48 +77,47 @@ namespace JMC.Parser.JMC
         /// </summary>
         /// <param name="index"></param>
         /// <returns></returns>
-        private JMCParseResult ParseVariableCondition(int index)
+        private ParseResult ParseVariableCondition(int index)
         {
-            var node = new JMCSyntaxNode();
-            var next = new List<JMCSyntaxNode>();
+            var node = new SyntaxNode();
+            var next = new List<SyntaxNode>();
             var query = this.AsParseQuery(index);
-            var start = GetIndexStartPos(index);
+            var startPos = GetIndexStartPos(index);
 
-            if (query.ExpectOr(out var syntaxNode, [.. ConditionalOperatorTokens]))
+            if (query.ExpectOr(out var conditonalOperatorNode, [.. ConditionalOperatorTokens]))
             {
-                next.Add(syntaxNode!);
-                JMCSyntaxNodeType[] types = [JMCSyntaxNodeType.Int, JMCSyntaxNodeType.Variable, JMCSyntaxNodeType.Scoreboard];
-                var match = query.Next().
-                    ExpectOr(out syntaxNode, types);
+                next.Add(conditonalOperatorNode!);
+                SyntaxNodeType[] validTypes = [SyntaxNodeType.Int, SyntaxNodeType.Variable, SyntaxNodeType.Scoreboard];
+                var match = query.Next().ExpectOr(out conditonalOperatorNode, validTypes);
 
-                if (match && syntaxNode != null)
-                    next.Add(syntaxNode!);
+                if (match && conditonalOperatorNode != null)
+                    next.Add(conditonalOperatorNode!);
                 else
-                    Errors.Add(new JMCSyntaxError(GetRangeByIndex(index), TrimmedText[index], types));
+                    Errors.Add(new JMCSyntaxError(GetRangeByIndex(index), TrimmedText[index], validTypes));
 
                 index = query.Index;
             }
-            else if (query.Expect("matches", out syntaxNode, false))
+            else if (query.Expect("matches", out conditonalOperatorNode, false))
             {
-                next.Add(syntaxNode!);
+                next.Add(conditonalOperatorNode!);
                 var match = query.Next().ExpectIntRange();
                 index = query.Index;
                 var range = GetRangeByIndex(index);
-                next.Add(new(JMCSyntaxNodeType.IntRange, TrimmedText[index], range: range));
+                next.Add(new(SyntaxNodeType.IntRange, TrimmedText[index], range: range));
             }
-            else if (!query.Expect(JMCSyntaxNodeType.RParen, out _))
+            else if (!query.Expect(SyntaxNodeType.ClosingParenthesis, out _))
             {
-                Errors.Add(new JMCSyntaxError(new(start, start), TrimmedText[index],
+                Errors.Add(new JMCSyntaxError(new(startPos, startPos), TrimmedText[index],
                     ConditionalOperatorTokens.Select(v => v.ToTokenString())
                     .Concat(["matches"])
                     .ToArray()));
             }
 
-            var end = GetIndexEndPos(index);
+            var endPos = GetIndexEndPos(index);
 
             node.Next = next.Count == 0 ? null : next;
-            node.Range = new Range(start, end);
-            node.NodeType = JMCSyntaxNodeType.Condition;
+            node.Range = new Range(startPos, endPos);
+            node.NodeType = SyntaxNodeType.Condition;
 
             return new(node, index);
         }
@@ -128,35 +127,35 @@ namespace JMC.Parser.JMC
         /// </summary>
         /// <param name="index"></param>
         /// <returns></returns>
-        private JMCParseResult ParseDo(int index)
+        private ParseResult ParseDo(int index)
         {
-            var node = new JMCSyntaxNode();
-            var next = new List<JMCSyntaxNode>();
+            var node = new SyntaxNode();
+            var next = new List<SyntaxNode>();
 
-            var start = GetIndexStartPos(index);
+            var startPos = GetIndexStartPos(index);
 
             //parse block
-            var block = ParseBlock(index);
-            if (block.Node != null)
-                next.Add(block.Node);
-            index = NextIndex(block.EndIndex);
+            var blockParseResult = ParseBlock(index);
+            if (blockParseResult.Node != null)
+                next.Add(blockParseResult.Node);
+            index = NextIndex(blockParseResult.EndIndex);
             var query = this.AsParseQuery(index);
 
             //parse while
-            query.Expect(JMCSyntaxNodeType.While, out _);
+            query.Expect(SyntaxNodeType.While, out _);
             index = NextIndex(NextIndex(query.Index));
 
             //parse condition
-            var condition = ParseCondition(index);
-            if (condition.Node != null)
-                next.Add(condition.Node);
-            index = NextIndex(condition.EndIndex);
+            var conditionParseResult = ParseCondition(index);
+            if (conditionParseResult.Node != null)
+                next.Add(conditionParseResult.Node);
+            index = NextIndex(conditionParseResult.EndIndex);
 
-            var end = GetIndexStartPos(index);
+            var endPos = GetIndexStartPos(index);
             //set next
             node.Next = next.Count != 0 ? next : null;
-            node.Range = new Range(start, end);
-            node.NodeType = JMCSyntaxNodeType.Do;
+            node.Range = new Range(startPos, endPos);
+            node.NodeType = SyntaxNodeType.Do;
 
             return new(node, index);
         }
@@ -166,30 +165,30 @@ namespace JMC.Parser.JMC
         /// </summary>
         /// <param name="index"></param>
         /// <returns></returns>
-        private JMCParseResult ParseWhile(int index)
+        private ParseResult ParseWhile(int index)
         {
-            var node = new JMCSyntaxNode();
-            var next = new List<JMCSyntaxNode>();
+            var node = new SyntaxNode();
+            var next = new List<SyntaxNode>();
 
-            var start = GetIndexStartPos(index);
+            var startPos = GetIndexStartPos(index);
 
             //parse condition
-            var condition = ParseCondition(NextIndex(index));
-            if (condition.Node != null)
-                next.Add(condition.Node);
-            index = NextIndex(condition.EndIndex);
+            var conditionParseResult = ParseCondition(NextIndex(index));
+            if (conditionParseResult.Node != null)
+                next.Add(conditionParseResult.Node);
+            index = NextIndex(conditionParseResult.EndIndex);
 
             //parse block
-            var block = ParseBlock(index);
-            if (block.Node != null)
-                next.Add(block.Node);
-            index = block.EndIndex;
+            var blockParseResult = ParseBlock(index);
+            if (blockParseResult.Node != null)
+                next.Add(blockParseResult.Node);
+            index = blockParseResult.EndIndex;
 
-            var end = GetIndexStartPos(index);
+            var endPos = GetIndexStartPos(index);
             //set next
             node.Next = next.Count != 0 ? next : null;
-            node.Range = new(start, end);
-            node.NodeType = JMCSyntaxNodeType.While;
+            node.Range = new(startPos, endPos);
+            node.NodeType = SyntaxNodeType.While;
 
             return new(node, index);
         }
@@ -199,42 +198,42 @@ namespace JMC.Parser.JMC
         /// </summary>
         /// <param name="index"></param>
         /// <returns></returns>
-        private JMCParseResult ParseFor(int index)
+        private ParseResult ParseFor(int index)
         {
-            var node = new JMCSyntaxNode();
-            var next = new List<JMCSyntaxNode>();
+            var node = new SyntaxNode();
+            var next = new List<SyntaxNode>();
 
             var start = GetIndexStartPos(index);
 
             //parse statement 1
-            var s1 = ParseExpression(NextIndex(index));
-            if (s1.Node != null)
-                next.Add(s1.Node);
-            index = s1.EndIndex;
+            var statement1ParseResult = ParseExpression(NextIndex(index));
+            if (statement1ParseResult.Node != null)
+                next.Add(statement1ParseResult.Node);
+            index = statement1ParseResult.EndIndex;
 
             //parse statement 2
-            var s2 = ParseCondition(NextIndex(index));
-            if (s2.Node != null)
-                next.Add(s2.Node);
-            index = s2.EndIndex;
+            var statement2ParseResult = ParseCondition(NextIndex(index));
+            if (statement2ParseResult.Node != null)
+                next.Add(statement2ParseResult.Node);
+            index = statement2ParseResult.EndIndex;
 
             //parse statement 3
-            var s3 = ParseExpression(NextIndex(index), true);
-            if (s3.Node != null)
-                next.Add(s3.Node);
-            index = s3.EndIndex;
+            var statement3ParseResult = ParseExpression(NextIndex(index), true);
+            if (statement3ParseResult.Node != null)
+                next.Add(statement3ParseResult.Node);
+            index = statement3ParseResult.EndIndex;
 
             //parse block
-            var block = ParseBlock(NextIndex(index));
-            if (block.Node != null)
-                next.Add(block.Node);
-            index = block.EndIndex;
+            var blockParseResult = ParseBlock(NextIndex(index));
+            if (blockParseResult.Node != null)
+                next.Add(blockParseResult.Node);
+            index = blockParseResult.EndIndex;
 
-            var end = GetIndexEndPos(index);
+            var endPos = GetIndexEndPos(index);
             //set next
             node.Next = next.Count != 0 ? next : null;
-            node.Range = new(start, end);
-            node.NodeType = JMCSyntaxNodeType.For;
+            node.Range = new(start, endPos);
+            node.NodeType = SyntaxNodeType.For;
 
             return new(node, index);
         }
@@ -244,15 +243,16 @@ namespace JMC.Parser.JMC
         /// </summary>
         /// <param name="index"></param>
         /// <returns></returns>
-        private JMCParseResult ParseSwitch(int index)
+        private ParseResult ParseSwitch(int index)
         {
-            var node = new JMCSyntaxNode();
-            var next = new List<JMCSyntaxNode>();
+            var node = new SyntaxNode();
+            var next = new List<SyntaxNode>();
 
             //parse paren
-            var start = GetIndexEndPos(index);
+            var startPos = GetIndexEndPos(index);
+
             var query = this.AsParseQuery(index);
-            query.ExpectList(out var nodes, true, JMCSyntaxNodeType.Variable, JMCSyntaxNodeType.RParen, JMCSyntaxNodeType.LCP);
+            query.ExpectList(out var nodes, true, SyntaxNodeType.Variable, SyntaxNodeType.ClosingParenthesis,SyntaxNodeType.OpeningCurlyParenthesis);
             index = query.Index;
 
             //add variable
@@ -261,25 +261,25 @@ namespace JMC.Parser.JMC
             //get next text
             index = NextIndex(index);
 
-            var texts = TrimmedText.AsSpan();
-            ref var currentText = ref texts[index];
+            var trimmedTextSpan = TrimmedText.AsSpan();
+            ref var currentText = ref trimmedTextSpan[index];
             //parse cases
             while (currentText != "}" && index < TrimmedText.Length)
             {
                 //parse case
-                var cr = ParseCase(index);
-                if (cr.Node != null)
-                    next.Add(cr.Node);
-                index = cr.EndIndex;
-                currentText = ref texts[index]!;
+                var caseParseResult = ParseCase(index);
+                if (caseParseResult.Node != null)
+                    next.Add(caseParseResult.Node);
+                index = caseParseResult.EndIndex;
+                currentText = ref trimmedTextSpan[index]!;
             }
 
-            var end = GetIndexEndPos(index);
+            var endPos = GetIndexEndPos(index);
 
             //check closing
             var stackTrace = new StackTrace();
             var frames = stackTrace.GetFrames();
-            var funcCount = frames.Where(v => v.GetMethod().Name == nameof(ParseBlock)).Count();
+            var funcCount = frames.Where(v => v.GetMethod()?.Name == nameof(ParseBlock)).Count();
 
             if (funcCount > 0)
             {
@@ -290,8 +290,8 @@ namespace JMC.Parser.JMC
 
             //set next
             node.Next = next.Count != 0 ? next : null;
-            node.Range = new(start, end);
-            node.NodeType = JMCSyntaxNodeType.Switch;
+            node.Range = new(startPos, endPos);
+            node.NodeType = SyntaxNodeType.Switch;
             node.Value = nodes.FirstOrDefault()?.Value;
 
             return new(node, index);
@@ -302,39 +302,38 @@ namespace JMC.Parser.JMC
         /// </summary>
         /// <param name="index"></param>
         /// <returns></returns>
-        private JMCParseResult ParseCase(int index)
+        private ParseResult ParseCase(int index)
         {
-            var node = new JMCSyntaxNode();
-            var next = new List<JMCSyntaxNode>();
+            var node = new SyntaxNode();
+            var next = new List<SyntaxNode>();
 
-            var start = GetIndexStartPos(index);
+            var startPos = GetIndexStartPos(index);
             var query = this.AsParseQuery(index);
 
             //test for syntax
-            var match =
-                query.ExpectList(out var syntaxNodes, true, JMCSyntaxNodeType.Int, JMCSyntaxNodeType.Colon);
+            var match = query.ExpectList(out var syntaxNodes, true, SyntaxNodeType.Int, SyntaxNodeType.Colon);
 
             index = NextIndex(query.Index);
 
-            var texts = TrimmedText.AsSpan();
-            ref var currentText = ref texts[index];
+            var trimmedTextSpan = TrimmedText.AsSpan();
+            ref var currentText = ref trimmedTextSpan[index];
             //parse cases
             while (currentText != "case" && currentText != "}" && index < TrimmedText.Length)
             {
                 //parse case
-                var cr = ParseExpression(index);
-                if (cr.Node != null)
-                    next.Add(cr.Node);
-                index = NextIndex(cr.EndIndex);
-                currentText = ref texts[index]!;
+                var expressionParseResult = ParseExpression(index);
+                if (expressionParseResult.Node != null)
+                    next.Add(expressionParseResult.Node);
+                index = NextIndex(expressionParseResult.EndIndex);
+                currentText = ref trimmedTextSpan[index]!;
             }
 
-            var end = GetIndexStartPos(index);
+            var endPos = GetIndexStartPos(index);
 
             //set next
             node.Next = next.Count != 0 ? next : null;
-            node.Range = new(start, end);
-            node.NodeType = JMCSyntaxNodeType.Case;
+            node.Range = new(startPos, endPos);
+            node.NodeType = SyntaxNodeType.Case;
             node.Value = syntaxNodes.FirstOrDefault()?.Value;
 
             return new(node, index);
@@ -345,31 +344,31 @@ namespace JMC.Parser.JMC
         /// </summary>
         /// <param name="index"></param>
         /// <returns></returns>
-        private JMCParseResult ParseIf(int index)
+        private ParseResult ParseIf(int index)
         {
-            var node = new JMCSyntaxNode();
-            var next = new List<JMCSyntaxNode>();
+            var node = new SyntaxNode();
+            var next = new List<SyntaxNode>();
 
-            var start = GetIndexStartPos(index);
+            var startPos = GetIndexStartPos(index);
 
             //parse condition
-            var condition = ParseCondition(NextIndex(index));
-            if (condition.Node != null)
-                next.Add(condition.Node);
-            index = condition.EndIndex;
+            var conditionParseResult = ParseCondition(NextIndex(index));
+            if (conditionParseResult.Node != null)
+                next.Add(conditionParseResult.Node);
+            index = conditionParseResult.EndIndex;
 
             //parse block
-            var block = ParseBlock(index);
-            index = block.EndIndex;
-            if (block.Node != null)
-                next.Add(block.Node);
+            var blockParseResult = ParseBlock(index);
+            index = blockParseResult.EndIndex;
+            if (blockParseResult.Node != null)
+                next.Add(blockParseResult.Node);
 
-            var end = GetIndexEndPos(index);
+            var endPos = GetIndexEndPos(index);
 
             //set next
             node.Next = next.Count != 0 ? next : null;
-            node.NodeType = JMCSyntaxNodeType.If;
-            node.Range = new(start, end);
+            node.NodeType = SyntaxNodeType.If;
+            node.Range = new(startPos, endPos);
 
             return new(node, index);
         }

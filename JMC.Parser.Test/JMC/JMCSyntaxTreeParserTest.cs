@@ -9,12 +9,12 @@ namespace JMC.Parser.Test.JMC
     {
         [Theory]
         [MemberData(nameof(JMCSyntaxTreeParserTestCase.BasicParseTests), MemberType = typeof(JMCSyntaxTreeParserTestCase))]
-        public async Task BasicParse_Test(string text, JMCSyntaxNodeType type)
+        public async Task BasicParse_Test(string text, SyntaxNodeType type)
         {
             var tree = await ParserBaseTree.InitializeAsync(text);
             tree.Errors.Should().BeEmpty();
 
-            var expected = new JMCSyntaxNode()
+            var expected = new SyntaxNode()
             {
                 NodeType = type,
                 Range = new(0, 0, 0, text.Length - 1),
@@ -28,7 +28,7 @@ namespace JMC.Parser.Test.JMC
 
         [Theory]
         [MemberData(nameof(JMCSyntaxTreeParserTestCase.ExpressionParseTests), MemberType = typeof(JMCSyntaxTreeParserTestCase))]
-        internal async Task ExpressionParse_Test(string text, List<JMCSyntaxNode> expectedNodes)
+        internal async Task ExpressionParse_Test(string text, List<SyntaxNode> expectedNodes)
         {
             var tree = await ParserBaseTree.InitializeAsync(text);
             tree.Errors.Should().BeEmpty();

@@ -29,7 +29,7 @@ namespace JMC.Extension.Server.Types
             {
                 ref var file = ref arr[i];
                 var text = File.ReadAllText(file);
-                var tree = new JMCSyntaxTree().InitializeAsync(text).Result;
+                var tree = new SyntaxTree().InitializeAsync(text).Result;
                 var jmcFile = new JMCFile(tree, DocumentUri.File(file));
                 files.Add(jmcFile);
             }
@@ -51,7 +51,7 @@ namespace JMC.Extension.Server.Types
             {
                 var file = jmcFiles[i];
                 var text = File.ReadAllText(file);
-                var tree = await new JMCSyntaxTree().InitializeAsync(text);
+                var tree = await new SyntaxTree().InitializeAsync(text);
                 var jmcFile = new JMCFile(tree, DocumentUri.File(file));
                 files.Add(jmcFile);
             }

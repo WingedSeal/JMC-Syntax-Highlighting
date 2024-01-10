@@ -7,72 +7,72 @@ namespace JMC.Parser.Test.JMC
         //TODO: finish the test
         public static readonly object[][] ExpressionParseTests = [
             ["$test=4;",
-                new List<JMCSyntaxNode>
+                new List<SyntaxNode>
                 {
-                    new(JMCSyntaxNodeType.Variable,"$test",[
-                        new(JMCSyntaxNodeType.EqualTo, "=",null,new(0,5,0,5),5),
-                        new(JMCSyntaxNodeType.Number, "4",null,new(0,6,0,6),6)
+                    new(SyntaxNodeType.Variable,"$test",[
+                        new(SyntaxNodeType.EqualTo, "=",null,new(0,5,0,5),5),
+                        new(SyntaxNodeType.Number, "4",null,new(0,6,0,6),6)
                     ],new(0,0,0,7),0)
                 }
             ],
             ["obj:@s=4;",
-                new List<JMCSyntaxNode>
+                new List<SyntaxNode>
                 {
-                    new(JMCSyntaxNodeType.Scoreboard,"obj:@s",[
-                        new(JMCSyntaxNodeType.EqualTo, "=",null,new(0,6,0,6),6),
-                        new(JMCSyntaxNodeType.Number, "4",null,new(0,7,0,7),7)
+                    new(SyntaxNodeType.Scoreboard,"obj:@s",[
+                        new(SyntaxNodeType.EqualTo, "=",null,new(0,6,0,6),6),
+                        new(SyntaxNodeType.Number, "4",null,new(0,7,0,7),7)
                     ],new(0,0,0,8),0)
                 }
             ],
             ["obj:@s=$test;",
-                new List<JMCSyntaxNode>
+                new List<SyntaxNode>
                 {
-                    new(JMCSyntaxNodeType.Scoreboard,"obj:@s",[
-                        new(JMCSyntaxNodeType.EqualTo, "=",null,new(0,6,0,6),6),
-                        new(JMCSyntaxNodeType.Variable, "$test",null,new(0,7,0,12),7)
+                    new(SyntaxNodeType.Scoreboard,"obj:@s",[
+                        new(SyntaxNodeType.EqualTo, "=",null,new(0,6,0,6),6),
+                        new(SyntaxNodeType.Variable, "$test",null,new(0,7,0,12),7)
                     ],new(0,0,0,12),0)
                 }
             ],
         ];
 
         public static readonly object[][] BasicParseTests = [
-            ["++", JMCSyntaxNodeType.OpIncrement],
-            ["--", JMCSyntaxNodeType.OpDecrement],
+            ["++", SyntaxNodeType.IncrementOperator],
+            ["--", SyntaxNodeType.DecrementOperator],
 
-            ["+", JMCSyntaxNodeType.OpPlus],
-            ["-", JMCSyntaxNodeType.OpSubtract],
-            ["*", JMCSyntaxNodeType.OpMultiply],
-            ["/", JMCSyntaxNodeType.OpDivide],
-            ["%", JMCSyntaxNodeType.OpRemainder],
+            ["+", SyntaxNodeType.PlusOperator],
+            ["-", SyntaxNodeType.SubtractOperator],
+            ["*", SyntaxNodeType.MultiplyOperator],
+            ["/", SyntaxNodeType.DivideOperator],
+            ["%", SyntaxNodeType.RemainderOperator],
 
-            ["-=", JMCSyntaxNodeType.OpSubtractEqual],
-            ["+=", JMCSyntaxNodeType.OpPlusEqual],
-            ["/=", JMCSyntaxNodeType.OpDivideEqual],
-            ["*=", JMCSyntaxNodeType.OpMultiplyEqual],
-            ["%=", JMCSyntaxNodeType.OpRemainderEqual],
+            ["-=", SyntaxNodeType.SubtractEqualOperator],
+            ["+=", SyntaxNodeType.PlusEqualOperator],
+            ["/=", SyntaxNodeType.DivideEqualOperator],
+            ["*=", SyntaxNodeType.MultiplyEqualOperator],
+            ["%=", SyntaxNodeType.RemainderEqualOperator],
 
-            ["??=", JMCSyntaxNodeType.OpNullcoale],
-            ["?=", JMCSyntaxNodeType.OpSuccess],
-            ["><", JMCSyntaxNodeType.OpSwap],
+            ["??=", SyntaxNodeType.NullcoaleOperator],
+            ["?=", SyntaxNodeType.SuccessOperator],
+            ["><", SyntaxNodeType.SwapOperator],
 
-            ["||", JMCSyntaxNodeType.CompOr],
-            ["&&", JMCSyntaxNodeType.CompAnd],
-            ["!", JMCSyntaxNodeType.CompNot],
+            ["||", SyntaxNodeType.Or],
+            ["&&", SyntaxNodeType.And],
+            ["!", SyntaxNodeType.Not],
 
-            ["{", JMCSyntaxNodeType.LCP],
-            ["}", JMCSyntaxNodeType.RCP],
-            ["(", JMCSyntaxNodeType.LParen],
-            [")", JMCSyntaxNodeType.RParen],
-            [";", JMCSyntaxNodeType.Semi],
-            [":", JMCSyntaxNodeType.Colon],
-            ["=>", JMCSyntaxNodeType.Arrow],
+            ["{", SyntaxNodeType.OpeningCurlyParenthesis],
+            ["}", SyntaxNodeType.ClosingCurlyParenthesis],
+            ["(", SyntaxNodeType.OpeningParenthesis],
+            [")", SyntaxNodeType.ClosingParenthesis],
+            [";", SyntaxNodeType.Semi],
+            [":", SyntaxNodeType.Colon],
+            ["=>", SyntaxNodeType.Arrow],
 
-            [">", JMCSyntaxNodeType.GreaterThan],
-            ["<", JMCSyntaxNodeType.LessThan],
-            [">=", JMCSyntaxNodeType.GreaterThanEqual],
-            ["<=", JMCSyntaxNodeType.LessThanEqual],
-            ["=", JMCSyntaxNodeType.EqualTo],
-            ["==", JMCSyntaxNodeType.Equal],
+            [">", SyntaxNodeType.GreaterThan],
+            ["<", SyntaxNodeType.LessThan],
+            [">=", SyntaxNodeType.GreaterThanEqual],
+            ["<=", SyntaxNodeType.LessThanEqual],
+            ["=", SyntaxNodeType.EqualTo],
+            ["==", SyntaxNodeType.Equal],
         ];
     }
 }

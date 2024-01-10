@@ -4,7 +4,7 @@ using System.Text.RegularExpressions;
 
 namespace JMC.Parser.JMC
 {
-    internal partial class JMCSyntaxTree
+    internal partial class SyntaxTree
     {
         //private static readonly ImmutableDictionary<JMCSyntaxNodeType, Regex> TokenPatterns = new Dictionary<JMCSyntaxNodeType, Regex>()
         //{
@@ -13,54 +13,54 @@ namespace JMC.Parser.JMC
 
         private static readonly ImmutableArray<char> LiteralChars = [.. "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_."];
 
-        private static readonly ImmutableArray<JMCSyntaxNodeType> OperatorsAssignTokens = [
-            JMCSyntaxNodeType.OpIncrement,
-            JMCSyntaxNodeType.OpDecrement,
-            JMCSyntaxNodeType.OpPlusEqual,
-            JMCSyntaxNodeType.OpSubtractEqual,
-            JMCSyntaxNodeType.OpMultiplyEqual,
-            JMCSyntaxNodeType.OpRemainderEqual,
-            JMCSyntaxNodeType.OpDivideEqual,
-            JMCSyntaxNodeType.OpNullcoale,
-            JMCSyntaxNodeType.OpSuccess,
-            JMCSyntaxNodeType.EqualTo,
-            JMCSyntaxNodeType.OpSwap,
+        private static readonly ImmutableArray<SyntaxNodeType> OperatorsAssignTokens = [
+            SyntaxNodeType.IncrementOperator,
+            SyntaxNodeType.DecrementOperator,
+            SyntaxNodeType.PlusEqualOperator,
+            SyntaxNodeType.SubtractEqualOperator,
+            SyntaxNodeType.MultiplyEqualOperator,
+            SyntaxNodeType.RemainderEqualOperator,
+            SyntaxNodeType.DivideEqualOperator,
+            SyntaxNodeType.NullcoaleOperator,
+            SyntaxNodeType.SuccessOperator,
+            SyntaxNodeType.EqualTo,
+            SyntaxNodeType.SwapOperator,
         ];
 
-        private static readonly ImmutableArray<JMCSyntaxNodeType> OperatorTokens = [
-            JMCSyntaxNodeType.OpPlus,
-            JMCSyntaxNodeType.OpSubtract,
-            JMCSyntaxNodeType.OpMultiply,
-            JMCSyntaxNodeType.OpRemainder,
-            JMCSyntaxNodeType.OpDivide,
+        private static readonly ImmutableArray<SyntaxNodeType> OperatorTokens = [
+            SyntaxNodeType.PlusOperator,
+            SyntaxNodeType.SubtractOperator,
+            SyntaxNodeType.MultiplyOperator,
+            SyntaxNodeType.RemainderOperator,
+            SyntaxNodeType.DivideOperator,
         ];
 
-        private static readonly ImmutableArray<JMCSyntaxNodeType> ConditionalOperatorTokens = [
-            JMCSyntaxNodeType.Equal,
-            JMCSyntaxNodeType.EqualTo,
-            JMCSyntaxNodeType.GreaterThan,
-            JMCSyntaxNodeType.GreaterThanEqual,
-            JMCSyntaxNodeType.LessThan,
-            JMCSyntaxNodeType.LessThanEqual,
+        private static readonly ImmutableArray<SyntaxNodeType> ConditionalOperatorTokens = [
+            SyntaxNodeType.Equal,
+            SyntaxNodeType.EqualTo,
+            SyntaxNodeType.GreaterThan,
+            SyntaxNodeType.GreaterThanEqual,
+            SyntaxNodeType.LessThan,
+            SyntaxNodeType.LessThanEqual,
         ];
 
-        private static readonly ImmutableArray<JMCSyntaxNodeType> LogicOperatorTokens = [
-            JMCSyntaxNodeType.CompOr,
-            JMCSyntaxNodeType.CompAnd,
-            JMCSyntaxNodeType.CompNot,
-            JMCSyntaxNodeType.LParen,
+        private static readonly ImmutableArray<SyntaxNodeType> LogicOperatorTokens = [
+            SyntaxNodeType.Or,
+            SyntaxNodeType.And,
+            SyntaxNodeType.Not,
+            SyntaxNodeType.OpeningParenthesis,
         ];
 
-        private static readonly ImmutableArray<JMCSyntaxNodeType> LogicTokens = [
-            JMCSyntaxNodeType.CompOr,
-            JMCSyntaxNodeType.CompAnd,
-            JMCSyntaxNodeType.CompNot,
-            JMCSyntaxNodeType.Equal,
-            JMCSyntaxNodeType.EqualTo,
-            JMCSyntaxNodeType.GreaterThan,
-            JMCSyntaxNodeType.GreaterThanEqual,
-            JMCSyntaxNodeType.LessThan,
-            JMCSyntaxNodeType.LessThanEqual,
+        private static readonly ImmutableArray<SyntaxNodeType> LogicTokens = [
+            SyntaxNodeType.Or,
+            SyntaxNodeType.And,
+            SyntaxNodeType.Not,
+            SyntaxNodeType.Equal,
+            SyntaxNodeType.EqualTo,
+            SyntaxNodeType.GreaterThan,
+            SyntaxNodeType.GreaterThanEqual,
+            SyntaxNodeType.LessThan,
+            SyntaxNodeType.LessThanEqual,
         ];
 
         private static readonly ImmutableArray<string> JSONFileTypes = [

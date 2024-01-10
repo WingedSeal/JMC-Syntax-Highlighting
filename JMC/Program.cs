@@ -20,7 +20,7 @@ namespace JMC
         static void LexerDebug()
         {
             var content = File.ReadAllText("test/workspace/main.jmc");
-            var lexer = new JMCLexer(content);
+            var lexer = new Lexer(content);
             var result = lexer.StartLexing();
         }
 
@@ -29,7 +29,7 @@ namespace JMC
             var content = File.ReadAllText("test/workspace/main.jmc");
             var sw = new Stopwatch();
             sw.Start();
-            var tree = await new JMCSyntaxTree().InitializeAsync(content);
+            var tree = await new SyntaxTree().InitializeAsync(content);
             sw.Stop();
             tree.PrintPretty();
             Console.WriteLine($"Error Count: {tree.Errors.Count}");
@@ -39,7 +39,7 @@ namespace JMC
 
         static async Task TestingAsync()
         {
-            var tree = await new JMCSyntaxTree().InitializeAsync(@"()=>{}");
+            var tree = await new SyntaxTree().InitializeAsync(@"()=>{}");
             var q = tree.AsParseQuery();
             var m = q.ExpectArrowFunction(out var s);
         }

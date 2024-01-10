@@ -16,7 +16,7 @@ namespace JMC.Extension.Server.Handler.JMC
         private readonly ILogger<JMCTextDocumentHandler> _logger = logger;
         public TextDocumentSyncKind Change { get; } = TextDocumentSyncKind.Full;
 
-        private void PublicDiagnostic(JMCSyntaxTree tree, DocumentUri uri, int? version) => _facade.TextDocument.PublishDiagnostics(new()
+        private void PublicDiagnostic(SyntaxTree tree, DocumentUri uri, int? version) => _facade.TextDocument.PublishDiagnostics(new()
         {
             Diagnostics = new(tree.GetDiagnostics()),
             Uri = uri,

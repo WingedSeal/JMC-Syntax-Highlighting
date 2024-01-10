@@ -8,11 +8,11 @@
     /// <param name="next"></param>
     /// <param name="range"></param>
     /// <param name="offset"></param>
-    internal class JMCSyntaxNode(JMCSyntaxNodeType nodeType = JMCSyntaxNodeType.Unknown, string value = "", IEnumerable<JMCSyntaxNode>? next = null, Range? range = null, int offset = -1)
+    internal class SyntaxNode(SyntaxNodeType nodeType = SyntaxNodeType.Unknown, string value = "", IEnumerable<SyntaxNode>? next = null, Range? range = null, int offset = -1)
     {
         public Range? Range { get; set; } = range;
-        public JMCSyntaxNodeType NodeType { get; set; } = nodeType;
-        public IEnumerable<JMCSyntaxNode>? Next { get; set; } = next;
+        public SyntaxNodeType NodeType { get; set; } = nodeType;
+        public IEnumerable<SyntaxNode>? Next { get; set; } = next;
         public string? Value { get; set; } = value;
         public int Offset { get; set; } = offset;
 
@@ -48,9 +48,9 @@
         /// 
         /// </summary>
         /// <returns></returns>
-        public IEnumerable<JMCSyntaxNode> ToFlattenNodes()
+        public IEnumerable<SyntaxNode> ToFlattenNodes()
         {
-            var current = new JMCSyntaxNode[] { this };
+            var current = new SyntaxNode[] { this };
             if (Next == null) return current;
             else return current.Concat(Next.Where(v => v != null).SelectMany(v => v.ToFlattenNodes()));
         }

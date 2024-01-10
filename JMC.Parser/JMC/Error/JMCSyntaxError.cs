@@ -8,7 +8,7 @@ namespace JMC.Parser.JMC.Error
     {
         public JMCSyntaxError(Range range, string current, params string[] expected) : base($"SyntaxError: at line:{range.Start.Line + 1} character: {range.Start.Character + 1}; expected [{string.Join(',', expected)}] but got {current}", ErrorType.IDE, range) { }
 
-        public JMCSyntaxError(Range range, string current, params JMCSyntaxNodeType[] expected) : 
+        public JMCSyntaxError(Range range, string current, params SyntaxNodeType[] expected) : 
             base($"SyntaxError: at line:{range.Start.Line + 1} character: {range.Start.Character + 1}; expected [{string.Join(',', expected.Select(v => v.ToTokenString()))}] but got {current}", ErrorType.IDE, range) { }
 
         public JMCSyntaxError(Range range, string expected, string current) : base($"SyntaxError: at line:{range.Start.Line + 1} character: {range.Start.Character + 1}; expected {expected} but got {current}", ErrorType.IDE, range) { }
