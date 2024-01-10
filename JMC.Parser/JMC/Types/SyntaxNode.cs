@@ -26,15 +26,22 @@
             Console.Write(indent);
             if (last)
             {
-                Console.Write("\\-");
-                indent += "  ";
+                Console.Write("└── ");
+                indent += "    ";
             }
             else
             {
-                Console.Write("|-");
-                indent += "| ";
+                Console.Write("├── ");
+                indent += "│   ";
             }
-            Console.WriteLine($"{NodeType} {Value} {Range}");
+            var color = Console.ForegroundColor;
+            Console.ForegroundColor = ConsoleColor.Cyan;
+            Console.Write(NodeType + " ");
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.Write(Value + " ");
+            Console.ForegroundColor = ConsoleColor.Green;
+            Console.WriteLine(Range);
+            Console.ForegroundColor = color;
 
             if (Next != null)
                 for (int i = 0; i < Next.Count(); i++)
