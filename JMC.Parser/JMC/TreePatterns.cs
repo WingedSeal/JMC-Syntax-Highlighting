@@ -66,7 +66,5 @@ namespace JMC.Parser.JMC
         private static readonly ImmutableArray<string> JSONFileTypes = [
             "advancements", "item_modifiers", "loot_tables", "tags", "recipes", "dimensions", "dimension_types", "predicates"
         ];
-
-        private static readonly RegexOptions _regexOptions = RegexOptions.Compiled;
     }
 }

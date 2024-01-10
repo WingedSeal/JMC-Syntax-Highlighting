@@ -1,11 +1,9 @@
 ﻿using JMC.Parser.JMC.Error;
 using JMC.Parser.JMC.Error.Base;
 using JMC.Parser.JMC.Types;
-using JMC.Shared.Datas.Minecraft.Types;
-using Newtonsoft.Json.Linq;
+using Microsoft.VisualStudio.Threading;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 using System.Runtime.InteropServices;
-using System.Text.Json;
 
 namespace JMC.Parser.JMC
 {
@@ -78,7 +76,11 @@ namespace JMC.Parser.JMC
         /// Reset a tree
         /// </summary>
         /// <param name="changedText"></param>
-        public void ModifyFull(string changedText) => InitializeAsync(changedText).Wait();
+        public void ModifyFull(string changedText)
+        {
+            var factory = new JoinableTaskFactory(new JoinableTaskContext());
+            _ = factory.Run(() => InitializeAsync(changedText));
+        }
 
         /// <inheritdoc cref="ModifyFull(string)"/>
         public async Task ModifyFullAsync(string changedText) => await InitializeAsync(changedText);
@@ -321,7 +323,7 @@ namespace JMC.Parser.JMC
                 if (isValid)
                     return SyntaxNodeType.Variable;
             }
-            
+
             //string matching
             var splitString = value.Split('"');
             if (splitString.Length == 3 && !splitString.Contains(Environment.NewLine))

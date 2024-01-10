@@ -8,6 +8,7 @@ using OmniSharp.Extensions.LanguageServer.Protocol.Server.Capabilities;
 using OmniSharp.Extensions.LanguageServer.Protocol.Window;
 using OmniSharp.Extensions.LanguageServer.Server;
 using Serilog;
+using System.Collections.Immutable;
 using System.Diagnostics;
 
 namespace JMC.Extension.Server
@@ -15,7 +16,13 @@ namespace JMC.Extension.Server
 
     public class JMCLanguageServer
     {
+#pragma warning disable CS8618 //allow null
         public static ILanguageServer Server { get; private set; }
+#pragma warning restore CS8618
+
+        private static readonly ImmutableArray<string> TriggerCharacters = ["(", ",", " "];
+        private static readonly ImmutableArray<string> ReTriggerCharacters = [",", " "];
+
         private static async Task Main(string[] args)
         {
 #if DEBUG
@@ -64,9 +71,9 @@ namespace JMC.Extension.Server
                                     provider =>
                                     {
                                         var loggerFactory = provider.GetService<ILoggerFactory>();
-                                        var logger = loggerFactory?.CreateLogger<LSPLogger>();
+                                        var logger = loggerFactory!.CreateLogger<LSPLogger>();
 
-                                        logger?.LogInformation("logger set up done");
+                                        logger.LogInformation("logger set up done");
 
                                         return new LSPLogger(logger);
                                     }
@@ -96,14 +103,8 @@ namespace JMC.Extension.Server
                                         },
                                         SignatureHelpProvider = new()
                                         {
-                                            TriggerCharacters = new string[]
-                                            {
-                                                "(", ",", " "
-                                            },
-                                            RetriggerCharacters = new string[]
-                                            {
-                                                ",", " "
-                                            }
+                                            TriggerCharacters = TriggerCharacters,
+                                            RetriggerCharacters = ReTriggerCharacters
                                         },
                                         SemanticTokensProvider = new()
                                         {

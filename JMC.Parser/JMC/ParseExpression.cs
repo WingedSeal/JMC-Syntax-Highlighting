@@ -371,7 +371,6 @@ namespace JMC.Parser.JMC
         private ParseResult ParseFunctionCall(int index)
         {
             var node = new SyntaxNode();
-            var next = new List<SyntaxNode>();
 
             //parse parameters
             var functionName = TrimmedText[index];
