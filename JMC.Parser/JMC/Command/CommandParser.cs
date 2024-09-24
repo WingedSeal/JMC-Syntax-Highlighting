@@ -82,7 +82,7 @@ namespace JMC.Parser.JMC.Command
             return Nodes;
         }
 
-        public IEnumerable<SyntaxNode> ParseIfCommand()
+        public IEnumerable<SyntaxNode> ParseIfCommand() // why doe we even keep this
         {
             var extend = "execute if ";
             CommandString = extend + CommandString;
@@ -117,13 +117,6 @@ namespace JMC.Parser.JMC.Command
                     CurrentNode = GetCommandNode(q);
                 }
             }
-
-            //detect end
-            //if (CurrentNode == null && CurrentChar != '\0')
-            //{
-            //    Errors.Add(Index, "Expect End");
-            //}
-            //else
             if (CurrentNode?.Executable == null)
             {
                 var keys = CurrentNode?.Children?.Keys;

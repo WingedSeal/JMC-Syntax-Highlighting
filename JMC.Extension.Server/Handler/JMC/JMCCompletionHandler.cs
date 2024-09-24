@@ -50,6 +50,21 @@ namespace JMC.Extension.Server.Handler.JMC
             "advancement","attribute","ban","ban-ip","banlist","bossbar","clear","clone","damage","data","datapack","debug","defaultgamemode","deop","difficulty","effect","enchant","execute","experience","fill","fillbiome","forceload","function","gamemode","gamerule","give","help","item","jfr","kick","kill","list","locate","loot","me","msg","op","pardon","pardon-ip","particle","perf","place","playsound","publish","random","recipe","reload","return","ride","save-all","save-off","save-on","say","schedule","scoreboard","seed","setblock","setidletimeout","setworldspawn","spawnpoint","spectate","spreadplayers","stop","stopsound","summon","tag","team","teammsg","teleport","tell","tellraw","tick","time","title","tm","tp","transfer","trigger","w","weather","whitelist","worldborder","xp"
         };
 
+        Dictionary<string, string> JMCSnippets = new()
+        {
+            {"__tick__", "function __tick__() {\r\n    say \"Loop\"; // This will run every tick.\r\n}"},
+            {"function", "function name() {\r\n    say \"hello\";\r\n}"},
+            {"class", "class name {\r\n}"},
+            {"if", "if (true) {\r\n}"},
+            {"elif", "else if (true) {\r\n}"},
+            {"else", "else {\r\n}"},
+            {"while", "while (condition) {\r\n}"},
+            {"dowhile", "do {\r\n} while (condition)"},
+            {"for", "for (condition) {\r\n}"},
+            {"switch", "switch (variable) {\r\ncase 1:\r\n    say \"hi!\";\r\n}"}
+        };
+
+
         private Task<CompletionList> GetJMCAsync(CompletionParams request, CancellationToken cancellationToken)
         {
             var list = new List<CompletionItem>();
@@ -143,66 +158,15 @@ namespace JMC.Extension.Server.Handler.JMC
                 }
 
                 //snippets
-                list.Add(new()
+                foreach (var item in JMCSnippets)
                 {
-                    Label = "__tick__",
-                    Kind = CompletionItemKind.Snippet,
-                    InsertText = "function __tick__() {\r\n    say \"Loop\"; // This will run every tick.\r\n}"
-                });
-                list.Add(new()
-                {
-                    Label = "function",
-                    Kind = CompletionItemKind.Snippet,
-                    InsertText = "function name() {\r\n    say \"hello\";\r\n}"
-                });
-                list.Add(new()
-                {
-                    Label = "class",
-                    Kind = CompletionItemKind.Snippet,
-                    InsertText = "class name {\r\n}"
-                });
-                list.Add(new()
-                {
-                    Label = "if",
-                    Kind = CompletionItemKind.Snippet,
-                    InsertText = "if (true) {\r\n}"
-                });
-                list.Add(new()
-                {
-                    Label = "elif",
-                    Kind = CompletionItemKind.Snippet,
-                    InsertText = "else if (true) {\r\n}"
-                });
-                list.Add(new()
-                {
-                    Label = "else",
-                    Kind = CompletionItemKind.Snippet,
-                    InsertText = "else {\r\n}"
-                });
-                list.Add(new()
-                {
-                    Label = "while",
-                    Kind = CompletionItemKind.Snippet,
-                    InsertText = "while (condition) {\r\n}"
-                });
-                list.Add(new()
-                {
-                    Label = "dowhile",
-                    Kind = CompletionItemKind.Snippet,
-                    InsertText = "do {\r\n} while (condition)"
-                });
-                list.Add(new()
-                {
-                    Label = "for",
-                    Kind = CompletionItemKind.Snippet,
-                    InsertText = "for (confition) {\r\n}"
-                });
-                list.Add(new()
-                {
-                    Label = "switch",
-                    Kind = CompletionItemKind.Snippet,
-                    InsertText = "switch (convariable) {\r\ncase 1:\r\n say \"hi!\";}"
-                });
+                    list.Add(new()
+                    {
+                        Label = item.Key,
+                        Kind = CompletionItemKind.Snippet,
+                        InsertText = item.Value
+                    });
+                }
 
                 //keywords
                 foreach (var item in JMCKeywords)
