@@ -2,6 +2,7 @@
 using JMC.Shared;
 using JMC.Shared.Datas.Minecraft.Command;
 using JMC.Shared.Datas.Minecraft.Command.Types;
+using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 using System.Collections.Immutable;
 using System.Text.RegularExpressions;
 
@@ -55,7 +56,6 @@ namespace JMC.Parser.JMC.Command
 
                 if (CurrentNode == null) break;
 
-
                 var node = GetSyntaxNode(r);
                 Nodes.Add(node);
 
@@ -66,11 +66,11 @@ namespace JMC.Parser.JMC.Command
                     CurrentNode = GetCommandNode(q);
                 }
             }
-
             //detect end
             if (CurrentNode == null && CurrentChar != '\0')
             {
-                Errors.Add(Index, "Expect End");
+                if (!text.Substring(StartOffset, text.IndexOf('\n', StartOffset) - StartOffset).Contains(";")) 
+                    Errors.Add(Index, $"Expect End");
             }
             else if (CurrentNode?.Executable == null && CurrentNode?.Children?.Keys != null)
             {
@@ -119,11 +119,12 @@ namespace JMC.Parser.JMC.Command
             }
 
             //detect end
-            if (CurrentNode == null && CurrentChar != '\0')
-            {
-                Errors.Add(Index, "Expect End");
-            }
-            else if (CurrentNode?.Executable == null)
+            //if (CurrentNode == null && CurrentChar != '\0')
+            //{
+            //    Errors.Add(Index, "Expect End");
+            //}
+            //else
+            if (CurrentNode?.Executable == null)
             {
                 var keys = CurrentNode?.Children?.Keys;
                 var s = keys != null ? string.Join(" or ", keys.Select(v => $"'{v}'")) : "";

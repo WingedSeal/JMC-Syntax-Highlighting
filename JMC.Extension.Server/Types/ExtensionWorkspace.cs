@@ -64,6 +64,7 @@ namespace JMC.Extension.Server.Types
         public string[] GetAllJMCVariableNames() => JMCFiles.SelectMany(v => v.SyntaxTree.GetVariableNames()).Distinct().ToArray();
         public string[] GetAllJMCFunctionNames() => JMCFiles.SelectMany(v => v.SyntaxTree.GetFunctionNames()).Distinct().ToArray();
         public string[] GetAllJMCClassNames() => JMCFiles.SelectMany(v => v.SyntaxTree.GetClassNames()).Distinct().ToArray();
+        public string GetAllFunctionsFromContext(int pos) => JMCFiles.Select(v => v.SyntaxTree.GetConnectedClassName(pos)).First();
         #endregion
 
         #region HJMC
