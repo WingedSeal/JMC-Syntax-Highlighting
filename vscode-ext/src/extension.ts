@@ -36,7 +36,7 @@ export function activate(context: ExtensionContext) {
         "..",
         "JMC.Extension.Server",
         "bin",
-        "Debug",
+        "release",
         "net8.0",
         serverExe
       ),

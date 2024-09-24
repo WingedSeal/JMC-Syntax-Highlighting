@@ -27,6 +27,44 @@ namespace JMC.Extension.Server.Handler.JMC
                 throw new NotImplementedException();
         }
 
+        private string GetDocumentText(Uri uri)
+        {
+            var text = File.ReadAllText(uri.LocalPath);
+            return text;
+        }
+
+        private string GetContext(string text, int cursorPosition,int line)
+        {
+            string l = text.Split(Environment.NewLine)[line].Trim();
+            string beforeCursor = l.Substring(0, Math.Min(cursorPosition,l.Length)).TrimStart();
+            int lastDotIndex = beforeCursor.LastIndexOf('.');
+            int lastspace = Math.Max(0, beforeCursor.LastIndexOf(' '));
+            string word1 = beforeCursor.Substring(lastspace,lastDotIndex - lastspace);
+
+            return word1;
+        }
+
+        string[] JMCKeywords = 
+        {
+            "true","false","import","class","if","else","while","do","for","switch","case","new",
+            "advancement","attribute","ban","ban-ip","banlist","bossbar","clear","clone","damage","data","datapack","debug","defaultgamemode","deop","difficulty","effect","enchant","execute","experience","fill","fillbiome","forceload","function","gamemode","gamerule","give","help","item","jfr","kick","kill","list","locate","loot","me","msg","op","pardon","pardon-ip","particle","perf","place","playsound","publish","random","recipe","reload","return","ride","save-all","save-off","save-on","say","schedule","scoreboard","seed","setblock","setidletimeout","setworldspawn","spawnpoint","spectate","spreadplayers","stop","stopsound","summon","tag","team","teammsg","teleport","tell","tellraw","tick","time","title","tm","tp","transfer","trigger","w","weather","whitelist","worldborder","xp"
+        };
+
+        Dictionary<string, string> JMCSnippets = new()
+        {
+            {"__tick__", "function __tick__() {\r\n    say \"Loop\"; // This will run every tick.\r\n}"},
+            {"function", "function name() {\r\n    say \"hello\";\r\n}"},
+            {"class", "class name {\r\n}"},
+            {"if", "if (true) {\r\n}"},
+            {"elif", "else if (true) {\r\n}"},
+            {"else", "else {\r\n}"},
+            {"while", "while (condition) {\r\n}"},
+            {"dowhile", "do {\r\n} while (condition)"},
+            {"for", "for (condition) {\r\n}"},
+            {"switch", "switch (variable) {\r\ncase 1:\r\n    say \"hi!\";\r\n}"}
+        };
+
+
         private Task<CompletionList> GetJMCAsync(CompletionParams request, CancellationToken cancellationToken)
         {
             var list = new List<CompletionItem>();
@@ -41,7 +79,6 @@ namespace JMC.Extension.Server.Handler.JMC
 
             var triggerChar = request.Context.TriggerCharacter;
             var triggerType = request.Context.TriggerKind;
-
             //variables
             if (triggerChar != null &&
                 triggerChar == "$" &&
@@ -58,11 +95,30 @@ namespace JMC.Extension.Server.Handler.JMC
                     });
                 }
             }
+            
             //normal case
             else if (triggerChar != null &&
                 triggerChar == "$" &&
                 triggerType == CompletionTriggerKind.TriggerCharacter)
                 return GetJMCHirechyCompletionAsync(request, cancellationToken);
+            //class case
+            else if (triggerChar != null &&
+                triggerChar == "." &&
+                triggerType == CompletionTriggerKind.TriggerCharacter)
+            {
+                var text = workspace.GetJMCFile(request.TextDocument.Uri).SyntaxTree.RawText;//GetDocumentText(request.TextDocument.Uri.ToUri());
+                var ctx = GetContext(text, request.Position.Character, request.Position.Line);
+                if (FunctionsContextManager.contexts.ContainsKey(ctx))
+                foreach (var item in FunctionsContextManager.contexts[ctx])
+                {
+                    list.Add(new()
+                    {
+                        Label = item.name,
+                        Detail = item.usage,
+                        Kind = CompletionItemKind.Function,
+                    });
+                }
+            }
             else
             {
                 //from .jmc
@@ -73,11 +129,13 @@ namespace JMC.Extension.Server.Handler.JMC
                     list.Add(new()
                     {
                         Label = v,
-                        Kind = CompletionItemKind.Function
+                        Kind = CompletionItemKind.Function,
+                        InsertText = v +"();"
                     });
                 }
+                
                 var cls = workspace.GetAllJMCClassNames().AsSpan();
-                for (var i = 0; i < funcs.Length; i++)
+                for (var i = 0; i < cls.Length; i++)
                 {
                     ref var v = ref cls[i];
                     list.Add(new()
@@ -95,9 +153,31 @@ namespace JMC.Extension.Server.Handler.JMC
                     list.Add(new()
                     {
                         Label = v.Class,
-                        Kind = CompletionItemKind.Class
+                        Kind = CompletionItemKind.Class,
                     });
                 }
+
+                //snippets
+                foreach (var item in JMCSnippets)
+                {
+                    list.Add(new()
+                    {
+                        Label = item.Key,
+                        Kind = CompletionItemKind.Snippet,
+                        InsertText = item.Value
+                    });
+                }
+
+                //keywords
+                foreach (var item in JMCKeywords)
+                {
+                    list.Add(new()
+                    {
+                        Label = item,
+                        Kind = CompletionItemKind.Keyword,
+                    });
+                }
+
                 //functions
                 list.Add(new()
                 {

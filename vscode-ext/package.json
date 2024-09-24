@@ -58,7 +58,10 @@
       {
         "language": "jmc",
         "scopeName": "source.jmc",
-        "path": "./syntaxes/jmc.tmLanguage.json"
+        "path": "./syntaxes/jmc.tmLanguage.json",
+        "embeddedLanguages": {
+          "meta.embedded.block.mcfunction": "mcfunction"
+        }
       },
       {
         "language": "hjmc",
@@ -68,7 +71,7 @@
     ],
     "snippets": [
       {
-        "language": "jmc",
+        "language": "mcfunction",
         "path": "./snippets/jmc.json"
       }
     ],

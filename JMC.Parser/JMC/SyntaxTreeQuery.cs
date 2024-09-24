@@ -36,5 +36,20 @@ namespace JMC.Parser.JMC
                 .Select(v => v.Value!.Split('.').First());
             return normalClass.Concat(funcClass).ToArray();
         }
+
+        public string GetConnectedClassName(int pos)
+        {
+            var node = FlattenedNodes
+        .FirstOrDefault(v => v.Value != null && v.Value.Contains('.') && pos > v.Value.IndexOf('.') && pos <= v.Value.Length);
+
+            if (node != null)
+            {
+                var parts = node.Value.Split('.');
+                return parts[0]; // Return the word before the dot
+            }
+
+            return null; // Return null if no match is found
+        }
+
     }
 }
